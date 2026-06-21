@@ -142,12 +142,17 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           mkdir -p "$GITHUB_WORKSPACE/release-apks"
-          for apk in app/build/outputs/apk/release/*.apk; do
-            if [ -f "$apk" ]; then
-              cp "$apk" "$GITHUB_WORKSPACE/release-apks/readerMT-${{ github.ref_name }}.apk"
-              echo "Renamed $apk -> release-apks/readerMT-${{ github.ref_name }}.apk"
-            fi
-          done
+          echo "Looking for APK files..."
+          find "$GITHUB_WORKSPACE" -name "*.apk" -type f
+          APK_PATH=$(find "$GITHUB_WORKSPACE" -name "*.apk" -type f | head -1)
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: No APK file found after build!"
+            exit 1
+          fi
+          echo "Found APK: $APK_PATH"
+          cp "$APK_PATH" "$GITHUB_WORKSPACE/release-apks/readerMT-${{ github.ref_name }}.apk"
+          echo "Copied to release-apks/readerMT-${{ github.ref_name }}.apk"
+          ls -la "$GITHUB_WORKSPACE/release-apks/"
 
       - name: Delete old prereleases
         if: ${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') }}
