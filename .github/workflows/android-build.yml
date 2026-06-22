@@ -127,10 +127,10 @@ jobs:
         if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         run: |
           ./gradlew :app:assembleRelease --no-daemon --stacktrace \
-            -Pkey.store="$KEYSTORE_PATH" \
-            -Pkey.alias="$KEY_ALIAS" \
-            -Pkey.store.password="$STORE_PASSWORD" \
-            -Pkey.key.password="$KEY_PASSWORD"
+            -PRELEASE_STORE_FILE="$KEYSTORE_PATH" \
+            -PRELEASE_KEY_ALIAS="$KEY_ALIAS" \
+            -PRELEASE_STORE_PASSWORD="$STORE_PASSWORD" \
+            -PRELEASE_KEY_PASSWORD="$KEY_PASSWORD"
 
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
