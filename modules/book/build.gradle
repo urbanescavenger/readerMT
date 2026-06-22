@@ -1,18 +1,12 @@
 plugins {
     alias libs.plugins.android.library
-    alias libs.plugins.kotlin.android
 }
 
 android {
     compileSdk = compile_sdk_version
     namespace = 'me.ag2s'
-    kotlin {
-        jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
-        }
-    }
     defaultConfig {
-        minSdk 21
+        minSdk 26
         targetSdk 36
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
