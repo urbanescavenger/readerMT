@@ -1,6 +1,7 @@
 package io.legado.app.platform
 
 import io.legado.app.platform.js.RhinoEngine
+import io.legado.app.platform.web.WebViewRenderer
 
 /**
  * 平台无关 legado 引擎的全局 SPI 持有者。
