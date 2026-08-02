@@ -46,10 +46,12 @@ jobs:
 
       - name: Enforce engine import boundary
         # 引擎禁止 import android.*/androidx.*/com.script.*/com.htmake.*
+        # 锚定 ^import:真实 import 语句总在行首(Kotlin 顶层 import 无缩进),
+        # 避免匹配注释/字符串中提及的 "import com.script.*" 等文档文本(误报)。
         run: |
           set -e
           echo "Checking :legado-engine has no forbidden imports..."
-          ! grep -rnE "import (android|androidx|com\.script|com\.htmake)\." modules/legado-engine/src/main/kotlin || \
+          ! grep -rnE "^import (android|androidx|com\.script|com\.htmake)\." modules/legado-engine/src/main/kotlin || \
             { echo "ERROR: :legado-engine contains forbidden imports (android/androidx/com.script/com.htmake)"; exit 1; }
           echo "OK: :legado-engine import boundary clean."
 
