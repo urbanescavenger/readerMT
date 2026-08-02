@@ -6,6 +6,7 @@ on:
       - main
       - master
       - mort_debug
+      - monorepo/unify
     tags:
       - 'v*'
   pull_request:

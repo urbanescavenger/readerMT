@@ -1,0 +1,25 @@
+// :modules:legado-engine
+// 平台无关的 legado 引擎模块(kotlin-jvm + java-library)。
+// Phase 0: 空占位,确保模块可独立编译。
+// Phase 1 将把 readerMT app/ 下的引擎源码(model/analyzeRule、data/entities DTO、
+// help/http、utils、constant 等)剥离 Android 依赖后搬入此模块,
+// 并通过 io.legado.app.platform.* SPI 注入平台实现。
+// 引擎禁止 import android.*/androidx.*/com.script.*/com.htmake.*(由 CI grep 强制)。
+plugins {
+    alias libs.plugins.kotlin.jvm
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+// Phase 1 起填充:engine 共用依赖(两端都用)。
+dependencies {
+    // implementation libs.gson
+    // implementation libs.okhttp
+    // implementation libs.jsoup
+    // implementation libs.json.path
+    // implementation libs.mozilla.rhino
+    // implementation libs.kotlinx.coroutines.core
+    // implementation libs.kotlin.stdlib
+}

@@ -1,0 +1,54 @@
+name: Build Docker Image (DockerHub)
+
+# 从 reader-mt 移植,适配 monorepo(Dockerfile 在 modules/server/)。
+# Phase 0/1 休眠:仅在打 tag v* 或手动 dispatch 时运行。
+# Phase 2 起 :server 内容就绪后,再加 push: branches: [main] 与 PR 触发(§5d)。
+# 需要 secrets: DOCKER_USERNAME / DOCKER_PASSWORD。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: {}
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v4
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: urbanescavenger/reader
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-,format=short
+      -
+        name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./modules/server
+          file: ./modules/server/Dockerfile.source
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: |
+            linux/amd64
+            linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
