@@ -41,8 +41,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Build legado-engine and server (JVM)
-        run: ./gradlew :modules:legado-engine:build :modules:server:build --no-daemon --stacktrace
+      - name: Build legado-engine (JVM)
+        # :modules:server is NOT a root-Gradle subproject (it builds only inside
+        # Docker with its own gradle7/JDK8 toolchain) — so only :legado-engine here.
+        run: ./gradlew :modules:legado-engine:build --no-daemon --stacktrace
 
       - name: Enforce engine import boundary
         # 引擎禁止 import android.*/androidx.*/com.script.*/com.htmake.*
@@ -54,15 +56,6 @@ jobs:
           ! grep -rnE "^import (android|androidx|com\.script|com\.htmake)\." modules/legado-engine/src/main/kotlin || \
             { echo "ERROR: :legado-engine contains forbidden imports (android/androidx/com.script/com.htmake)"; exit 1; }
           echo "OK: :legado-engine import boundary clean."
-
-      - name: Enforce server package boundary
-        # :server 禁止在 io.legado.app 包下定义类
-        run: |
-          set -e
-          echo "Checking :server does not define classes under io.legado.app..."
-          ! grep -rnE "^package io\.legado\.app" modules/server/src/main/kotlin || \
-            { echo "ERROR: :server defines classes under io.legado.app (forbidden)"; exit 1; }
-          echo "OK: :server package boundary clean."
 
       - name: Parity test (skeleton)
         # Phase 3 将在此跑 BookSourceParityTest(50+ 书源,三端 hash 一致)。

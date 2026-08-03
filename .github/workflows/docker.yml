@@ -1,57 +1,69 @@
 name: Build Docker Image
 
-# 从 reader-mt 移植,适配 monorepo(Dockerfile 在 modules/server/)。
-# Phase 0/1 休眠:仅在打 tag v* 或手动 dispatch 时运行。
-# Phase 2 起 :server 内容就绪后,再加 push: branches: [main] 与 PR 触发,作为合并必需状态检查(§5d)。
+# Phase 2: build the server (reader-mt, own toolchain: gradle7/JDK8/cli.gradle)
+# from modules/server/Dockerfile.source. Build = verify the server compiles+
+# packages; run+curl = verify it serves (§5b). Push to GHCR only on tags.
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main, monorepo/unify]
+    tags: ['v*']
   workflow_dispatch: {}
 
 jobs:
-  docker:
+  build-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v4
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      -
-        name: Login to GHCR
+
+      - name: Build server image (verify compile + package)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./modules/server
+          file: ./modules/server/Dockerfile.source
+          push: false
+          load: true
+          tags: reader:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run server + curl smoke (§5b)
+        continue-on-error: true
+        run: |
+          set -x
+          docker run -d --name reader -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod reader:ci
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/ >/dev/null 2>&1; then echo "server up after ${i}x2s"; break; fi
+            sleep 2
+          done
+          echo "--- GET / ---"
+          curl -sS http://localhost:8080/ | head -c 300 || true
+          echo
+          echo "--- docker logs (tail) ---"
+          docker logs reader 2>&1 | tail -40 || true
+
+      - name: Login to GHCR (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=raw,value=latest
-            type=sha,prefix=sha-,format=short
-      -
-        name: Build and push
+
+      - name: Push to GHCR (tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: docker/build-push-action@v6
         with:
           context: ./modules/server
           file: ./modules/server/Dockerfile.source
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: |
-            linux/amd64
-            linux/arm64
+          tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max

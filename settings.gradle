@@ -51,4 +51,7 @@ include ':app'
 include ':modules:book'
 include ':modules:rhino'
 include ':modules:legado-engine'
-include ':modules:server'
+// :modules:server is NOT a root-Gradle subproject: it keeps its own toolchain
+// (gradle 7 + JDK 8 + cli.gradle, Kotlin 1.5.21) and is built ONLY inside Docker
+// (see modules/server/Dockerfile.source). Including it here would force the
+// monorepo's Kotlin 2.3.21/Java 17 onto reader-mt's Kotlin 1.5/Java 8 code.
