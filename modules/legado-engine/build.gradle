@@ -28,4 +28,9 @@ dependencies {
     implementation libs.mozilla.rhino
     // implementation libs.mozilla.rhino
     // implementation libs.kotlin.stdlib
+
+    // §5c parity 测试 harness(JUnit 4;catalog 已有 junit:junit:4.13.2)。
+    // testImplementation 自动继承 implementation,测试可见 gson/jsoup/jsoupxpath/
+    // json-path/rhino/kotlinx-coroutines 等。`./gradlew :build` 的 `test` 任务执行。
+    testImplementation libs.junit
 }

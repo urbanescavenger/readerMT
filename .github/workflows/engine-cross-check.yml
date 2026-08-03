@@ -58,8 +58,8 @@ jobs:
           echo "OK: :legado-engine import boundary clean."
 
       - name: Parity test (skeleton)
-        # Phase 3 将在此跑 BookSourceParityTest(50+ 书源,三端 hash 一致)。
-        # Phase 0 占位:仅打印,不阻塞。
+        # §5c parity 已起步:BookSourceParityTest(合成 JSoup/JsonPath fixture,引擎侧
+        # 规范化 hash 契约)经上面的 `:modules:legado-engine:build` 的 `test` 任务执行。
+        # 本步仅占位打印;三端 hash 一致性(app/server 复跑同一 fixture)待 Phase 3。
         run: |
-          echo "::notice::parity test skeleton — not yet implemented (Phase 3)"
-          echo "Phase 0: parity tests will run here once :legado-engine carries engine source (Phase 1) and both platform impls exist."
+          echo "::notice::BookSourceParityTest runs via ./gradlew :modules:legado-engine:build (test task). Cross-platform hash parity = Phase 3."

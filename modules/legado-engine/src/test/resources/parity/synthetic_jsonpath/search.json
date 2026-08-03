@@ -1,0 +1,12 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "total": 3,
+    "list": [
+      {"title": "书名D", "author": "作者D", "url": "/book/4", "cover": "/cover/4.jpg", "intro": "简介D", "kind": "历史", "last": "第40章", "count": "40.0万字"},
+      {"title": "书名E", "author": "作者E", "url": "/book/5", "cover": "/cover/5.jpg", "intro": "简介E", "kind": "悬疑", "last": "第50章", "count": "50.0万字"},
+      {"title": "书名F", "author": "作者F", "url": "/book/6", "cover": "/cover/6.jpg", "intro": "简介F", "kind": "言情", "last": "第60章", "count": "60.0万字"}
+    ]
+  }
+}

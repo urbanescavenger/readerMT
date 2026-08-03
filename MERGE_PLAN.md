@@ -303,3 +303,24 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 - **B**(未选):停在绿地基 + 骨架,把核心作后续聚焦。
 
 **记忆**:`C:\Users\Mort\.claude\projects\e--GITHUB-readerMT\memory\monorepo-unify-progress.md` 同步维护,后续会话可续。
+
+### 9.6 §5c parity 测试 harness 起步(合成 fixture + 引擎侧 hash 契约,用户已选合成先行)
+
+§9.5 A 路线 JsExtensions 主体 + AnalyzeUrl/AnalyzeRule flip 已过并 CI 双绿后,启动 §5c("统一规则兼容性闸门")轨道。本批为 `:modules:legado-engine` 建立纯 JVM 测试 harness,确立"每源对固定 HTML/JSON fixture 跑 search 解析,产出规范化结果 hash"的**引擎侧基线**。三端 hash 一致性(engine vs app/server)待 Phase 3 两端平台实现就绪后用同一 fixture 复跑验证;本批先确立可复用 harness 与 hash 契约机制,并经 CI 自动执行。
+
+**勘探结论(三份 Explore 报告)**:
+- 引擎 `AnalyzeRule` 是规则求值原语,**无 getBooks/getBookList**;search→book-list 驱动流程在 app `BookList.analyzeBookList`(`app/.../webBook/BookList.kt:35-289`)。测试侧 `ParityDriver` 复刻其引擎相关子集(去 SearchBook/BookHelp/appDb/格式化,只留 `setContent`→`getElements`→逐项 `setContent`+`getString`/`getStringList`)。
+- **纯 JSoup/XPath/JsonPath/Regex 规则路径不触碰任何 `Platform` lateinit SPI**(getString/getStringList/getElements/splitSourceRule 全程不读 Platform.rhino/webView/webBook/Repositories)。故合成 fixture 用纯 JSoup + JsonPath → 无需真 SPI 实现;`AnalyzeRule(ruleData=null, source=null)` 即可。
+- 引擎已移植 `data/entities/rule/*`(带 `jsonDeserializer`)+ `utils/GsonExtensions.GSON`(注册全部规则 deserializer)→ 测试直接 `GSON.fromJson(json, BookSourceFixture::class.java)`。
+- 引擎 `BookSource` 仅空 interface(Phase 1b 实体迁移未推进);测试用测试侧 `BookSourceFixture` data class 持字段,不实现 BaseSource。
+
+**落地(纯增量,app/ 未动)**:
+- `modules/legado-engine/build.gradle`:加 `testImplementation libs.junit`(JUnit 4,catalog 已有 4.13.2;`testImplementation` 继承 `implementation`,测试可见 gson/jsoup/jsoupxpath/json-path/rhino/coroutines)。`./gradlew :modules:legado-engine:build` 的 `test` 任务执行(原 `engine-cross-check.yml:47` 已跑 `:build`,无需改触发)。
+- `src/test/kotlin/io/legado/app/parity/BookSourceFixture.kt`:测试侧 BookSource 承载体(字段命名同 app JSON;`searchRule()` 兜底)。
+- `src/test/kotlin/io/legado/app/parity/ParityDriver.kt`:`parseSearch(source, body, baseUrl)` 复刻 BookList 引擎子集;`normalizedHash(books)` = 按 bookUrl 排序 + 固定字段序列(name/author/bookUrl/coverUrl/intro/kind/lastChapter/wordCount)序列化 → SHA-256 hex = §5c 契约常量。
+- `src/test/resources/parity/synthetic_jsoup/{source.json,search.html}`:纯 CSS `@text/@href/@src` 规则,3 本书 A/B/C。
+- `src/test/resources/parity/synthetic_jsonpath/{source.json,search.json}`:纯 `$.path` 规则,3 本书 D/E/F。
+- `src/test/kotlin/io/legado/app/parity/BookSourceParityTest.kt`(JUnit 4):`@Before` 防御性赋 `Repositories`/`webBook`/`isMainThread`(纯规则路径不触达,context/appConfig/scriptAssets/webView/rhino 不赋值——若误走 JS 路径以 `UninitializedPropertyAccessException` 明确失败 = 预期信号)。4 用例:JSoup/JsonPath 各 `ParsesExpectedBooks`(逐字段硬断言)+ `HashIsStable`(== 固化常量;hash 变 → 解析回归 → 人工核对后更新常量 = 闸门)。hash 首次经本地 python 预算并固化(`JSOUP_HASH`/`JSONPATH_HASH`),CI 实跑验证。
+- `.github/workflows/engine-cross-check.yml`:"Parity test (skeleton)" echo 步骤注释更新为"BookSourceParityTest 经 `:build` 的 `test` 任务执行,三端 hash parity = Phase 3"。
+
+**不在本批(后续)**:① 真 Rhino `RhinoEngine` 实现(用 classpath 上 `libs.mozilla.rhino`)→ 让含 `@js:` 的书源 fixture 可跑 → 解锁真实「未来天王」源(其 bookUrl/coverUrl 含 `@js:`);② 用户侧抓「未来天王」search/书详情/章节 HTML → 加为真实 fixture;③ TOC/content 解析 driver(本批仅 search);④ 主实体 BookSource data class 进引擎(Phase 1b 轨道,独立推进);⑤ 三端 hash 一致性(app/server 复跑同一 fixture)。

@@ -1,0 +1,17 @@
+{
+  "bookSourceUrl": "https://synthetic.test",
+  "bookSourceName": "合成JsonPath源",
+  "bookSourceType": 0,
+  "searchUrl": "https://synthetic.test/api/search?q={{key}}",
+  "ruleSearch": {
+    "bookList": "$.data.list",
+    "name": "$.title",
+    "author": "$.author",
+    "bookUrl": "$.url",
+    "coverUrl": "$.cover",
+    "intro": "$.intro",
+    "kind": "$.kind",
+    "lastChapter": "$.last",
+    "wordCount": "$.count"
+  }
+}
