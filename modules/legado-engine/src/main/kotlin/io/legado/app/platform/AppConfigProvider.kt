@@ -20,4 +20,7 @@ interface AppConfigProvider {
 
     /** HTTP User-Agent(引擎 okHttpClient 默认 UA 头)。 */
     val userAgent: String
+
+    /** 并发线程数(`JsExtensions.ajaxAll`/`ajaxTestAll` 并发度;对应 app `AppConfig.threadCount`)。 */
+    val threadCount: Int
 }

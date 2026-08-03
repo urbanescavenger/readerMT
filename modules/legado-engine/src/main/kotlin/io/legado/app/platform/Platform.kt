@@ -3,6 +3,7 @@ package io.legado.app.platform
 import io.legado.app.platform.js.RhinoEngine
 import io.legado.app.platform.repo.Repositories
 import io.legado.app.platform.web.WebViewRenderer
+import io.legado.app.platform.webbook.WebBookProvider
 
 /**
  * 平台无关 legado 引擎的全局 SPI 持有者。
@@ -25,6 +26,7 @@ object Platform {
     lateinit var scriptAssets: ScriptAssetProvider
     lateinit var rhino: RhinoEngine
     lateinit var repositories: Repositories
+    lateinit var webBook: WebBookProvider
 
     /** 是否主线程。Android 注入 `Looper` 判定;服务端恒 false。 */
     var isMainThread: () -> Boolean = { false }

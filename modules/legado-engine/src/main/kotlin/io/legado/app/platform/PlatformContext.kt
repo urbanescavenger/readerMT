@@ -14,4 +14,7 @@ interface PlatformContext {
     val cacheDir: File
     val filesDir: File
     val externalFilesDir: File?
+
+    /** 外部缓存目录(`JsExtensions.getFile` 用;Android `externalCacheDir`,服务端可指向同一 cacheDir)。 */
+    val externalCache: File?
 }

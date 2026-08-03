@@ -40,6 +40,19 @@ interface RhinoEngine {
      */
     fun getOrCreateSharedScope(srcKey: String, initJs: String?): Any?
 
+    /**
+     * 带 [coroutineContext] 的 [getOrCreateSharedScope] 重载。
+     *
+     * `SharedJsScope.getScope` 初始化阶段会下载 jsLib URL + 编译 JS(`runBlocking`),可能长时间;
+     * `AnalyzeUrl.evalJS`/`AnalyzeRule.evalJS` 传 `coroutineContext` 做 `ensureActive` cancellation,
+     * 故初始化阶段也需透传 ctx。实现端在内部 init eval 时接入 cancellation。
+     */
+    fun getOrCreateSharedScope(
+        srcKey: String,
+        initJs: String?,
+        coroutineContext: CoroutineContext,
+    ): Any?
+
     /** 驱逐 [srcKey] 的共享 scope 缓存(对应 `SharedJsScope.remove`;`BaseSource.refreshJSLib` 用)。 */
     fun removeSharedScope(srcKey: String?)
 }

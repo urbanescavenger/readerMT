@@ -48,4 +48,32 @@ interface WebViewRenderer {
         timeout: Long,
         result: String?,
     ): String
+
+    /**
+     * 带 `sourceRegex`/`overrideUrlRegex`/`delayTime` 的渲染(过 Cloudflare 资源拦截/重定向匹配)。
+     *
+     * 对应 `AnalyzeUrl.executeStrRequest` 的 `BackstageWebView(url,html,javaScript,sourceRegex,
+     * headerMap,delayTime).getStrResponse()`(POST 分支先 HTTP 拿 res 再渲染;
+     * 非 POST 分支 html="" 即导航式加载),以及 `JsExtensions.webViewGetSource`(sourceRegex)/
+     * `webViewGetOverrideUrl`(overrideUrlRegex)。
+     *
+     * - [sourceRegex]:命中后返回该资源响应(过 CF 关键),空表示不拦截;
+     * - [overrideUrlRegex]:命中重定向 URL 时拦截,空表示不拦截;
+     * - [delayTime]:渲染前等待毫秒(让 JS 执行完)。
+     *
+     * [result] 为上下文 JSON(书源规则中间结果),[tag] 为源键(缓存用),[cacheFirst] 优先缓存。
+     */
+    fun renderHtmlWithJs(
+        url: String?,
+        html: String,
+        javaScript: String,
+        headerMap: Map<String, String>?,
+        tag: String?,
+        sourceRegex: String?,
+        overrideUrlRegex: String?,
+        cacheFirst: Boolean,
+        timeout: Long,
+        delayTime: Long,
+        result: String?,
+    ): String
 }
