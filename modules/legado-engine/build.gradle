@@ -34,3 +34,13 @@ dependencies {
     // json-path/rhino/kotlinx-coroutines 等。`./gradlew :build` 的 `test` 任务执行。
     testImplementation libs.junit
 }
+
+// 打印测试失败详情(含 ComparisonFailure 的 expected/but was 与 stdout),
+// 便于云端 CI 定位 hash 契约不匹配等断言失败。本地无 Gradle,CI 是唯一反馈环。
+tasks.named('test') {
+    testLogging {
+        events 'failed'
+        exceptionFormat 'full'
+        showStandardStreams true
+    }
+}
