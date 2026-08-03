@@ -2,8 +2,11 @@
 
 package io.legado.app.utils
 
+import io.legado.app.constant.AppLog
 import okhttp3.internal.publicsuffix.PublicSuffixDatabase
+import java.net.InetAddress
 import java.net.URL
+import java.util.BitSet
 
 /**
  * 从 readerMT `utils/NetworkUtils` 抽出的纯 JVM 域名工具子集。
@@ -50,5 +53,101 @@ object NetworkUtils {
 
     fun getSubDomainOrNull(url: String): String? {
         return kotlin.runCatching { getSubDomain(url) }.getOrNull()
+    }
+
+    fun getDomain(url: String): String {
+        val baseUrl = getBaseUrl(url) ?: return url
+        return kotlin.runCatching {
+            URL(baseUrl).host
+        }.getOrDefault(baseUrl)
+    }
+
+    // ---- URL 编码判定(batch 2a,从 app NetworkUtils 抽纯 JVM 子集)----
+
+    private val notNeedEncodingQuery: BitSet by lazy {
+        val bitSet = BitSet(256)
+        for (i in 'a'.code..'z'.code) bitSet.set(i)
+        for (i in 'A'.code..'Z'.code) bitSet.set(i)
+        for (i in '0'.code..'9'.code) bitSet.set(i)
+        for (char in "!\$&()*+,-./:;=?@[\\]^_`{|}~") bitSet.set(char.code)
+        bitSet
+    }
+
+    private val notNeedEncodingForm: BitSet by lazy {
+        val bitSet = BitSet(256)
+        for (i in 'a'.code..'z'.code) bitSet.set(i)
+        for (i in 'A'.code..'Z'.code) bitSet.set(i)
+        for (i in '0'.code..'9'.code) bitSet.set(i)
+        for (char in "*-._") bitSet.set(char.code)
+        bitSet
+    }
+
+    private fun isDigit16Char(c: Char): Boolean {
+        return c in '0'..'9' || c in 'A'..'F' || c in 'a'..'f'
+    }
+
+    fun encodedQuery(str: String): Boolean {
+        var needEncode = false
+        var i = 0
+        while (i < str.length) {
+            val c = str[i]
+            if (notNeedEncodingQuery.get(c.code)) { i++; continue }
+            if (c == '%' && i + 2 < str.length) {
+                val c1 = str[++i]
+                val c2 = str[++i]
+                if (isDigit16Char(c1) && isDigit16Char(c2)) { i++; continue }
+            }
+            needEncode = true
+            break
+        }
+        return !needEncode
+    }
+
+    fun encodedForm(str: String): Boolean {
+        var needEncode = false
+        var i = 0
+        while (i < str.length) {
+            val c = str[i]
+            if (notNeedEncodingForm.get(c.code)) { i++; continue }
+            if (c == '%' && i + 2 < str.length) {
+                val c1 = str[++i]
+                val c2 = str[++i]
+                if (isDigit16Char(c1) && isDigit16Char(c2)) { i++; continue }
+            }
+            needEncode = true
+            break
+        }
+        return !needEncode
+    }
+
+    /**
+     * 获取绝对地址
+     */
+    fun getAbsoluteURL(baseURL: String?, relativePath: String): String {
+        if (baseURL.isNullOrEmpty()) return relativePath.trim()
+        var absoluteUrl: URL? = null
+        try {
+            absoluteUrl = URL(baseURL.substringBefore(","))
+        } catch (e: Exception) {
+            e.printOnDebug()
+        }
+        return getAbsoluteURL(absoluteUrl, relativePath)
+    }
+
+    fun getAbsoluteURL(baseURL: URL?, relativePath: String): String {
+        val relativePathTrim = relativePath.trim()
+        if (baseURL == null) return relativePathTrim
+        if (relativePathTrim.isAbsUrl()) return relativePathTrim
+        if (relativePathTrim.isDataUrl()) return relativePathTrim
+        if (relativePathTrim.startsWith("javascript")) return ""
+        var relativeUrl = relativePathTrim
+        try {
+            val parseUrl = URL(baseURL, relativePath)
+            relativeUrl = parseUrl.toString()
+            return relativeUrl
+        } catch (e: Exception) {
+            AppLog.put("网址拼接出错\n${e.localizedMessage}", e)
+        }
+        return relativeUrl
     }
 }

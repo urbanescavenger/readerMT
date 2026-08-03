@@ -22,9 +22,8 @@ dependencies {
     implementation libs.json.path
     implementation libs.hutool.core
     implementation libs.hutool.crypto
+    implementation libs.commons.text
+    implementation libs.kotlinx.coroutines.core
     // implementation libs.mozilla.rhino
-    // implementation libs.json.path
-    // implementation libs.mozilla.rhino
-    // implementation libs.kotlinx.coroutines.core
     // implementation libs.kotlin.stdlib
 }
