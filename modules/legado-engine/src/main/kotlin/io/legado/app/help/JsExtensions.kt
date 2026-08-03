@@ -8,6 +8,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.help.http.CookieStore
+import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.platform.Platform
 import io.legado.app.utils.ChineseUtils
 import io.legado.app.utils.EncodingDetect
@@ -16,6 +17,7 @@ import io.legado.app.utils.FileUtils
 import io.legado.app.utils.HtmlFormatter
 import io.legado.app.utils.JsURL
 import io.legado.app.utils.StringUtils
+import io.legado.app.utils.stackTraceStr
 import java.io.File
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -168,6 +170,31 @@ interface JsExtensions : JsEncodeUtils {
      */
     private val context: CoroutineContext
         get() = Platform.rhino.currentCoroutineContext() ?: EmptyCoroutineContext
+
+    /**
+     * 访问网络,返回 String(`AnalyzeRule.ajax` 覆盖;默认实现调 [AnalyzeUrl])。
+     * 闭包核心:此方法 + AnalyzeUrl + AnalyzeRule 互递归,必须同批进引擎。
+     */
+    fun ajax(url: Any): String? {
+        return ajax(url, null)
+    }
+
+    fun ajax(url: Any, callTimeout: Long?): String? {
+        val urlStr = if (url is List<*>) {
+            url.firstOrNull().toString()
+        } else {
+            url.toString()
+        }
+        val analyzeUrl = AnalyzeUrl(urlStr, source = getSource(), callTimeout = callTimeout, coroutineContext = context)
+        return kotlin.runCatching {
+            analyzeUrl.getStrResponse().body
+        }.onFailure {
+            Platform.rhino.currentCoroutineContext()?.ensureActive()
+            AppLog.put("ajax($urlStr) error\n${it.localizedMessage}", it)
+        }.getOrElse {
+            it.stackTraceStr
+        }
+    }
 
     /** js 实现读取 cookie */
     fun getCookie(tag: String): String {
