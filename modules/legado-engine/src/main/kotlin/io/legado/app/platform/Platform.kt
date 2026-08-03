@@ -1,6 +1,7 @@
 package io.legado.app.platform
 
 import io.legado.app.platform.js.RhinoEngine
+import io.legado.app.platform.repo.Repositories
 import io.legado.app.platform.web.WebViewRenderer
 
 /**
@@ -23,6 +24,7 @@ object Platform {
     lateinit var appConfig: AppConfigProvider
     lateinit var scriptAssets: ScriptAssetProvider
     lateinit var rhino: RhinoEngine
+    lateinit var repositories: Repositories
 
     /** 是否主线程。Android 注入 `Looper` 判定;服务端恒 false。 */
     var isMainThread: () -> Boolean = { false }
