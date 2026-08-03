@@ -83,6 +83,8 @@ object ParityDriver {
             sb.append(FIELD_ORDER.joinToString("") { book[it].orEmpty() })
         }
         val digest = MessageDigest.getInstance("SHA-256").digest(sb.toString().toByteArray(Charsets.UTF_8))
-        return digest.joinToString("") { "%02x".format(it) }
+        // 注意:Byte 是有符号,>= 0x80 的字节会被 %x 符号扩展成 8 位 hex。
+        // 先 `and 0xFF` 转无符号 0..255,确保每字节恰 2 位 hex(与 python hexdigest 一致)。
+        return digest.joinToString("") { "%02x".format(it.toInt() and 0xFF) }
     }
 }
