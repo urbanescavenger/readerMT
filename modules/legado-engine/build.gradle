@@ -16,7 +16,7 @@ kotlin {
 // Phase 1 起填充:engine 共用依赖(两端都用)。
 dependencies {
     implementation libs.gson
-    // implementation libs.okhttp
+    implementation libs.okhttp
     // implementation libs.jsoup
     // implementation libs.json.path
     // implementation libs.mozilla.rhino
