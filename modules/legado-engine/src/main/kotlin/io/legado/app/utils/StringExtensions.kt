@@ -15,3 +15,10 @@ fun String.splitNotBlank(vararg delimiter: String, limit: Int = 0): Array<String
 fun String.splitNotBlank(regex: Regex, limit: Int = 0): Array<String> = run {
     this.split(regex, limit).map { it.trim() }.filterNot { it.isBlank() }.toTypedArray()
 }
+
+/* String 是否为十六进制串(SymmetricCryptoAndroid.decrypt 用以区分 hex / base64)。 */
+fun String.isHex(): Boolean {
+    return all { c ->
+        c in '0'..'9' || c in 'A'..'F' || c in 'a'..'f'
+    }
+}
