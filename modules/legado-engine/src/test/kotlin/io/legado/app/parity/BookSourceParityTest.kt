@@ -62,12 +62,9 @@ class BookSourceParityTest {
         val source = loadSource("/parity/synthetic_jsoup/source.json")
         val html = resourceText("/parity/synthetic_jsoup/search.html")
         val books = ParityDriver.parseSearch(source, html, baseUrl)
-        println("JSOUP books=${books}")
-        println("JSOUP normalizedString=${ParityDriver.normalizedString(books)}")
         val actual = ParityDriver.normalizedHash(books)
-        println("JSOUP_HASH expected=$JSOUP_HASH actual=$actual")
         assertEquals(
-            "JSoup fixture hash 变更:引擎解析逻辑可能回归(核对输出后更新 JSOUP_HASH)。actual=$actual",
+            "JSoup fixture hash 变更:引擎解析逻辑可能回归(核对输出后更新 JSOUP_HASH)。",
             JSOUP_HASH, actual
         )
     }
@@ -92,9 +89,8 @@ class BookSourceParityTest {
         val json = resourceText("/parity/synthetic_jsonpath/search.json")
         val books = ParityDriver.parseSearch(source, json, baseUrl)
         val actual = ParityDriver.normalizedHash(books)
-        println("JSONPATH_HASH expected=$JSONPATH_HASH actual=$actual")
         assertEquals(
-            "JsonPath fixture hash 变更:引擎解析逻辑可能回归(核对输出后更新 JSONPATH_HASH)。actual=$actual",
+            "JsonPath fixture hash 变更:引擎解析逻辑可能回归(核对输出后更新 JSONPATH_HASH)。",
             JSONPATH_HASH, actual
         )
     }
