@@ -2,7 +2,9 @@
 
 package io.legado.app.help
 
+import cn.hutool.core.codec.Base64
 import cn.hutool.core.util.HexUtil
+import io.legado.app.utils.EncoderUtils
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -86,5 +88,47 @@ object JsExtensions {
         } catch (e: Exception) {
             ""
         }
+    }
+
+    // ---- 簇①b:base64(+flags 经 EncoderUtils java.util.Base64 重写)+ timeFormat ----
+
+    fun base64Decode(str: String?): String {
+        return Base64.decodeStr(str)
+    }
+
+    fun base64Decode(str: String?, charset: String): String {
+        return Base64.decodeStr(str, charset(charset))
+    }
+
+    fun base64Decode(str: String, flags: Int): String {
+        return EncoderUtils.base64Decode(str, flags)
+    }
+
+    fun base64DecodeToByteArray(str: String?): ByteArray? {
+        if (str.isNullOrBlank()) {
+            return null
+        }
+        return EncoderUtils.base64DecodeToByteArray(str, 0)
+    }
+
+    fun base64DecodeToByteArray(str: String?, flags: Int): ByteArray? {
+        if (str.isNullOrBlank()) {
+            return null
+        }
+        return EncoderUtils.base64DecodeToByteArray(str, flags)
+    }
+
+    fun base64Encode(str: String): String? {
+        return EncoderUtils.base64Encode(str, 2)
+    }
+
+    fun base64Encode(str: String, flags: Int): String? {
+        return EncoderUtils.base64Encode(str, flags)
+    }
+
+    fun timeFormat(time: Long): String {
+        // readerMT 用 AppConst.dateFormat(FastDateFormat "yyyy/MM/dd HH:mm",线程安全共享);
+        // 引擎无 AppConst,用每次新建 SimpleDateFormat(线程安全)同格式。
+        return SimpleDateFormat("yyyy/MM/dd HH:mm").format(Date(time))
     }
 }
