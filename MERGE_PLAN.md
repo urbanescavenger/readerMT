@@ -228,3 +228,58 @@ d. **CI 强制(常开)**:`:legado-engine` 禁 import `android.*`/`androidx.*`/`c
 3. 两端已分化的引擎逻辑的 parity 校验(Phase 3 + parity 测试,决定"是否真正统一"的闸门)。
 
 建议执行顺序严格按 Phase 0→4,每阶段云端 CI 绿(且 parity 测试绿)才进下一阶段;Phase 1 与 Phase 4 的版本升级务必拆成多个小 PR,绝不堆积。若资源/时间受限,可先只做 Phase 0–2(单仓库 + 两端各保留引擎副本 + parity 测试作监控),拿到"同仓 + 分歧可见"的收益,再视情况推进 Phase 3 彻底统一。
+
+---
+
+## 9. 执行进度与发现(2026-08-03,持续更新)
+
+> 本地**无 Android SDK/Gradle,不能本地编译**;云端 CI 是唯一编译反馈环,每次推送后挂 Monitor 监控至终态。分支 `monorepo/unify`(已推 origin),所有已落地项 **CI 双绿**(`android-build.yml` + `engine-cross-check.yml`;`docker.yml` 见下)。
+
+### 9.1 已落地并 CI 绿
+
+**Phase 0**:模块脚手架。`:modules:legado-engine`(kotlin-jvm,Groovy)+ `:modules:server`(详见 9.3);`settings.gradle`/根 `build.gradle` 扩展;`vendor/reader-mt` 参考源(Phase 2 后已移为 `modules/server`,vendor/ 删除);`.github/workflows/{engine-cross-check.yml,docker.yml,dockerhub.yml}` + `android-build.yml` 加 `monorepo/unify` 触发。
+
+**Phase 1(干净/机械/自包含部分,app/ 原件未动)**:源码**复制**进引擎,app/ 不变 → 两端同名类不在同一 classpath,无冲突;switchover(Phase 1c)时才让 app/ 依赖引擎 + 删 app/ 副本 + `*Entity` 改名。
+- `platform/*` SPI:Platform(holder:context/webView/appConfig/scriptAssets/rhino/repositories+isMainThread)、PlatformContext、web/WebViewRenderer、AppConfigProvider(+userAgent)、ScriptAssetProvider、js/RhinoEngine(+ScriptBindings/CompiledScript,**已扩建模共享作用域/原型**)、repo/Repositories + CookieRepository/CacheRepository(+NoOp)。
+- `exception/*`(8)、`constant/{BookSourceType,BookType,SourceType,AppPattern}`(@IntDef 剥)、`data/entities/rule/{BookListRule,BookInfoRule,SearchRule,TocRule,ContentRule,ExploreRule,ReviewRule}`(@Parcelize/Parcelable 剥)、`data/entities/{Cache,Cookie}`(@Entity 剥成纯 DTO,首个 Room→DTO 样板)。
+- `utils/{GsonExtensions(+libs.gson),StringUtils(TextUtils 替:isEmpty/join),Utf8BomUtils,StringExtensions.splitNotBlank,NetworkUtils(纯子集 getBaseUrl/isIPAddress/getSubDomain,okhttp publicsuffix),LogUtils(printOnDebug 纯),EncoderUtils(java.util.Base64 + android flag 值映射,替 android.util.Base64)}`;`constant/AppLog`(stderr 占位,待 §3.7 接 kotlin-logging)。
+- `help/http/{StrResponse(剥@Keep),RequestMethod,OkHttpExceptionInterceptor,DecompressInterceptor(+libs.okhttp),api/CookieManagerInterface,CookieUtils,SSLHelper(JVM trust-all 三件套,替 android),OkhttpUncaughtExceptionHandler,HttpHelper(引擎基础 okHttpClient:超时+trust-all SSL+2 拦截器+Keep-Alive+UA(Platform.appConfig),弃 Glide/SSLHelper-android/CookieManager/addressCache/Cronet,留 app 增强)}`;`help/{LruCache(JVM LinkedHashMap access-order,替 androidx.collection.LruCache),CacheManager(字符串缓存→Repositories.cache,弃 ACache 磁盘/@JavascriptInterface;AppCacheManager/WebCacheManager 留 app/),CookieStore(弃 android.webkit.CookieManager、appDb→Repositories.cookie、内存 map 替 CacheManager、getSubDomain 抽纯、折叠 helper)}`。
+- `model/analyzeRule/{AnalyzeByJSoup,AnalyzeByRegex,AnalyzeByXPath(TextUtils→StringUtils),AnalyzeByJSonPath(剥@Keep),RuleAnalyzer,RuleData,RuleDataInterface}`(+libs.jsoup/jsoupxpath/json.path)。
+- `help/JsExtensions` 簇①a/①b(strToBytes/bytesToStr、hex、timeFormatUTC、encodeURI、base64 全套、timeFormat)——⚠️ **见 9.4 结构返工**。
+
+**两个 Android 耦合 helper 已架构重构进引擎并绿**:CookieStore(弃 android.webkit.CookieManager)、CacheManager(JVM LruCache 弃 androidx/ACache)。证明盲推架构重构可行(至今仅 1 处 KDoc 嵌套 `/*` 注释语法修复 + 1 处缺 import + 1 处边界 grep 锚定修复)。
+
+### 9.2 服务器(Phase 2)已验证可跑(成品验证)
+
+- reader-mt 服务器搬进 `modules/server`(`vendor/reader-mt` 改名而来)。**保留自有工具链**:Docker 内 `gradle:7-jdk8` + `cli.gradle`(Kotlin 1.5.21/Java 8)构建,运行时 `amazoncorretto:8-jre`。详见 9.3 为什么不能作为 root-Gradle 子项目。
+- `settings.gradle` **移除 `:modules:server`**(root Gradle 不构建它);`engine-cross-check.yml` 只构建 `:legado-engine`(移除 `:server` 构建与 server 包名边界 grep——服务器仍带 io/legado/app 快照,该边界是 Phase 3 目标)。
+- `docker.yml`:`workflow_dispatch` + tag `v*` 触发;构建 `modules/server/Dockerfile.source` 推 GHCR(`ghcr.io/urbanescavenger/readermt:unify` 及 `:sha-<short>`,分支推送也推 `:unify` 后改为 dispatch+tag 节省 CI)。镜像默认 private,需 GitHub Packages 设 public 才能匿名 pull。
+- **CI 已验**:Docker 镜像构建成功,`docker run` 后 `curl localhost:8080/` 6 秒返回 Vue 首页。
+- **用户端验(完整)**:用样例书源「未来天王」(`http://www.weilaitianwang.info#🎃`,纯 HTTP、不过 CF)经 UI 导入后**可搜书、可阅读**。此书源为已知可用黄金样例,将来 §5c fixture parity 用(届时需抓其 search/书详情/章节页 HTML 作 fixture)。
+
+### 9.3 关键发现 1:服务器必须保留自有工具链(修正 §4 Phase 2「锁版本」假设)
+
+monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 **Kotlin 1.5.21 / Java 8 / Spring 2.1.6 / Vert.x 3.8.1**。**一个 Gradle 构建无法容纳两个 Kotlin 版本**(Kotlin 1.5 编译器/运行时读不了 2.3 元数据,Java 8 运行时加载不了 Java 17 字节码)。所以 §4「Phase 2 锁版本不升级」的假设在「服务器作为 root-Gradle 子项目消费 `:legado-engine`」这件事上**不成立**。
+
+**结论**:服务器**保留自有工具链,只在 Docker 内构建,不进 root Gradle**(已落地)。代价:服务器要消费 `:legado-engine` 的 jar,必须**先升级到 Kotlin 2.3.21 + 兼容 Java + 兼容 Spring/Vert.x**(即 §4 的 Phase 4 升级,被现实提前成「服务器侧 parity」的门槛)。两条 parity 路(服务器活站 diff、§5c fixture)都绕不开硬核(见 9.4)。
+
+### 9.4 关键发现 2:真实引擎层级结构与 big bang 真实规模(修正 §3.3 / §8 估计)
+
+执行中摸清真实结构:`interface JsEncodeUtils`(~500 行加密接口)← `interface JsExtensions : JsEncodeUtils` ← `interface BaseSource : JsExtensions` ← `BookSource`/`RssSource`(data class)。**注意:`JsExtensions`/`JsEncodeUtils` 是接口,不是 object**——9.1 中 `help/JsExtensions` 簇①a/①b 写成了 `object`,**结构错误,需返工**为 `interface JsEncodeUtils`(编码默认方法)+ `interface JsExtensions : JsEncodeUtils`(HTTP/WebView 等待加)。
+
+真实 big bang ≈ **5000+ 行互递归一次性进引擎**:
+- `JsEncodeUtils`(~500 行加密:md5/AES/DES/3DES/HMac/对称/非对称/签名,用 hutool-crypto + `help.crypto.{AsymmetricCrypto,Sign,SymmetricCryptoAndroid}` android 加密需移植;书源解密正文依赖,**引擎必需**,parity 敏感)。
+- `JsExtensions` 剩余 ~85 方法(HTTP:ajax/connect 调 `AnalyzeUrl`;get/post/head 调 jsoup+SSLHelper+`getSource():BaseSource`+ConcurrentRateLimiter;WebView:webView*/startBrowser→Platform.webView;Cookie:getCookie→CookieStore;文件→Platform.context;源:getSource/getTag)。
+- `BaseSource`(interface:login 流程[RowUi UI + `AppConst.androidId` AES + SymmetricCryptoAndroid,app 交互专属,拟省略进 app] + variable[CacheManager] + evalJS[com.script→Platform.rhino + getShareScope] + ConcurrentRateLimiter)。
+- `ConcurrentRateLimiter` ↔ `AnalyzeUrl.ConcurrentRecord`(互递归,需把 ConcurrentRecord 抽独立类解环)。
+- `AnalyzeUrl`(~700行)+ `AnalyzeRule`(~700行):com.script→RhinoEngine、WebView→Platform.webView、JS 共享作用域语义(`getShareScope`/`SharedJsScope`→`Platform.rhino.getOrCreateSharedScope`,§3.3 最高风险 seam,只能 parity 验)。
+- `help.source`(getShareScope/clearExploreKindsCache,重 android)、`SharedJsScope`。
+
+这是计划 **Phase 1 的整个 2–3 周最高风险核心**,非一条盲推能收敛;且 `JsExtensions` 增量搬在 HTTP 簇就被 `AnalyzeUrl`/`BaseSource`/com.script 钉死(互递归),不能逐簇,必须 big bang。
+
+### 9.5 下一步抉择(待用户定)
+
+- **A**:盲推 5000+ 行核心(从 `JsEncodeUtils` 加密簇 + 结构返工开始,CI 试错,多会话马拉松;加密/scope 语义盲定,错了 parity 才发现)。
+- **B**:停在 9.1/9.2 干净绿地基(服务器已验、引擎机械部分已搬),把 5000 行设计密集核心作为后续聚焦(配 §5c parity,逐簇在 CI 上慢推但承认是长跑)。
+
+**记忆**:`C:\Users\Mort\.claude\projects\e--GITHUB-readerMT\memory\monorepo-unify-progress.md` 同步维护,后续会话可续。
