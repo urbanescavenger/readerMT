@@ -8,15 +8,22 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.help.http.CookieStore
+import io.legado.app.help.ConcurrentRateLimiter
+import io.legado.app.help.http.CookieManager.cookieJarHeader
+import io.legado.app.help.http.SSLHelper
+import io.legado.app.help.http.StrResponse
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.platform.Platform
 import io.legado.app.utils.ChineseUtils
 import io.legado.app.utils.EncodingDetect
 import io.legado.app.utils.EncoderUtils
 import io.legado.app.utils.FileUtils
+import io.legado.app.utils.GSON
 import io.legado.app.utils.HtmlFormatter
 import io.legado.app.utils.JsURL
 import io.legado.app.utils.StringUtils
+import io.legado.app.utils.fromJsonObject
+import io.legado.app.utils.mapAsync
 import io.legado.app.utils.stackTraceStr
 import java.io.File
 import java.net.URLEncoder
@@ -27,7 +34,14 @@ import java.util.SimpleTimeZone
 import java.util.UUID
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import org.jsoup.Connection
+import org.jsoup.Jsoup
 
 /**
  * 引擎版 JsExtensions(书源 JS 的 API 表面,计划 §3.3 / §9.4)。
@@ -194,6 +208,276 @@ interface JsExtensions : JsEncodeUtils {
         }.getOrElse {
             it.stackTraceStr
         }
+    }
+
+    /**
+     * 并发访问网络
+     */
+    fun ajaxAll(urlList: Array<String>): Array<StrResponse> {
+        return ajaxAll(urlList, false)
+    }
+
+    fun ajaxAll(urlList: Array<String>, skipRateLimit: Boolean): Array<StrResponse> {
+        return runBlocking(context) {
+            urlList.asFlow().mapAsync(Platform.appConfig.threadCount) { url ->
+                val analyzeUrl = AnalyzeUrl(
+                    url,
+                    source = getSource(),
+                    coroutineContext = coroutineContext
+                )
+                analyzeUrl.getStrResponseAwait(skipRateLimit = skipRateLimit)
+            }.flowOn(IO).toList().toTypedArray()
+        }
+    }
+
+    /**
+     * 并发测试网络
+     */
+    fun ajaxTestAll(urlList: Array<String>, timeout: Int): Array<StrResponse> {
+        return ajaxTestAll(urlList, timeout, false)
+    }
+
+    fun ajaxTestAll(urlList: Array<String>, timeout: Int, skipRateLimit: Boolean): Array<StrResponse> {
+        return runBlocking(context) {
+            urlList.asFlow().mapAsync(Platform.appConfig.threadCount) { url ->
+                val analyzeUrl = AnalyzeUrl(
+                    url,
+                    source = getSource(),
+                    coroutineContext = coroutineContext,
+                    callTimeout = timeout.toLong()
+                )
+                analyzeUrl.getStrResponseAwait(isTest = true, skipRateLimit = skipRateLimit)
+            }.flowOn(IO).toList().toTypedArray()
+        }
+    }
+
+    /**
+     * 访问网络,返回Response<String>
+     */
+    fun connect(urlStr: String): StrResponse {
+        val analyzeUrl = AnalyzeUrl(
+            urlStr,
+            source = getSource(),
+            coroutineContext = context
+        )
+        return kotlin.runCatching {
+            analyzeUrl.getStrResponse()
+        }.onFailure {
+            Platform.rhino.currentCoroutineContext()?.ensureActive()
+            AppLog.put("connect($urlStr) error\n${it.localizedMessage}", it)
+        }.getOrElse {
+            StrResponse(analyzeUrl.url, it.stackTraceStr)
+        }
+    }
+
+    fun connect(urlStr: String, header: String?): StrResponse {
+        return connect(urlStr, header, null)
+    }
+
+    fun connect(urlStr: String, header: String?, callTimeout: Long?): StrResponse {
+        val headerMap = GSON.fromJsonObject<Map<String, String>>(header).getOrNull()
+        val analyzeUrl = AnalyzeUrl(
+            urlStr,
+            headerMapF = headerMap,
+            source = getSource(),
+            callTimeout = callTimeout,
+            coroutineContext = context
+        )
+        return kotlin.runCatching {
+            analyzeUrl.getStrResponse()
+        }.onFailure {
+            Platform.rhino.currentCoroutineContext()?.ensureActive()
+            AppLog.put("connect($urlStr,$header) error\n${it.localizedMessage}", it)
+        }.getOrElse {
+            StrResponse(analyzeUrl.url, it.stackTraceStr)
+        }
+    }
+
+    fun webView(html: String?, url: String?, js: String?): String? {
+        return webView(html, url, js, false)
+    }
+
+    /**
+     * 使用webView访问网络
+     * @param html 直接用webView载入的html, 如果html为空直接访问url
+     * @param url html内如果有相对路径的资源不传入url访问不了
+     * @param js 用来取返回值的js语句, 没有就返回整个源代码
+     * @param cacheFirst 优先使用缓存,为true能提高访问速度
+     * @return 返回js获取的内容
+     */
+    fun webView(html: String?, url: String?, js: String?, cacheFirst: Boolean): String? {
+        if (Platform.isMainThread()) {
+            error("webView must be called on a background thread")
+        }
+        return runBlocking(context) {
+            Platform.webView.renderHtmlWithJs(
+                url,
+                html ?: "",
+                js ?: "",
+                getSource()?.getHeaderMap(true),
+                getSource()?.getKey(),
+                cacheFirst,
+                0L,
+                null
+            )
+        }
+    }
+
+    fun webViewGetSource(html: String?, url: String?, js: String?, sourceRegex: String): String? {
+        return webViewGetSource(html, url, js, sourceRegex, false, 0)
+    }
+
+    fun webViewGetSource(html: String?, url: String?, js: String?, sourceRegex: String, cacheFirst: Boolean): String? {
+        return webViewGetSource(html, url, js, sourceRegex, cacheFirst, 0)
+    }
+
+    /**
+     * 使用webView获取资源url
+     */
+    fun webViewGetSource(
+        html: String?,
+        url: String?,
+        js: String?,
+        sourceRegex: String,
+        cacheFirst: Boolean,
+        delayTime: Long
+    ): String? {
+        if (Platform.isMainThread()) {
+            error("webViewGetSource must be called on a background thread")
+        }
+        return runBlocking(context) {
+            Platform.webView.renderHtmlWithJs(
+                url,
+                html ?: "",
+                js ?: "",
+                getSource()?.getHeaderMap(true),
+                getSource()?.getKey(),
+                sourceRegex,
+                null,
+                cacheFirst,
+                0L,
+                delayTime,
+                null
+            )
+        }
+    }
+
+    fun webViewGetOverrideUrl(html: String?, url: String?, js: String?, overrideUrlRegex: String): String? {
+        return webViewGetOverrideUrl(html, url, js, overrideUrlRegex, false, 0)
+    }
+
+    fun webViewGetOverrideUrl(html: String?, url: String?, js: String?, overrideUrlRegex: String, cacheFirst: Boolean): String? {
+        return webViewGetOverrideUrl(html, url, js, overrideUrlRegex, cacheFirst, 0)
+    }
+
+    /**
+     * 使用webView获取跳转url
+     */
+    fun webViewGetOverrideUrl(
+        html: String?,
+        url: String?,
+        js: String?,
+        overrideUrlRegex: String,
+        cacheFirst: Boolean,
+        delayTime: Long
+    ): String? {
+        if (Platform.isMainThread()) {
+            error("webViewGetOverrideUrl must be called on a background thread")
+        }
+        return runBlocking(context) {
+            Platform.webView.renderHtmlWithJs(
+                url,
+                html ?: "",
+                js ?: "",
+                getSource()?.getHeaderMap(true),
+                getSource()?.getKey(),
+                null,
+                overrideUrlRegex,
+                cacheFirst,
+                0L,
+                delayTime,
+                null
+            )
+        }
+    }
+
+    /**
+     * js实现重定向拦截,网络访问get
+     */
+    fun get(urlStr: String, headers: Map<String, String>): Connection.Response {
+        return get(urlStr, headers, null)
+    }
+
+    fun get(urlStr: String, headers: Map<String, String>, timeout: Int?): Connection.Response {
+        val requestHeaders = if (getSource()?.enabledCookieJar == true) {
+            headers.toMutableMap().apply { put(cookieJarHeader, "1") }
+        } else headers
+        val rateLimiter = ConcurrentRateLimiter(getSource()?.getKey(), getSource()?.concurrentRate)
+        val response = rateLimiter.withLimitBlocking {
+            Platform.rhino.currentCoroutineContext()?.ensureActive()
+            Jsoup.connect(urlStr)
+                .sslSocketFactory(SSLHelper.unsafeSSLSocketFactory)
+                .timeout(timeout ?: 30000)
+                .ignoreContentType(true)
+                .followRedirects(false)
+                .headers(requestHeaders)
+                .method(Connection.Method.GET)
+                .execute()
+        }
+        return response
+    }
+
+    /**
+     * js实现重定向拦截,网络访问head,不返回Response Body更省流量
+     */
+    fun head(urlStr: String, headers: Map<String, String>): Connection.Response {
+        return head(urlStr, headers, null)
+    }
+
+    fun head(urlStr: String, headers: Map<String, String>, timeout: Int?): Connection.Response {
+        val requestHeaders = if (getSource()?.enabledCookieJar == true) {
+            headers.toMutableMap().apply { put(cookieJarHeader, "1") }
+        } else headers
+        val rateLimiter = ConcurrentRateLimiter(getSource()?.getKey(), getSource()?.concurrentRate)
+        val response = rateLimiter.withLimitBlocking {
+            Platform.rhino.currentCoroutineContext()?.ensureActive()
+            Jsoup.connect(urlStr)
+                .sslSocketFactory(SSLHelper.unsafeSSLSocketFactory)
+                .timeout(timeout ?: 30000)
+                .ignoreContentType(true)
+                .followRedirects(false)
+                .headers(requestHeaders)
+                .method(Connection.Method.HEAD)
+                .execute()
+        }
+        return response
+    }
+
+    /**
+     * 网络访问post
+     */
+    fun post(urlStr: String, body: String, headers: Map<String, String>): Connection.Response {
+        return post(urlStr, body, headers, null)
+    }
+
+    fun post(urlStr: String, body: String, headers: Map<String, String>, timeout: Int?): Connection.Response {
+        val requestHeaders = if (getSource()?.enabledCookieJar == true) {
+            headers.toMutableMap().apply { put(cookieJarHeader, "1") }
+        } else headers
+        val rateLimiter = ConcurrentRateLimiter(getSource()?.getKey(), getSource()?.concurrentRate)
+        val response = rateLimiter.withLimitBlocking {
+            Platform.rhino.currentCoroutineContext()?.ensureActive()
+            Jsoup.connect(urlStr)
+                .sslSocketFactory(SSLHelper.unsafeSSLSocketFactory)
+                .timeout(timeout ?: 30000)
+                .ignoreContentType(true)
+                .followRedirects(false)
+                .requestBody(body)
+                .headers(requestHeaders)
+                .method(Connection.Method.POST)
+                .execute()
+        }
+        return response
     }
 
     /** js 实现读取 cookie */
