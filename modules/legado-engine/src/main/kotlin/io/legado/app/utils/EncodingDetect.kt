@@ -36,7 +36,7 @@ object EncodingDetect {
             var charsetStr: String
             for (metaTag in metaTags) {
                 charsetStr = metaTag.attr("charset")
-                if (!isEmpty(charsetStr)) {
+                if (!StringUtils.isEmpty(charsetStr)) {
                     return charsetStr
                 }
                 val httpEquiv = metaTag.attr("http-equiv")
@@ -48,7 +48,7 @@ object EncodingDetect {
                     } else {
                         content.substringAfter(";")
                     }
-                    if (!isEmpty(charsetStr)) {
+                    if (!StringUtils.isEmpty(charsetStr)) {
                         return charsetStr
                     }
                 }
