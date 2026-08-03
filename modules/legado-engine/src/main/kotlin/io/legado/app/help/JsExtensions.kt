@@ -49,7 +49,7 @@ import kotlinx.coroutines.ensureActive
  *   htmlFormat/log/logType/getFile/readFile/readTxtFile/deleteFile)。
  * 待 2c-3 闭包(阻塞 AnalyalyzeUrl):HTTP(ajax/ajaxAll/ajaxTestAll/connect/get/post/head)、
  * downloadFile、getZip/Rar/7zByteArrayContent、queryTTF、importScript/cacheFile、
- * webView*/webViewGetSource/webViewGetOverrideUrl/startBrowser*。
+ * webView 系列(webViewGetSource/webViewGetOverrideUrl/startBrowserAwait)。
  */
 interface JsExtensions : JsEncodeUtils {
 
