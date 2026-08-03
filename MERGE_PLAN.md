@@ -245,7 +245,8 @@ d. **CI 强制(常开)**:`:legado-engine` 禁 import `android.*`/`androidx.*`/`c
 - `utils/{GsonExtensions(+libs.gson),StringUtils(TextUtils 替:isEmpty/join),Utf8BomUtils,StringExtensions.splitNotBlank,NetworkUtils(纯子集 getBaseUrl/isIPAddress/getSubDomain,okhttp publicsuffix),LogUtils(printOnDebug 纯),EncoderUtils(java.util.Base64 + android flag 值映射,替 android.util.Base64)}`;`constant/AppLog`(stderr 占位,待 §3.7 接 kotlin-logging)。
 - `help/http/{StrResponse(剥@Keep),RequestMethod,OkHttpExceptionInterceptor,DecompressInterceptor(+libs.okhttp),api/CookieManagerInterface,CookieUtils,SSLHelper(JVM trust-all 三件套,替 android),OkhttpUncaughtExceptionHandler,HttpHelper(引擎基础 okHttpClient:超时+trust-all SSL+2 拦截器+Keep-Alive+UA(Platform.appConfig),弃 Glide/SSLHelper-android/CookieManager/addressCache/Cronet,留 app 增强)}`;`help/{LruCache(JVM LinkedHashMap access-order,替 androidx.collection.LruCache),CacheManager(字符串缓存→Repositories.cache,弃 ACache 磁盘/@JavascriptInterface;AppCacheManager/WebCacheManager 留 app/),CookieStore(弃 android.webkit.CookieManager、appDb→Repositories.cookie、内存 map 替 CacheManager、getSubDomain 抽纯、折叠 helper)}`。
 - `model/analyzeRule/{AnalyzeByJSoup,AnalyzeByRegex,AnalyzeByXPath(TextUtils→StringUtils),AnalyzeByJSonPath(剥@Keep),RuleAnalyzer,RuleData,RuleDataInterface}`(+libs.jsoup/jsoupxpath/json.path)。
-- `help/JsExtensions` 簇①a/①b(strToBytes/bytesToStr、hex、timeFormatUTC、encodeURI、base64 全套、timeFormat)——✅ **9.4 结构返工已落地**:由 `object` 改为 `interface JsExtensions : JsEncodeUtils`(13 方法成默认方法),新建空壳 `interface JsEncodeUtils`(加密簇待 big-bang)。
+- `help/JsExtensions` 簇①a/①b(strToBytes/bytesToStr、hex、timeFormatUTC、encodeURI、base64 全套、timeFormat)——✅ **9.4 结构返工已落地**:由 `object` 改为 `interface JsExtensions : JsEncodeUtils`(13 方法成默认方法)。
+- `help/JsEncodeUtils` 加密簇——✅ **§9.5 A big-bang batch 1 已落地并 CI 双绿**(commit `6d15a43a0`):填入全部加密默认方法(md5/AES/DES/3DES/digest/HMac/createSymmetricCrypto/createAsymmetricCrypto/createSign),去 `@JavascriptInterface`,`android.util.Base64`→`EncoderUtils`(NO_WRAP flag 映射)。配套移植 `utils/MD5Utils`(纯 JVM)、`utils/StringExtensions.isHex`、`help/crypto/{SymmetricCryptoAndroid,AsymmetricCrypto,Sign}`(去 `@Keep`,背靠 hutool-crypto)。`build.gradle` 加 `libs.hutool.crypto`(catalog 已有 5.8.22)。自包含,不碰 AnalyzeUrl/BaseSource/com.script。
 
 **两个 Android 耦合 helper 已架构重构进引擎并绿**:CookieStore(弃 android.webkit.CookieManager)、CacheManager(JVM LruCache 弃 androidx/ACache)。证明盲推架构重构可行(至今仅 1 处 KDoc 嵌套 `/*` 注释语法修复 + 1 处缺 import + 1 处边界 grep 锚定修复)。
 
@@ -281,9 +282,9 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 
 这是计划 **Phase 1 的整个 2–3 周最高风险核心**,非一条盲推能收敛;且 `JsExtensions` 增量搬在 HTTP 簇就被 `AnalyzeUrl`/`BaseSource`/com.script 钉死(互递归),不能逐簇,必须 big bang。
 
-### 9.5 下一步抉择(待用户定;9.4 结构返工已绿,故抉择仅剩 big-bang 是否启动)
+### 9.5 下一步抉择(用户已选 A;加密簇 batch 1 已绿,推进中)
 
-- **A**:盲推 5000+ 行核心(从 `JsEncodeUtils` 加密簇开始——结构骨架已就位,CI 试错,多会话马拉松;加密/scope 语义盲定,错了 parity 才发现)。
-- **B**:停在 9.1/9.2 干净绿地基 + 9.4 结构骨架(服务器已验、引擎机械部分已搬、继承层级就位),把 5000 行设计密集核心作为后续聚焦(配 §5c parity,逐簇在 CI 上慢推但承认是长跑)。
+- **A**(进行中):盲推 5000+ 行核心。**batch 1 = JsEncodeUtils 加密簇已落地并 CI 双绿**(`6d15a43a0`,自包含,无互递归)。下一批 = 进入**互递归核心**:`JsExtensions` HTTP 簇(ajax/connect→AnalyzeUrl)+ WebView 簇(→Platform.webView)+ `BaseSource`(com.script→RhinoEngine、getShareScope)+ `AnalyzeUrl`/`AnalyzeRule`(com.script→RhinoEngine、WebView→WebViewRenderer)。此 chunk 被 `AnalyzeUrl`/`BaseSource`/com.script 互递归钉死,须一次性 big bang,CI 试错多会话马拉松;加密/scope 语义盲定,错了 parity 才发现。
+- **B**(未选):停在绿地基 + 骨架,把核心作后续聚焦。
 
 **记忆**:`C:\Users\Mort\.claude\projects\e--GITHUB-readerMT\memory\monorepo-unify-progress.md` 同步维护,后续会话可续。
