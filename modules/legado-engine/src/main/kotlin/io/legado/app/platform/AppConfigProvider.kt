@@ -17,4 +17,7 @@ interface AppConfigProvider {
 
     /** 缓存目录路径。 */
     val cachePath: String
+
+    /** HTTP User-Agent(引擎 okHttpClient 默认 UA 头)。 */
+    val userAgent: String
 }
