@@ -17,7 +17,10 @@ kotlin {
 dependencies {
     implementation libs.gson
     implementation libs.okhttp
-    // implementation libs.jsoup
+    implementation libs.jsoup
+    implementation libs.jsoupxpath
+    implementation libs.json.path
+    // implementation libs.mozilla.rhino
     // implementation libs.json.path
     // implementation libs.mozilla.rhino
     // implementation libs.kotlinx.coroutines.core
