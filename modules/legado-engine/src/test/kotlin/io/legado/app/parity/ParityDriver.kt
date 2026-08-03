@@ -69,22 +69,28 @@ object ParityDriver {
 
     /**
      * §5c 规范化结果 hash(SHA-256 hex):按 bookUrl 排序去页面顺序抖动,每项按
-     * [FIELD_ORDER] 取值(null→""),字段以 `` 分隔、条目以 `\n` 分隔。
+     * [FIELD_ORDER] 取值(null→""),字段以 `` 分隔、条目以 `\n` 分隔。
      *
      * 此 hash 即 parity 契约常量:引擎解析逻辑若意外变动 → hash 变 → 测试红,
      * 需人工核对输出后更新常量(回归闸门)。三端 parity 时 app/server 用同一 fixture
      * 复跑须产出同一 hash。
      */
     fun normalizedHash(books: List<Map<String, String?>>): String {
+        val sb = normalizedString(books)
+        val digest = MessageDigest.getInstance("SHA-256").digest(sb.toByteArray(Charsets.UTF_8))
+        // Byte 有符号,>= 0x80 字节被 %x 符号扩展成 8 位 hex;先 and 0xFF 转无符号,
+        // 确保每字节恰 2 位 hex(与 python hexdigest 一致)。
+        return digest.joinToString("") { "%02x".format(it.toInt() and 0xFF) }
+    }
+
+    /** 规范化字符串(hash 前明文),诊断用。 */
+    fun normalizedString(books: List<Map<String, String?>>): String {
         val sorted = books.sortedBy { it["bookUrl"].orEmpty() }
         val sb = StringBuilder()
         for ((i, book) in sorted.withIndex()) {
             if (i > 0) sb.append('\n')
-            sb.append(FIELD_ORDER.joinToString("") { book[it].orEmpty() })
+            sb.append(FIELD_ORDER.joinToString("") { book[it].orEmpty() })
         }
-        val digest = MessageDigest.getInstance("SHA-256").digest(sb.toString().toByteArray(Charsets.UTF_8))
-        // 注意:Byte 是有符号,>= 0x80 的字节会被 %x 符号扩展成 8 位 hex。
-        // 先 `and 0xFF` 转无符号 0..255,确保每字节恰 2 位 hex(与 python hexdigest 一致)。
-        return digest.joinToString("") { "%02x".format(it.toInt() and 0xFF) }
+        return sb.toString()
     }
 }

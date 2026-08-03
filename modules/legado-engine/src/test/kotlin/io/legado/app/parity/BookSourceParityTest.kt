@@ -62,6 +62,8 @@ class BookSourceParityTest {
         val source = loadSource("/parity/synthetic_jsoup/source.json")
         val html = resourceText("/parity/synthetic_jsoup/search.html")
         val books = ParityDriver.parseSearch(source, html, baseUrl)
+        println("JSOUP books=${books}")
+        println("JSOUP normalizedString=${ParityDriver.normalizedString(books)}")
         val actual = ParityDriver.normalizedHash(books)
         println("JSOUP_HASH expected=$JSOUP_HASH actual=$actual")
         assertEquals(
