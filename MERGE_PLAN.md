@@ -245,7 +245,7 @@ d. **CI 强制(常开)**:`:legado-engine` 禁 import `android.*`/`androidx.*`/`c
 - `utils/{GsonExtensions(+libs.gson),StringUtils(TextUtils 替:isEmpty/join),Utf8BomUtils,StringExtensions.splitNotBlank,NetworkUtils(纯子集 getBaseUrl/isIPAddress/getSubDomain,okhttp publicsuffix),LogUtils(printOnDebug 纯),EncoderUtils(java.util.Base64 + android flag 值映射,替 android.util.Base64)}`;`constant/AppLog`(stderr 占位,待 §3.7 接 kotlin-logging)。
 - `help/http/{StrResponse(剥@Keep),RequestMethod,OkHttpExceptionInterceptor,DecompressInterceptor(+libs.okhttp),api/CookieManagerInterface,CookieUtils,SSLHelper(JVM trust-all 三件套,替 android),OkhttpUncaughtExceptionHandler,HttpHelper(引擎基础 okHttpClient:超时+trust-all SSL+2 拦截器+Keep-Alive+UA(Platform.appConfig),弃 Glide/SSLHelper-android/CookieManager/addressCache/Cronet,留 app 增强)}`;`help/{LruCache(JVM LinkedHashMap access-order,替 androidx.collection.LruCache),CacheManager(字符串缓存→Repositories.cache,弃 ACache 磁盘/@JavascriptInterface;AppCacheManager/WebCacheManager 留 app/),CookieStore(弃 android.webkit.CookieManager、appDb→Repositories.cookie、内存 map 替 CacheManager、getSubDomain 抽纯、折叠 helper)}`。
 - `model/analyzeRule/{AnalyzeByJSoup,AnalyzeByRegex,AnalyzeByXPath(TextUtils→StringUtils),AnalyzeByJSonPath(剥@Keep),RuleAnalyzer,RuleData,RuleDataInterface}`(+libs.jsoup/jsoupxpath/json.path)。
-- `help/JsExtensions` 簇①a/①b(strToBytes/bytesToStr、hex、timeFormatUTC、encodeURI、base64 全套、timeFormat)——⚠️ **见 9.4 结构返工**。
+- `help/JsExtensions` 簇①a/①b(strToBytes/bytesToStr、hex、timeFormatUTC、encodeURI、base64 全套、timeFormat)——✅ **9.4 结构返工已落地**:由 `object` 改为 `interface JsExtensions : JsEncodeUtils`(13 方法成默认方法),新建空壳 `interface JsEncodeUtils`(加密簇待 big-bang)。
 
 **两个 Android 耦合 helper 已架构重构进引擎并绿**:CookieStore(弃 android.webkit.CookieManager)、CacheManager(JVM LruCache 弃 androidx/ACache)。证明盲推架构重构可行(至今仅 1 处 KDoc 嵌套 `/*` 注释语法修复 + 1 处缺 import + 1 处边界 grep 锚定修复)。
 
@@ -265,7 +265,11 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 
 ### 9.4 关键发现 2:真实引擎层级结构与 big bang 真实规模(修正 §3.3 / §8 估计)
 
-执行中摸清真实结构:`interface JsEncodeUtils`(~500 行加密接口)← `interface JsExtensions : JsEncodeUtils` ← `interface BaseSource : JsExtensions` ← `BookSource`/`RssSource`(data class)。**注意:`JsExtensions`/`JsEncodeUtils` 是接口,不是 object**——9.1 中 `help/JsExtensions` 簇①a/①b 写成了 `object`,**结构错误,需返工**为 `interface JsEncodeUtils`(编码默认方法)+ `interface JsExtensions : JsEncodeUtils`(HTTP/WebView 等待加)。
+执行中摸清真实结构:`interface JsEncodeUtils`(~500 行加密接口)← `interface JsExtensions : JsEncodeUtils` ← `interface BaseSource : JsExtensions` ← `BookSource`/`RssSource`(data class)。**注意:`JsExtensions`/`JsEncodeUtils` 是接口,不是 object**——9.1 中 `help/JsExtensions` 簇①a/①b 写成了 `object`,**结构错误,需返工**为 `interface JsEncodeUtils` + `interface JsExtensions : JsEncodeUtils`。
+
+**⚠️ 措辞修正**:本节原文将 JsEncodeUtils 称为"编码默认方法",但核实 app 后确认 `JsEncodeUtils` 是**纯加密**(md5/AES/DES/3DES/digest/HMac/createSymmetricCrypto/createAsymmetricCrypto/createSign,517 行);9.1 已搬的 13 个方法(strToBytes/bytesToStr/hex/base64/encodeURI/timeFormat/timeFormatUTC)在 app 中**全部属 `JsExtensions`**,不属 `JsEncodeUtils`。返工须忠实 app 拆分。
+
+**✅ 9.4 结构返工已落地并 CI 双绿**(commit `ea05bb90e`,`monorepo/unify`):新建空壳 `interface JsEncodeUtils`(加密簇待 big-bang);`help/JsExtensions` 由 `object` 改为 `interface JsExtensions : JsEncodeUtils`,13 个已搬方法成默认方法。**暂不加**抽象 `getSource()/getTag()`(避免拉入未搬的 BaseSource)。纯结构、零新依赖/新 import,边界 grep 仍 0 命中,app/ 未动。继承骨架就位,等用户在 9.5 定 A/B。
 
 真实 big bang ≈ **5000+ 行互递归一次性进引擎**:
 - `JsEncodeUtils`(~500 行加密:md5/AES/DES/3DES/HMac/对称/非对称/签名,用 hutool-crypto + `help.crypto.{AsymmetricCrypto,Sign,SymmetricCryptoAndroid}` android 加密需移植;书源解密正文依赖,**引擎必需**,parity 敏感)。
@@ -277,9 +281,9 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 
 这是计划 **Phase 1 的整个 2–3 周最高风险核心**,非一条盲推能收敛;且 `JsExtensions` 增量搬在 HTTP 簇就被 `AnalyzeUrl`/`BaseSource`/com.script 钉死(互递归),不能逐簇,必须 big bang。
 
-### 9.5 下一步抉择(待用户定)
+### 9.5 下一步抉择(待用户定;9.4 结构返工已绿,故抉择仅剩 big-bang 是否启动)
 
-- **A**:盲推 5000+ 行核心(从 `JsEncodeUtils` 加密簇 + 结构返工开始,CI 试错,多会话马拉松;加密/scope 语义盲定,错了 parity 才发现)。
-- **B**:停在 9.1/9.2 干净绿地基(服务器已验、引擎机械部分已搬),把 5000 行设计密集核心作为后续聚焦(配 §5c parity,逐簇在 CI 上慢推但承认是长跑)。
+- **A**:盲推 5000+ 行核心(从 `JsEncodeUtils` 加密簇开始——结构骨架已就位,CI 试错,多会话马拉松;加密/scope 语义盲定,错了 parity 才发现)。
+- **B**:停在 9.1/9.2 干净绿地基 + 9.4 结构骨架(服务器已验、引擎机械部分已搬、继承层级就位),把 5000 行设计密集核心作为后续聚焦(配 §5c parity,逐簇在 CI 上慢推但承认是长跑)。
 
 **记忆**:`C:\Users\Mort\.claude\projects\e--GITHUB-readerMT\memory\monorepo-unify-progress.md` 同步维护,后续会话可续。
