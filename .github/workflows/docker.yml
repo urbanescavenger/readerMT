@@ -1,8 +1,7 @@
 name: Build Docker Image
 
-# Phase 2: build the server (reader-mt, own toolchain: gradle7/JDK8/cli.gradle)
-# from modules/server/Dockerfile.source. Build = verify the server compiles+
-# packages; run+curl = verify it serves (§5b). Push to GHCR only on tags.
+# 构建服务器(modules/server/Dockerfile.source,独立工具链)并推 GHCR 供下载验证。
+# monorepo/unify 分支推 :unify;tag v* 推 :latest+:<tag>(注意 v* 也会触发 android-build 发布)。
 on:
   push:
     branches: [main, monorepo/unify]
@@ -22,14 +21,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build server image (verify compile + package)
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=unify,enable=${{ github.ref == 'refs/heads/monorepo/unify' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=ref,event=tag
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: ./modules/server
           file: ./modules/server/Dockerfile.source
-          push: false
-          load: true
-          tags: reader:ci
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -37,7 +55,8 @@ jobs:
         continue-on-error: true
         run: |
           set -x
-          docker run -d --name reader -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod reader:ci
+          IMG=$(echo "${{ steps.meta.outputs.tags }}" | head -1)
+          docker run -d --name reader -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod "$IMG"
           for i in $(seq 1 60); do
             if curl -sf http://localhost:8080/ >/dev/null 2>&1; then echo "server up after ${i}x2s"; break; fi
             sleep 2
@@ -47,23 +66,3 @@ jobs:
           echo
           echo "--- docker logs (tail) ---"
           docker logs reader 2>&1 | tail -40 || true
-
-      - name: Login to GHCR (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push to GHCR (tags only)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: docker/build-push-action@v6
-        with:
-          context: ./modules/server
-          file: ./modules/server/Dockerfile.source
-          push: true
-          tags: ghcr.io/${{ github.repository }}:latest,ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
