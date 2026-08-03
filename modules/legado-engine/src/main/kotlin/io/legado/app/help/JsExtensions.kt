@@ -4,6 +4,7 @@ package io.legado.app.help
 
 import cn.hutool.core.codec.Base64
 import cn.hutool.core.util.HexUtil
+import io.legado.app.data.entities.BaseSource
 import io.legado.app.utils.EncoderUtils
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -36,6 +37,12 @@ import java.util.SimpleTimeZone
  * htmlFormat(HtmlFormatter→AnalyzeUrl)。
  */
 interface JsExtensions : JsEncodeUtils {
+
+    /** 书源对象(JS 中 `source`/`java` 可调 `source.getTag()`);由 BaseSource/AnalyzeRule/AnalyzeUrl 实现。 */
+    fun getSource(): BaseSource?
+
+    /** 源标签(日志/缓存键);由 BaseSource/AnalyzeRule 实现。 */
+    fun getTag(): String?
 
     fun strToBytes(str: String): ByteArray {
         return str.toByteArray(charset("UTF-8"))

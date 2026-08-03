@@ -27,4 +27,25 @@ interface WebViewRenderer {
 
     /** 在已加载页面执行 [js] 并返回结果字符串。 */
     fun evalJS(js: String): String
+
+    /**
+     * 在预加载的 [html](非导航 URL)上执行 [javaScript] 并返回结果(body 文本)。
+     * 对应 `AnalyzeRule.getWebJsResult` 调 `BackstageWebView(url,html,javaScript,headerMap,
+     * tag,cacheFirst,timeout,result,isRule=true).getStrResponse().body`。
+     *
+     * - Android `:app`:委托真 `BackstageWebView`;
+     * - `:server`:browserless/jsdom 等价。
+     *
+     * [result] 为上下文 JSON(书源规则中间结果),[tag] 为源键(缓存用),[cacheFirst] 优先缓存。
+     */
+    fun renderHtmlWithJs(
+        url: String?,
+        html: String,
+        javaScript: String,
+        headerMap: Map<String, String>?,
+        tag: String?,
+        cacheFirst: Boolean,
+        timeout: Long,
+        result: String?,
+    ): String
 }
