@@ -4,7 +4,6 @@ name: Build Docker Image
 # monorepo/unify 分支推 :unify;tag v* 推 :latest+:<tag>(注意 v* 也会触发 android-build 发布)。
 on:
   push:
-    branches: [main, monorepo/unify]
     tags: ['v*']
   workflow_dispatch: {}
 
