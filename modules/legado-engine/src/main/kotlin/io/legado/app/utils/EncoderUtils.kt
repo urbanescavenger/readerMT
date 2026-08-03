@@ -21,6 +21,25 @@ object EncoderUtils {
     const val CRLF = 4
     const val URL_SAFE = 8
 
+    /** JS `escape` 编码(对应 readerMT `EncoderUtils.escape`);charset=="escape" 时 AnalyzeUrl 用。 */
+    fun escape(src: String): String {
+        val tmp = StringBuilder()
+        for (char in src) {
+            val charCode = char.code
+            if (charCode in 48..57 || charCode in 65..90 || charCode in 97..122) {
+                tmp.append(char)
+                continue
+            }
+            val prefix = when {
+                charCode < 16 -> "%0"
+                charCode < 256 -> "%"
+                else -> "%u"
+            }
+            tmp.append(prefix).append(charCode.toString(16))
+        }
+        return tmp.toString()
+    }
+
     fun base64Decode(str: String, flags: Int = DEFAULT): String = String(base64DecodeToByteArray(str, flags))
 
     fun base64DecodeToByteArray(str: String, flags: Int = DEFAULT): ByteArray {
