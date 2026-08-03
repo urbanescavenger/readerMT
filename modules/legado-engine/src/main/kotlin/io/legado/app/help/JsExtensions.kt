@@ -12,24 +12,30 @@ import java.util.Locale
 import java.util.SimpleTimeZone
 
 /**
- * 引擎版 JsExtensions(书源 JS 的 API 表面)。
+ * 引擎版 JsExtensions(书源 JS 的 API 表面,计划 §3.3 / §9.4)。
  *
- * readerMT 的 `help/JsExtensions` 是 102 方法的单体对象,深度耦合 android(appCtx/
- * android.webkit.JavascriptInterface/@JavascriptInterface)、com.script、hutool、UI、
- * model.AnalyzeUrl 等。本引擎对象**逐簇往里加方法**:app 的全量 JsExtensions 不动
+ * 对应 readerMT `app/.../help/JsExtensions.kt` 的 `interface JsExtensions : JsEncodeUtils`
+ * (1199 行,102 方法)。本接口**逐簇往里加默认方法**:app 全量 JsExtensions 不动
  * (两端同名不同模块,switchover 前不在同一 classpath,无冲突),引擎版逐步长齐后再让
  * AnalyzeRule 用它。
+ *
+ * 继承:`interface JsExtensions : JsEncodeUtils`(JsEncodeUtils 加密簇待 §9.5 big-bang)。
+ * 抽象成员 `getSource(): BaseSource?`/`getTag(): String?` **暂不加**——待 BaseSource
+ * 进引擎的 big-bang(避免拉入未搬的 BaseSource)。
  *
  * 与 readerMT 的差异:
  * - **去 `@JavascriptInterface`**:那是 android.webkit 的 JS 桥注解;引擎用 RhinoEngine
  *   绑定,不需要。方法仍是 public,可被 JS 调用。
  * - android 专属方法(openVideoPlayer 等)不进引擎。
  *
- * 本批(簇①纯子集):strToBytes/bytesToStr、hex 编解码、timeFormatUTC、encodeURI。
- * 缓:base64 flags 变体(走 android.util.Base64,需 java.util.Base64 重写 + flag 映射)、
- * timeFormat(走 AppConst.dateFormat)、htmlFormat(HtmlFormatter→AnalyzeUrl)。
+ * 已搬(簇①纯子集 + 簇①b):strToBytes/bytesToStr、hex 编解码、timeFormatUTC、encodeURI、
+ * base64 全套(经 EncoderUtils java.util.Base64 + android flag 值映射)、timeFormat
+ * (每次新建 SimpleDateFormat 替 AppConst.dateFormat)。
+ * 待 big-bang:HTTP(ajax/connect→AnalyzeUrl+okHttpClient)、WebView(→Platform.webView)、
+ * Cookie(→CookieStore)、文件(→Platform.context/scriptAssets)、源(getSource/getTag→BaseSource)、
+ * htmlFormat(HtmlFormatter→AnalyzeUrl)。
  */
-object JsExtensions {
+interface JsExtensions : JsEncodeUtils {
 
     fun strToBytes(str: String): ByteArray {
         return str.toByteArray(charset("UTF-8"))
