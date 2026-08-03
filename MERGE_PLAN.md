@@ -288,7 +288,7 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 - **A**(进行中):盲推核心。**修正 §9.4 规模估计**——三份 Explore 报告(AnalyzeUrl/AnalyzeRule/BaseSource)核实:真正互递归**只有一个环**(AnalyzeUrl↔ConcurrentRateLimiter↔ConcurrentRecord),抽 `ConcurrentRecord` 为顶层类即断(batch 2a 已断);其余是 import/SPI 改写 + 补 util 缺口,**可分小批增量、各自 CI 绿**,只有 flip 步骤需闭包同批。
   - ✅ batch 1 = `JsEncodeUtils` 加密簇(`6d15a43a0`,自包含)。
   - ✅ batch 2a = 增量叶子(utils/HTTP helpers/解环/依赖,`4234d13f7`+`de898f705`)。
-  - ⏭️ batch 2b = SPI 扩展(`RhinoEngine.removeSharedScope`+`eval(+coroutineContext)`+`getOrCreateSharedScope` plain-string 实现、`WebViewRenderer.renderHtmlWithJs`、`Platform.bookRefresh`)+ `BaseSource` engine interface(login/refreshExplore 留 app-only open fun)。仍 additive。
+  - ✅ batch 2b = SPI 扩展 + BaseSource interface(`da15431a8`):`RhinoEngine` 加 `removeSharedScope`/`eval(+coroutineContext)`/`CompiledScript.eval(+ctx)`、`getOrCreateSharedScope` 改返 `Any?`;`WebViewRenderer` 加 `renderHtmlWithJs`;`AppConst.UA_NAME`;`data/entities/BaseSource` engine interface(可移植主体 + app-only open fun: getLoginInfo/putLoginInfo/getLoginInfoMap/refreshExplore);`JsExtensions` 补抽象 `getSource():BaseSource?`/`getTag():String?`(9.4 deferred,现补;同模块循环引用 help↔data.entities Kotlin 允许)。CI 双绿。
   - ⏭️ batch 2c = flip(闭包同批):`JsExtensions` 长齐全表面(~85 默认方法)+ `AnalyzeUrl`+`AnalyzeRule` 进引擎,CI 试错马拉松。JS 共享作用域语义(`getShareScope`/`SharedJsScope`→`Platform.rhino.getOrCreateSharedScope`)是 §3.3 最高风险 seam,语义盲定,错了 parity 才发现。
 - **B**(未选):停在绿地基 + 骨架,把核心作后续聚焦。
 
