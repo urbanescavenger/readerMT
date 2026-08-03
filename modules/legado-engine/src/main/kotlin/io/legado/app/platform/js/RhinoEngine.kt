@@ -34,6 +34,16 @@ interface RhinoEngine {
     fun getRuntimeScope(bindings: ScriptBindings): Any
 
     /**
+     * 当前 JS 执行的协程上下文(对应 rhino-android 的 `rhinoContextOrNull`)。
+     *
+     * `JsExtensions` 的 HTTP/WebView/文件等方法从 JS 内被调用时,需拿到当前 eval 的
+     * `coroutineContext` 做 `ensureActive` cancellation 与 `runBlocking` 上下文。实现端在
+     * [eval]/[getOrCreateSharedScope] 执行期间把 ctx 存入 ThreadLocal,本方法读取;无活动
+     * JS 执行时返回 null(对应 `rhinoContextOrNull`)。
+     */
+    fun currentCoroutineContext(): CoroutineContext?
+
+    /**
      * 按源键 [srcKey] 缓存一个共享 scope,编译 [initJs](源的 init JS)一次,后续经原型链复用。
      * 对应 rhino-android 的 `SharedJsScope.getScope`。[initJs] 为空/blank 时返回 null。
      * 完整语义(JSON-URL jsLib 下载+磁盘缓存+preventExtensions)由实现端提供,parity 验留 §5c。

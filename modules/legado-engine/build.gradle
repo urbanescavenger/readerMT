@@ -24,6 +24,7 @@ dependencies {
     implementation libs.hutool.crypto
     implementation libs.commons.text
     implementation libs.kotlinx.coroutines.core
+    implementation libs.quick.chinese.transfer.core
     // implementation libs.mozilla.rhino
     // implementation libs.kotlin.stdlib
 }

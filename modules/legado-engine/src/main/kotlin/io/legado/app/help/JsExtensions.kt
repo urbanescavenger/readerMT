@@ -4,13 +4,28 @@ package io.legado.app.help
 
 import cn.hutool.core.codec.Base64
 import cn.hutool.core.util.HexUtil
+import io.legado.app.constant.AppLog
+import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BaseSource
+import io.legado.app.help.http.CookieStore
+import io.legado.app.platform.Platform
+import io.legado.app.utils.ChineseUtils
+import io.legado.app.utils.EncodingDetect
 import io.legado.app.utils.EncoderUtils
+import io.legado.app.utils.FileUtils
+import io.legado.app.utils.HtmlFormatter
+import io.legado.app.utils.JsURL
+import io.legado.app.utils.StringUtils
+import java.io.File
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.SimpleTimeZone
+import java.util.UUID
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 /**
  * 引擎版 JsExtensions(书源 JS 的 API 表面,计划 §3.3 / §9.4)。
@@ -20,21 +35,21 @@ import java.util.SimpleTimeZone
  * (两端同名不同模块,switchover 前不在同一 classpath,无冲突),引擎版逐步长齐后再让
  * AnalyzeRule 用它。
  *
- * 继承:`interface JsExtensions : JsEncodeUtils`(JsEncodeUtils 加密簇待 §9.5 big-bang)。
- * 抽象成员 `getSource(): BaseSource?`/`getTag(): String?` **暂不加**——待 BaseSource
- * 进引擎的 big-bang(避免拉入未搬的 BaseSource)。
+ * 继承:`interface JsExtensions : JsEncodeUtils`(JsEncodeUtils 加密簇已落地,§9.5 batch 1)。
+ * 抽象成员 `getSource(): BaseSource?`/`getTag(): String?` 已加(batch 2b,由 BaseSource/AnalyzeRule 实现)。
  *
  * 与 readerMT 的差异:
  * - **去 `@JavascriptInterface`**:那是 android.webkit 的 JS 桥注解;引擎用 RhinoEngine
  *   绑定,不需要。方法仍是 public,可被 JS 调用。
- * - android 专属方法(openVideoPlayer 等)不进引擎。
+ * - android 专属方法(openVideoPlayer/openUrl/toast/getReadBookConfig/getThemeConfig 等)不进引擎。
  *
- * 已搬(簇①纯子集 + 簇①b):strToBytes/bytesToStr、hex 编解码、timeFormatUTC、encodeURI、
- * base64 全套(经 EncoderUtils java.util.Base64 + android flag 值映射)、timeFormat
- * (每次新建 SimpleDateFormat 替 AppConst.dateFormat)。
- * 待 big-bang:HTTP(ajax/connect→AnalyzeUrl+okHttpClient)、WebView(→Platform.webView)、
- * Cookie(→CookieStore)、文件(→Platform.context/scriptAssets)、源(getSource/getTag→BaseSource)、
- * htmlFormat(HtmlFormatter→AnalyzeUrl)。
+ * 已搬:
+ * - 簇①(strToBytes/bytesToStr、hex 编解码、timeFormatUTC、encodeURI、base64 全套、timeFormat);
+ * - 簇②非 AnalyzeUrl 阻塞(getCookie/randomUUID/getWebViewUA/t2s/s2t/toURL/toNumChapter/
+ *   htmlFormat/log/logType/getFile/readFile/readTxtFile/deleteFile)。
+ * 待 2c-3 闭包(阻塞 AnalyalyzeUrl):HTTP(ajax/ajaxAll/ajaxTestAll/connect/get/post/head)、
+ * downloadFile、getZip/Rar/7zByteArrayContent、queryTTF、importScript/cacheFile、
+ * webView*/webViewGetSource/webViewGetOverrideUrl/startBrowser*。
  */
 interface JsExtensions : JsEncodeUtils {
 
@@ -143,5 +158,136 @@ interface JsExtensions : JsEncodeUtils {
         // readerMT 用 AppConst.dateFormat(FastDateFormat "yyyy/MM/dd HH:mm",线程安全共享);
         // 引擎无 AppConst,用每次新建 SimpleDateFormat(线程安全)同格式。
         return SimpleDateFormat("yyyy/MM/dd HH:mm").format(Date(time))
+    }
+
+    // ---- 簇②:非 AnalyzeUrl 阻塞的独立方法(Cookie/源/UUID/UA/繁简/URL/章节号/html/文件/日志) ----
+
+    /**
+     * 当前 JS 执行的协程上下文(对应 rhino-android `rhinoContextOrNull`)。
+     * HTTP/WebView/文件簇经它做 `ensureActive` cancellation 与 `runBlocking` 上下文。
+     */
+    private val context: CoroutineContext
+        get() = Platform.rhino.currentCoroutineContext() ?: EmptyCoroutineContext
+
+    /** js 实现读取 cookie */
+    fun getCookie(tag: String): String {
+        return getCookie(tag, null)
+    }
+
+    fun getCookie(tag: String, key: String?): String {
+        return if (key != null) {
+            CookieStore.getKey(tag, key)
+        } else {
+            CookieStore.getCookie(tag)
+        }
+    }
+
+    /** 生成 UUID */
+    fun randomUUID(): String {
+        return UUID.randomUUID().toString()
+    }
+
+    /** 获取 WebView UA(app 用 `WebSettings.getDefaultUserAgent`;引擎走 `Platform.appConfig.userAgent`)。 */
+    fun getWebViewUA(): String {
+        return Platform.appConfig.userAgent
+    }
+
+    fun t2s(text: String): String {
+        return ChineseUtils.t2s(text)
+    }
+
+    fun s2t(text: String): String {
+        return ChineseUtils.s2t(text)
+    }
+
+    fun htmlFormat(str: String): String {
+        return HtmlFormatter.formatKeepImg(str)
+    }
+
+    /** 章节数转数字 */
+    fun toNumChapter(s: String?): String? {
+        s ?: return null
+        val matcher = AppPattern.titleNumPattern.matcher(s)
+        if (matcher.find()) {
+            val intStr = StringUtils.stringToInt(matcher.group(2))
+            return "${matcher.group(1)}${intStr}${matcher.group(3)}"
+        }
+        return s
+    }
+
+    fun toURL(urlStr: String): JsURL {
+        return JsURL(urlStr)
+    }
+
+    fun toURL(url: String, baseUrl: String? = null): JsURL {
+        return JsURL(url, baseUrl)
+    }
+
+    /** 输出调试日志(app 用 `Debug.log` + `AppLog.putDebug`;引擎无 Debug UI,仅 `AppLog.put`)。 */
+    fun log(msg: Any?): Any? {
+        Platform.rhino.currentCoroutineContext()?.ensureActive()
+        AppLog.put("${getTag() ?: "源"}调试输出: $msg")
+        return msg
+    }
+
+    /** 输出对象类型 */
+    fun logType(any: Any?) {
+        if (any == null) {
+            log("null")
+        } else {
+            log(any.javaClass.name)
+        }
+    }
+
+    //****************文件操作******************//
+
+    /**
+     * 获取本地文件(相对路径,基于 `Platform.context.externalCache`)。
+     * @param path 相对路径
+     */
+    fun getFile(path: String): File {
+        val cachePath = (Platform.context.externalCache ?: Platform.context.cacheDir).absolutePath
+        val aPath = if (path.startsWith(File.separator)) {
+            cachePath + path
+        } else {
+            cachePath + File.separator + path
+        }
+        val file = File(aPath)
+        val safePath = (Platform.context.externalCache ?: Platform.context.cacheDir).parent
+        if (safePath != null && !file.canonicalPath.startsWith(safePath)) {
+            throw SecurityException("非法路径")
+        }
+        return file
+    }
+
+    fun readFile(path: String): ByteArray? {
+        val file = getFile(path)
+        if (file.exists()) {
+            return file.readBytes()
+        }
+        return null
+    }
+
+    fun readTxtFile(path: String): String {
+        val file = getFile(path)
+        if (file.exists()) {
+            val charsetName = EncodingDetect.getEncode(file)
+            return String(file.readBytes(), charset(charsetName))
+        }
+        return ""
+    }
+
+    fun readTxtFile(path: String, charsetName: String): String {
+        val file = getFile(path)
+        if (file.exists()) {
+            return String(file.readBytes(), charset(charsetName))
+        }
+        return ""
+    }
+
+    /** 删除本地文件 */
+    fun deleteFile(path: String): Boolean {
+        val file = getFile(path)
+        return FileUtils.delete(file, true)
     }
 }
