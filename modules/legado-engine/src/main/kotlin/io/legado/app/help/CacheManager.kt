@@ -13,7 +13,7 @@ import io.legado.app.platform.repo.Repositories
  *   `delete` 里的 ACache 调用——磁盘缓存属 app 端,留 `:app`(将来可另立 `FileCache` SPI)。
  * - **`@JavascriptInterface` 移除**:引擎不参与 WebView JS 桥。
  * - `AppCacheManager`(缓存 `QueryTTF`,属 model)与 `WebCacheManager`(WebView JS 桥包装)
- *   **留 app/**,不进引擎。
+ *   留在 app/,不进引擎。
  */
 @Suppress("unused")
 object CacheManager {
