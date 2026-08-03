@@ -247,6 +247,7 @@ d. **CI 强制(常开)**:`:legado-engine` 禁 import `android.*`/`androidx.*`/`c
 - `model/analyzeRule/{AnalyzeByJSoup,AnalyzeByRegex,AnalyzeByXPath(TextUtils→StringUtils),AnalyzeByJSonPath(剥@Keep),RuleAnalyzer,RuleData,RuleDataInterface}`(+libs.jsoup/jsoupxpath/json.path)。
 - `help/JsExtensions` 簇①a/①b(strToBytes/bytesToStr、hex、timeFormatUTC、encodeURI、base64 全套、timeFormat)——✅ **9.4 结构返工已落地**:由 `object` 改为 `interface JsExtensions : JsEncodeUtils`(13 方法成默认方法)。
 - `help/JsEncodeUtils` 加密簇——✅ **§9.5 A big-bang batch 1 已落地并 CI 双绿**(commit `6d15a43a0`):填入全部加密默认方法(md5/AES/DES/3DES/digest/HMac/createSymmetricCrypto/createAsymmetricCrypto/createSign),去 `@JavascriptInterface`,`android.util.Base64`→`EncoderUtils`(NO_WRAP flag 映射)。配套移植 `utils/MD5Utils`(纯 JVM)、`utils/StringExtensions.isHex`、`help/crypto/{SymmetricCryptoAndroid,AsymmetricCrypto,Sign}`(去 `@Keep`,背靠 hutool-crypto)。`build.gradle` 加 `libs.hutool.crypto`(catalog 已有 5.8.22)。自包含,不碰 AnalyzeUrl/BaseSource/com.script。
+- **batch 2a(互递归核心第 1 子批,增量叶子)已落地并 CI 双绿**(commit `4234d13f7` + 修 `de898f705`):补引擎 util/HTTP 缺口 + 解环,纯增量无 flip。`build.gradle` 加 `kotlinx-coroutines-core`+`commons-text`(catalog 已有)。`utils/NetworkUtils`(+getAbsoluteURL×2/encodedQuery/encodedForm/getDomain)、`utils/StringExtensions`(+isAbsUrl/isDataUrl/isJson/isJsonObject/isJsonArray/isXml/parseIpsFromString)、`utils/{ThrowableExtensions,MapExtensions,EncodingDetect}`(新;EncodingDetect 的 icu4j 统计检测器暂缓,那批 Java 含 android.os/android.system 耦合,无 meta 时回退 UTF-8,parity 留 §5c)、`help/http/{OkHttpUtils(扩展集),CookieManager(cookieJarHeader+mergeCookies)}`、`help/http/HttpHelper`(+getProxyClient)。**解环**:`ConcurrentRecord` 从 `AnalyzeUrl` 内嵌抽成顶层 `help/ConcurrentRecord.kt`;`help/ConcurrentRateLimiter.kt` 构造改取 `(key,concurrentRate)` 原始参(不再依赖 BaseSource)——§9.4 互递归环(AnalyzeUrl↔ConcurrentRateLimiter↔ConcurrentRecord)已断。CI 修过 1 处:`StringUtils.isEmpty` 是对象方法非顶层函数。
 
 **两个 Android 耦合 helper 已架构重构进引擎并绿**:CookieStore(弃 android.webkit.CookieManager)、CacheManager(JVM LruCache 弃 androidx/ACache)。证明盲推架构重构可行(至今仅 1 处 KDoc 嵌套 `/*` 注释语法修复 + 1 处缺 import + 1 处边界 grep 锚定修复)。
 
@@ -282,9 +283,13 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 
 这是计划 **Phase 1 的整个 2–3 周最高风险核心**,非一条盲推能收敛;且 `JsExtensions` 增量搬在 HTTP 簇就被 `AnalyzeUrl`/`BaseSource`/com.script 钉死(互递归),不能逐簇,必须 big bang。
 
-### 9.5 下一步抉择(用户已选 A;加密簇 batch 1 已绿,推进中)
+### 9.5 下一步抉择(用户已选 A;batch 1 加密簇 + batch 2a 增量叶子已绿,推进中)
 
-- **A**(进行中):盲推 5000+ 行核心。**batch 1 = JsEncodeUtils 加密簇已落地并 CI 双绿**(`6d15a43a0`,自包含,无互递归)。下一批 = 进入**互递归核心**:`JsExtensions` HTTP 簇(ajax/connect→AnalyzeUrl)+ WebView 簇(→Platform.webView)+ `BaseSource`(com.script→RhinoEngine、getShareScope)+ `AnalyzeUrl`/`AnalyzeRule`(com.script→RhinoEngine、WebView→WebViewRenderer)。此 chunk 被 `AnalyzeUrl`/`BaseSource`/com.script 互递归钉死,须一次性 big bang,CI 试错多会话马拉松;加密/scope 语义盲定,错了 parity 才发现。
+- **A**(进行中):盲推核心。**修正 §9.4 规模估计**——三份 Explore 报告(AnalyzeUrl/AnalyzeRule/BaseSource)核实:真正互递归**只有一个环**(AnalyzeUrl↔ConcurrentRateLimiter↔ConcurrentRecord),抽 `ConcurrentRecord` 为顶层类即断(batch 2a 已断);其余是 import/SPI 改写 + 补 util 缺口,**可分小批增量、各自 CI 绿**,只有 flip 步骤需闭包同批。
+  - ✅ batch 1 = `JsEncodeUtils` 加密簇(`6d15a43a0`,自包含)。
+  - ✅ batch 2a = 增量叶子(utils/HTTP helpers/解环/依赖,`4234d13f7`+`de898f705`)。
+  - ⏭️ batch 2b = SPI 扩展(`RhinoEngine.removeSharedScope`+`eval(+coroutineContext)`+`getOrCreateSharedScope` plain-string 实现、`WebViewRenderer.renderHtmlWithJs`、`Platform.bookRefresh`)+ `BaseSource` engine interface(login/refreshExplore 留 app-only open fun)。仍 additive。
+  - ⏭️ batch 2c = flip(闭包同批):`JsExtensions` 长齐全表面(~85 默认方法)+ `AnalyzeUrl`+`AnalyzeRule` 进引擎,CI 试错马拉松。JS 共享作用域语义(`getShareScope`/`SharedJsScope`→`Platform.rhino.getOrCreateSharedScope`)是 §3.3 最高风险 seam,语义盲定,错了 parity 才发现。
 - **B**(未选):停在绿地基 + 骨架,把核心作后续聚焦。
 
 **记忆**:`C:\Users\Mort\.claude\projects\e--GITHUB-readerMT\memory\monorepo-unify-progress.md` 同步维护,后续会话可续。
