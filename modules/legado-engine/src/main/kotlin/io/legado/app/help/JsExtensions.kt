@@ -12,6 +12,8 @@ import io.legado.app.help.ConcurrentRateLimiter
 import io.legado.app.help.http.CookieManager.cookieJarHeader
 import io.legado.app.help.http.SSLHelper
 import io.legado.app.help.http.StrResponse
+import io.legado.app.help.CacheManager
+import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.platform.Platform
 import io.legado.app.utils.ChineseUtils
@@ -21,7 +23,10 @@ import io.legado.app.utils.FileUtils
 import io.legado.app.utils.GSON
 import io.legado.app.utils.HtmlFormatter
 import io.legado.app.utils.JsURL
+import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.StringUtils
+import io.legado.app.utils.UrlUtil
+import io.legado.app.utils.createFileReplace
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.mapAsync
 import io.legado.app.utils.stackTraceStr
@@ -478,6 +483,104 @@ interface JsExtensions : JsEncodeUtils {
                 .execute()
         }
         return response
+    }
+
+    /**
+     * 可从网络，本地文件(阅读私有数据目录相对路径)导入JavaScript脚本
+     */
+    fun importScript(path: String): String {
+        val result = when {
+            path.startsWith("http") -> cacheFile(path)
+            else -> readTxtFile(path)
+        }
+        if (result.isBlank()) throw NoStackTraceException("$path 内容获取失败或者为空")
+        return result
+    }
+
+    /**
+     * 缓存以文本方式保存的文件 如.js .txt等
+     * @param urlStr 网络文件的链接
+     * @return 返回缓存后的文件内容
+     */
+    fun cacheFile(urlStr: String): String {
+        return cacheFile(urlStr, 0)
+    }
+
+    /**
+     * 缓存以文本方式保存的文件 如.js .txt等
+     * @param saveTime 缓存时间，单位：秒
+     */
+    fun cacheFile(urlStr: String, saveTime: Int): String {
+        val key = md5Encode16(urlStr)
+        val cachePath = CacheManager.get(key)
+        return if (
+            cachePath.isNullOrBlank() ||
+            !getFile(cachePath).exists()
+        ) {
+            val path = downloadFile(urlStr)
+            log("首次下载 $urlStr >> $path")
+            CacheManager.put(key, path, saveTime)
+            readTxtFile(path)
+        } else {
+            readTxtFile(cachePath)
+        }
+    }
+
+    /**
+     * 下载文件
+     * @param url 下载地址:可带参数type
+     * @return 下载的文件相对路径
+     */
+    fun downloadFile(url: String): String {
+        Platform.rhino.currentCoroutineContext()?.ensureActive()
+        val analyzeUrl = AnalyzeUrl(url, source = getSource(), coroutineContext = context)
+        val type = analyzeUrl.type ?: UrlUtil.getSuffix(url)
+        val path = FileUtils.getPath(
+            File(FileUtils.getCachePath()),
+            "${MD5Utils.md5Encode16(url)}.${type}"
+        )
+        val file = File(path)
+        file.delete()
+        analyzeUrl.getInputStream().use { iStream ->
+            file.createFileReplace()
+            try {
+                file.outputStream().buffered().use { oStream ->
+                    iStream.copyTo(oStream)
+                }
+            } catch (e: Throwable) {
+                file.delete()
+                throw e
+            }
+        }
+        return path.substring(FileUtils.getCachePath().length)
+    }
+
+    /**
+     * 实现16进制字符串转文件
+     * @param content 需要转成文件的16进制字符串
+     * @param url 通过url里的参数来判断文件类型
+     * @return 相对路径
+     */
+    @Deprecated(
+        "Deprecated",
+        ReplaceWith("downloadFile(url)")
+    )
+    fun downloadFile(content: String, url: String): String {
+        Platform.rhino.currentCoroutineContext()?.ensureActive()
+        val type = AnalyzeUrl(url, source = getSource(), coroutineContext = context).type
+            ?: return ""
+        val path = FileUtils.getPath(
+            FileUtils.createFolderIfNotExist(FileUtils.getCachePath()),
+            "${MD5Utils.md5Encode16(url)}.${type}"
+        )
+        val file = File(path)
+        file.createFileReplace()
+        HexUtil.decodeHex(content).let {
+            if (it.isNotEmpty()) {
+                file.writeBytes(it)
+            }
+        }
+        return path.substring(FileUtils.getCachePath().length)
     }
 
     /** js 实现读取 cookie */
