@@ -27,12 +27,17 @@ interface RuleDataInterface {
         }
     }
 
-    fun putBigVariable(key: String, value: String?)
+    /**
+     * 存大变量(≥10000 字符)。默认无持久化(内存 `variableMap` 已够,大变量留给实现端
+     * 用 `:app` 的 `RuleBigDataHelp` 落盘);`:server` 的实体不实现此方法,走默认空操作。
+     */
+    fun putBigVariable(key: String, value: String?) {}
 
     fun getVariable(key: String): String {
         return variableMap[key] ?: getBigVariable(key) ?: ""
     }
 
-    fun getBigVariable(key: String): String?
+    /** 取大变量。默认无持久化返回 null;实现端 override(如 `:app` RuleBigDataHelp)。 */
+    fun getBigVariable(key: String): String? = null
 
 }

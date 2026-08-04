@@ -25,3 +25,12 @@ fun File.createFolderIfNotExist(): File {
     }
     return this
 }
+
+/**
+ * 在 [this] 目录下按子路径拼出 File(reader-mt `FileExtensions.getFile`)。
+ * `:server` 的 `BookHelp` 用它定位书籍缓存目录。
+ */
+fun File.getFile(vararg subDirFiles: String): File {
+    val path = FileUtils.getPath(this, *subDirFiles)
+    return File(path)
+}

@@ -72,4 +72,13 @@ object BookType {
      */
     const val webDavTag = "webDav::"
 
+    // ---- `:server` 兼容别名(reader-mt 服务器把 bookSourceType 当 0-4 枚举用)----
+    // server 的 `Book.type`/`BookSource.bookSourceType` 只写不读(无位运算/语义判断),
+    // 故这里补两个占位常量供 `SourceAnalyzer` 编译映射;数值无运行时影响。
+    /** 未分类/文本(server 枚举 0)。 */
+    const val default = 0
+
+    /** 只提供下载服务的网站(server 枚举 3)。 */
+    const val file = 3
+
 }

@@ -71,3 +71,24 @@ fun String.parseIpsFromString(): List<InetAddress>? =
         .filter { it.isNotEmpty() }
         .mapNotNull { it.runCatching { InetAddress.getByName(this) }.getOrNull() }
         .takeIf { it.isNotEmpty() }
+/**
+ * 等价 reader-mt `StringExtensions.isTrue`(bookSourceType 等 "0/false/no" 字符串判否)。
+ * `:server` 的 `BookChapterList` 用它判断 `isVolume.isTrue()`。
+ */
+fun String?.isTrue(nullIsTrue: Boolean = false): Boolean {
+    if (this.isNullOrBlank() || this == "null") {
+        return nullIsTrue
+    }
+    return !this.matches("\s*(?i)(false|no|not|0)\s*".toRegex())
+}
+
+/**
+ * 等价 reader-mt `StringExtensions.htmlFormat`:把富文本 HTML 转纯文本(换行/去 script/加缩进)。
+ * `:server` 的 `BookList`/`BookInfo` 用。
+ */
+fun String?.htmlFormat(): String = if (this.isNullOrBlank()) "" else
+    this.replace("(?i)<(br[\s/]*|/*p\b.*?|/*div\b.*?)>".toRegex(), "\n")
+        .replace("<[script>]*.*?>|&nbsp;".toRegex(), "")
+        .replace("\s*\n+\s*".toRegex(), "\n　　")
+        .replace("^[\n\s]+".toRegex(), "　　")
+        .replace("[\n\s]+$".toRegex(), "")

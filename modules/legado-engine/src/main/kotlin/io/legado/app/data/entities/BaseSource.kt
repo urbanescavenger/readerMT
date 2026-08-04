@@ -49,17 +49,28 @@ interface BaseSource : JsExtensions {
     /** 登录地址 */
     var loginUrl: String?
 
-    /** 登录UI */
+    /**
+     * 登录UI。默认访问器返回 null、setter 空操作,以便 `:server` 的 `RssSource`/`BookSource`
+     * 无需声明该字段即可实现本接口;`:app` 实体自带该字段 override 默认访问器。
+     */
     var loginUi: String?
+        get() = null
+        set(value) {}
 
     /** 请求头 */
     var header: String?
 
-    /** 启用cookieJar */
+    /**
+     * 启用cookieJar。默认访问器返回 null、setter 空操作(同 [loginUi] 的理由)。
+     */
     var enabledCookieJar: Boolean?
+        get() = null
+        set(value) {}
 
-    /** js库 */
+    /** js库。默认访问器返回 null、setter 空操作(同 [loginUi] 的理由)。 */
     var jsLib: String?
+        get() = null
+        set(value) {}
 
     override fun getTag(): String
 

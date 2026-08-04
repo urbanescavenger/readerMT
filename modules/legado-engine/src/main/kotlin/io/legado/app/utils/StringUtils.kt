@@ -1,5 +1,7 @@
 package io.legado.app.utils
 
+import java.text.DecimalFormat
+
 /**
  * `android.text.TextUtils` 的平台无关替代(计划 §3.8)。
  *
@@ -121,5 +123,49 @@ object StringUtils {
             }
         }
         return -1
+    }
+
+    /** 是否为纯数字字符串(reader-mt `StringUtils.isNumeric`)。 */
+    fun isNumeric(str: String): Boolean {
+        val pattern = java.util.regex.Pattern.compile("-?[0-9]+")
+        val isNum = pattern.matcher(str)
+        return isNum.matches()
+    }
+
+    /** 字数格式化:纯数字转 "N字"/"N万字",否则原样(reader-mt `StringUtils.wordCountFormat`)。 */
+    fun wordCountFormat(wc: String?): String {
+        if (wc == null) return ""
+        var wordsS = ""
+        if (isNumeric(wc)) {
+            val words: Int = wc.toInt()
+            if (words > 0) {
+                wordsS = words.toString() + "字"
+                if (words > 10000) {
+                    val df = DecimalFormat("#.#")
+                    wordsS = df.format(words * 1.0f / 10000f.toDouble()) + "万字"
+                }
+            }
+        } else {
+            wordsS = wc
+        }
+        return wordsS
+    }
+
+    /**
+     * 移除字符串首尾空字符的高效方法(利用ASCII值判断,包括全角空格)。
+     * reader-mt `StringUtils.trim`。
+     */
+    fun trim(s: String): String {
+        if (s.isEmpty()) return ""
+        var start = 0
+        val len = s.length
+        var end = len - 1
+        while (start < end && (s[start].code <= 0x20 || s[start] == '　')) {
+            ++start
+        }
+        while (start < end && (s[end].code <= 0x20 || s[end] == '　')) {
+            --end
+        }
+        return s.substring(start, end + 1)
     }
 }

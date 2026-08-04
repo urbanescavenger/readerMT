@@ -17,4 +17,16 @@ interface BaseBook : RuleDataInterface {
     var name: String
     var author: String
     var bookUrl: String
+
+    /** 分类信息(书源获取);`:server` 的 `Book`/`SearchBook` 已实现。 */
+    var kind: String?
+
+    /** 字数(书源获取);`:server` 的 `Book`/`SearchBook` 已实现。 */
+    var wordCount: String?
+
+    /** 详情页 HTML(书源获取);`:server` 的 `Book`/`SearchBook` 已实现。 */
+    var infoHtml: String?
+
+    /** 目录页 HTML(书源获取);`:server` 的 `Book`/`SearchBook` 已实现。 */
+    var tocHtml: String?
 }
