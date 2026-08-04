@@ -56,6 +56,8 @@ rootProject.name = 'legado'
 // 配置阶段 evaluate 这些模块会失败(compileSdk/schema location 缺失)。server 自身不依赖它们,
 // maven 依赖解析走 settings.gradle 的 dependencyResolutionManagement,不受模块 include 影响。
 if (System.getenv("SERVER_ONLY") == "true") {
+    // M1 起 server 依赖 :modules:legado-engine(Docker 构建需一起 include,否则 project 依赖找不到)。
+    include ':modules:legado-engine'
     include ':modules:server'
 } else {
     include ':app'
