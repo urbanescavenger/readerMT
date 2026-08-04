@@ -14,6 +14,7 @@ import io.legado.app.lib.webdav.WebDavFile
 import io.legado.app.model.analyzeRule.CustomUrl
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.utils.NetworkUtils
+import io.legado.app.utils.isAvailable
 import io.legado.app.utils.isContentScheme
 import kotlinx.coroutines.runBlocking
 

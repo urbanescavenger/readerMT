@@ -57,6 +57,7 @@ import io.legado.app.ui.widget.number.NumberPickerDialog
 import io.legado.app.ui.widget.recycler.LoadMoreView
 import io.legado.app.utils.GSON
 import io.legado.app.utils.NetworkUtils
+import io.legado.app.utils.isAvailable
 import io.legado.app.utils.StartActivityContract
 import io.legado.app.utils.canScroll
 import io.legado.app.utils.fastBinarySearch
