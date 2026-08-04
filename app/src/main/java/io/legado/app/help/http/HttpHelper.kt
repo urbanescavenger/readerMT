@@ -9,7 +9,7 @@ import io.legado.app.help.http.CookieManager.cookieJarHeader
 import io.legado.app.model.ReadManga
 import io.legado.app.utils.NetworkUtils
 import okhttp3.ConnectionSpec
-import okhttp3.CookieEntity
+import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.Credentials
 import okhttp3.Dns
@@ -29,11 +29,11 @@ private val proxyClientCache: ConcurrentHashMap<String, OkHttpClient> by lazy {
 val cookieJar by lazy {
     object : CookieJar {
 
-        override fun loadForRequest(url: HttpUrl): List<CookieEntity> {
+        override fun loadForRequest(url: HttpUrl): List<Cookie> {
             return emptyList()
         }
 
-        override fun saveFromResponse(url: HttpUrl, cookies: List<CookieEntity>) {
+        override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
             if (cookies.isEmpty()) return
             //临时保存 书源启用cookie选项再添加到数据库
             val cookieBuilder = StringBuilder()
@@ -78,7 +78,7 @@ val okHttpClient: OkHttpClient by lazy {
             }
             builder.addHeader("Keep-Alive", "300")
             builder.addHeader("Connection", "Keep-Alive")
-            builder.addHeader("CacheEntity-Control", "no-cache")
+            builder.addHeader("Cache-Control", "no-cache")
             chain.proceed(builder.build())
         }
         .addNetworkInterceptor { chain ->

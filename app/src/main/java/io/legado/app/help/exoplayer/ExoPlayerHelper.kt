@@ -10,7 +10,7 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.FileDataSource
 import androidx.media3.datasource.ResolvingDataSource
-import androidx.media3.datasource.cache.CacheEntity
+import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSink
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
@@ -119,7 +119,7 @@ object ExoPlayerHelper {
     /**
      * Exoplayer 内置的缓存
      */
-    private val cache: CacheEntity by lazy {
+    private val cache: Cache by lazy {
         val databaseProvider = StandaloneDatabaseProvider(appCtx)
         return@lazy SimpleCache(
             //Exoplayer的缓存路径

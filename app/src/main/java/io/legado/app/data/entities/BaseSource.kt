@@ -150,7 +150,7 @@ interface BaseSource : JsExtensions {
      */
     fun putLoginHeader(header: String) {
         val headerMap = GSON.fromJsonObject<Map<String, String>>(header).getOrNull()
-        val cookie = headerMap?.get("CookieEntity") ?: headerMap?.get("cookie")
+        val cookie = headerMap?.get("Cookie") ?: headerMap?.get("cookie")
         cookie?.let {
             CookieStore.replaceCookie(getKey(), it)
         }

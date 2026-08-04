@@ -37,9 +37,9 @@ class CronetCoroutineInterceptor(private val cookieJar: CookieJar) : Interceptor
             builder.removeHeader("Accept-Encoding")
             if (cookieJar != CookieJar.NO_COOKIES) {
                 val cookieStr = getCookie(original.url)
-                //设置CookieEntity
+                //设置Cookie
                 if (cookieStr.length > 3) {
-                    builder.addHeader("CookieEntity", cookieStr)
+                    builder.addHeader("Cookie", cookieStr)
                 }
             }
 
@@ -110,7 +110,7 @@ class CronetCoroutineInterceptor(private val cookieJar: CookieJar) : Interceptor
         }
 
 
-    /** Returns a 'CookieEntity' HTTP request header with all cookies, like `a=b; c=d`. */
+    /** Returns a 'Cookie' HTTP request header with all cookies, like `a=b; c=d`. */
     private fun getCookie(url: HttpUrl): String = buildString {
         val cookies = cookieJar.loadForRequest(url)
         cookies.forEachIndexed { index, cookie ->

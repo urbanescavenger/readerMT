@@ -6,7 +6,7 @@ import io.legado.app.data.appDb
 import io.legado.app.help.CacheManager
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.splitNotBlank
-import okhttp3.CookieEntity
+import okhttp3.Cookie
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -40,7 +40,7 @@ object CookieManager {
 
     private fun saveCookiesFromHeaders(url: HttpUrl, headers: Headers) {
         val domain = NetworkUtils.getSubDomain(url.toString())
-        val cookies = CookieEntity.parseAll(url, headers)
+        val cookies = Cookie.parseAll(url, headers)
 
         val sessionCookie = cookies.filter { !it.persistent }.getString()
         updateSessionCookie(domain, sessionCookie)
@@ -57,13 +57,13 @@ object CookieManager {
         val domain = NetworkUtils.getSubDomain(url)
 
         val cookie = CookieStore.getCookie(domain)
-        val requestCookie = request.header("CookieEntity")
+        val requestCookie = request.header("Cookie")
 
         val newCookie = mergeCookies(requestCookie, cookie) ?: return request
 
         kotlin.runCatching {
             return request.newBuilder()
-                .header("CookieEntity", newCookie)
+                .header("Cookie", newCookie)
                 .build()
         }.onFailure {
             CookieStore.removeCookie(url)
@@ -107,7 +107,7 @@ object CookieManager {
     }
 
     /**
-     * 删除单个CookieEntity
+     * 删除单个Cookie
      */
     fun removeCookie(url: String, key: String) {
         val domain = NetworkUtils.getSubDomain(url)
@@ -150,7 +150,7 @@ object CookieManager {
         }
     }
 
-    fun List<CookieEntity>.getString() = buildString {
+    fun List<Cookie>.getString() = buildString {
         this@getString.forEachIndexed { index, cookie ->
             if (index > 0) append("; ")
             append(cookie.name).append('=').append(cookie.value)

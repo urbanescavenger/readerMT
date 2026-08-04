@@ -713,8 +713,8 @@ class AnalyzeUrl(
             CookieStore.getCookie(domain)
         }
         if (cookie.isNotEmpty()) {
-            mergeCookies(cookie, headerMap["CookieEntity"])?.let {
-                headerMap.put("CookieEntity", it)
+            mergeCookies(cookie, headerMap["Cookie"])?.let {
+                headerMap.put("Cookie", it)
             }
         }
         if (enabledCookieJar) {

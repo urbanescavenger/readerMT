@@ -673,13 +673,13 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                     url(url)
                     method(request.method, null)
                     if (!cookie.isNullOrEmpty()) {
-                        addHeader("CookieEntity", cookie)
+                        addHeader("Cookie", cookie)
                     }
                     request.requestHeaders?.forEach { (key, value) ->
                         addHeader(key, value)
                     }
                 }
-                res.headers("Set-CookieEntity").forEach { setCookie ->
+                res.headers("Set-Cookie").forEach { setCookie ->
                     webCookieManager.setCookie(url, setCookie)
                 }
                 val body = res.body
