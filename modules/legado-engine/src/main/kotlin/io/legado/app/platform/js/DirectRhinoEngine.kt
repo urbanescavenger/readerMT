@@ -25,10 +25,12 @@ import kotlin.coroutines.CoroutineContext
  * app 侧 `io.legado.app.model.SharedJsScope`(共享作用域),parity 验留 §5c。
  *
  * **设计要点**(勘探自 `:modules:rhino` 与 app `SharedJsScope.kt`):
- * - **ContextFactory**:私有 [EngineContextFactory],设 `VERSION_ES6` + `setInterpretedMode(true)`
- *   (解释器模式,避免 JVM 字节码生成/类加载器问题)。用 `Context.enter(factory)` 显式传 factory,
- *   **不**调 `ContextFactory.initGlobal` —— 不污染全局,可与 app 的 `RhinoScriptEngine`(initGlobal)
- *   同 JVM 共存(过渡期)。**不**设 ClassShutter/WrapFactory(加固,deferred;书源 JS parity 不依赖)。
+ * - **ContextFactory**:[EngineContextFactory] 设 `VERSION_ES6` + `setInterpretedMode(true)`
+ *   (解释器模式,避免 JVM 字节码生成/类加载器问题)。镜像 app:`ContextFactory.initGlobal(factory)`
+ *   + `Context.enter()`/`Context.exit()`(此 rhino 版本无 `Context.enter(ContextFactory)` 重载)。
+ *   `initGlobal` 是 JVM 全局 —— 引擎独立 JVM(test/server)下无冲突;app 共存场景(Phase 1c)
+ *  届时 app 弃用 rhino-android,亦无冲突。`runCatching` 兜底:全局已被设则沿用(不致命)。
+ * - **不**设 ClassShutter/WrapFactory(加固,deferred;书源 JS parity 不依赖)。
  * - **共享作用域**:`getOrCreateSharedScope(srcKey, initJs)` 按 srcKey 缓存一个 `NativeObject`
  *   scope(`prototype = cx.initStandardObjects()`),把 `initJs`(裸 JS 源)`eval` 注入后
  *   `preventExtensions()`,对应 app `SharedJsScope.getScope`。子 eval 不调 `getRuntimeScope`,
@@ -56,6 +58,21 @@ object DirectRhinoEngine : RhinoEngine {
 
     private val factory = EngineContextFactory()
 
+    init {
+        // 镜像 app RhinoScriptEngine:initGlobal 设全局 factory。已设则沿用(runCatching 兜底)。
+        runCatching { ContextFactory.initGlobal(factory) }
+    }
+
+    /** 共享 standardGlobal(懒建,供 DirectScriptBindings 默认原型)。 */
+    private val standardGlobal: Scriptable by lazy {
+        val cx = Context.enter()
+        try {
+            cx.initStandardObjects()
+        } finally {
+            Context.exit()
+        }
+    }
+
     /** 当前 JS 执行的协程上下文(ThreadLocal;[currentCoroutineContext] 读;eval/+ctx 期间 set)。 */
     private val ctxHolder = ThreadLocal<CoroutineContext?>()
 
@@ -67,7 +84,7 @@ object DirectRhinoEngine : RhinoEngine {
     override fun newBindings(): ScriptBindings = DirectScriptBindings()
 
     override fun getRuntimeScope(bindings: ScriptBindings): Any {
-        val cx = Context.enter(factory)
+        val cx = Context.enter()
         try {
             bindings.prototypeScope = cx.initStandardObjects()
             return bindings
@@ -80,7 +97,7 @@ object DirectRhinoEngine : RhinoEngine {
         eval(js, getRuntimeScope(bindings))
 
     override fun eval(js: String, scope: Any): Any? {
-        val cx = Context.enter(factory)
+        val cx = Context.enter()
         try {
             val r = cx.evaluateReader(scope as Scriptable, StringReader(js), "<eval>", 1, null)
             return unwrap(r)
@@ -99,7 +116,7 @@ object DirectRhinoEngine : RhinoEngine {
     }
 
     override fun compile(js: String): CompiledScript {
-        val cx = Context.enter(factory)
+        val cx = Context.enter()
         try {
             val scr = cx.compileReader(StringReader(js), "<compile>", 1, null)
             return DirectCompiledScript(scr)
@@ -120,7 +137,7 @@ object DirectRhinoEngine : RhinoEngine {
         }
         scopeMap[srcKey]?.get()?.let { return it }
         val scope = DirectScriptBindings()
-        val cx = Context.enter(factory)
+        val cx = Context.enter()
         try {
             scope.prototypeScope = cx.initStandardObjects()
             cx.evaluateReader(scope, StringReader(initJs), "<jsLib:$srcKey>", 1, null)
@@ -168,9 +185,14 @@ object DirectRhinoEngine : RhinoEngine {
      * 要求 bindings 即 Scriptable,故必须继承 NativeObject 而非组合。
      *
      * [prototypeScope] 委托 `super.setPrototype/getPrototype`(命名避开 NativeObject 的
-     * `prototype: Scriptable` 返回类型 widening override 冲突)。
+     * `prototype: Scriptable` 返回类型 widening override 冲突)。声明于 init 之前以避免
+     * "Variable cannot be initialized before declaration"。
      */
     private class DirectScriptBindings : NativeObject(), ScriptBindings {
+        override var prototypeScope: Any?
+            get() = super.getPrototype()
+            set(value) { super.setPrototype(value as? Scriptable) }
+
         init {
             // 默认原型 = 懒建共享 standardGlobal(对应 app ScriptBindings 的 topLevelScope);
             // getRuntimeScope/getOrCreateSharedScope 会覆盖为各自的 standardGlobal/sharedScope。
@@ -178,7 +200,7 @@ object DirectRhinoEngine : RhinoEngine {
         }
 
         override operator fun set(key: String, value: Any?) {
-            val cx = Context.enter(factory)
+            val cx = Context.enter()
             try {
                 put(key, this, Context.javaToJS(value, this))
             } finally {
@@ -186,26 +208,11 @@ object DirectRhinoEngine : RhinoEngine {
             }
         }
 
-        // get(key) 由继承的 ScriptableObject.get(String) 满足接口(返回原始 rhino 值;
-        // AnalyzeRule 主要写 bindings,极少回读;避免 override final 风险)。
+        // ScriptableObject 无单参 get(String);显式实现接口,委托 2 参 get(key, start)。
+        override operator fun get(key: String): Any? = get(key, this)
 
         override fun putAll(map: Map<String, Any?>) {
             map.forEach { (k, v) -> set(k, v) }
-        }
-
-        override var prototypeScope: Any?
-            get() = super.getPrototype()
-            set(value) { super.setPrototype(value as? Scriptable) }
-
-        companion object {
-            private val standardGlobal: Scriptable by lazy {
-                val cx = Context.enter(factory)
-                try {
-                    cx.initStandardObjects()
-                } finally {
-                    Context.exit()
-                }
-            }
         }
     }
 
@@ -216,7 +223,7 @@ object DirectRhinoEngine : RhinoEngine {
             eval(getRuntimeScope(bindings))
 
         override fun eval(scope: Any): Any? {
-            val cx = Context.enter(factory)
+            val cx = Context.enter()
             try {
                 return unwrap(script.exec(cx, scope as Scriptable))
             } finally {
