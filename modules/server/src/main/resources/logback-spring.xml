@@ -39,6 +39,8 @@
 
     <springProfile name="prod">
         <root level="INFO">
+            <!-- 同时输出 STDOUT,便于 docker logs 观察启动/错误(prod 也写文件归档) -->
+            <appender-ref ref="STDOUT"/>
             <appender-ref ref="ASYNC_ROLLING_FILE"/>
         </root>
     </springProfile>

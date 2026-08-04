@@ -1,6 +1,7 @@
 package com.htmake.reader.platform
 
 import io.legado.app.platform.PlatformContext
+import org.springframework.stereotype.Component
 import java.io.File
 
 /**
@@ -10,6 +11,7 @@ import java.io.File
  * `externalFilesDir`/`externalCache` 服务端无 Android 分区概念,回退到同一 `cacheDir`
  * (引擎 `JsExtensions.getFile`/`downloadFile` 用)。
  */
+@Component
 class ServerPlatformContext : PlatformContext {
     override val cacheDir: File = File(com.htmake.reader.init.appCtx.cacheDir)
     override val filesDir: File = File(com.htmake.reader.init.appCtx.cacheDir)
