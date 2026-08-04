@@ -70,7 +70,6 @@ interface RhinoEngine {
 interface ScriptBindings {
     operator fun set(key: String, value: Any?)
     operator fun get(key: String): Any?
-    fun putAll(map: Map<String, Any?>)
     /**
      * 原型链:可指向共享作用域(`bindings.prototypeScope = sharedScope`)。
      *

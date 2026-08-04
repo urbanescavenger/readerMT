@@ -211,9 +211,8 @@ object DirectRhinoEngine : RhinoEngine {
         // ScriptableObject 无单参 get(String);显式实现接口,委托 2 参 get(key, start)。
         override operator fun get(key: String): Any? = get(key, this)
 
-        // putAll:NativeObject 继承了一个同 JVM 签名的 putAll(Map)(accidental override);
-        // 引擎调用方只用 `bindings[key]=value`(set 运算符),从不用 putAll,故不 override,
-        // 由继承成员满足 SPI 接口即可。
+        // putAll 不在 SPI(NativeObject 继承的 putAll(Map) 与 SPI 的 Map<String,Any?> 同 JVM
+        // 签名冲突,且引擎调用方只用 set 运算符,故 SPI 不声明 putAll)。
     }
 
     // ---------- 内部:CompiledScript 实现 ----------
