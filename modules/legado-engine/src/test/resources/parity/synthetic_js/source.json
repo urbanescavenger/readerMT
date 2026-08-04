@@ -1,0 +1,17 @@
+{
+  "bookSourceUrl": "https://synthetic.test",
+  "bookSourceName": "合成JS源",
+  "bookSourceType": 0,
+  "searchUrl": "https://synthetic.test/search?q={{key}}",
+  "ruleSearch": {
+    "bookList": "div.book-list > div.item",
+    "name": "@js:java.getString('h3.title@text') + ' [' + java.getString('span.author@text') + ']'",
+    "author": "span.author@text",
+    "bookUrl": "a.title@href",
+    "coverUrl": "img.cover@src",
+    "intro": "p.intro@text",
+    "kind": "span.kind@text",
+    "lastChapter": "span.last@text",
+    "wordCount": "span.count@text"
+  }
+}

@@ -852,7 +852,7 @@ class AnalyzeRule(
             }
         } else {
             bindings.apply {
-                prototype = topScope
+                prototypeScope = topScope
             }
         }
         val script = compileScriptCache(jsStr)

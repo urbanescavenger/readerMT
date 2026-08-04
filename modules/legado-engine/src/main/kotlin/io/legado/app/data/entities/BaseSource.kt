@@ -271,7 +271,7 @@ interface BaseSource : JsExtensions {
         val scope = if (sharedScope == null) {
             Platform.rhino.getRuntimeScope(bindings)
         } else {
-            bindings.prototype = sharedScope
+            bindings.prototypeScope = sharedScope
             bindings
         }
         return Platform.rhino.eval(jsStr, scope)

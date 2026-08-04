@@ -377,7 +377,7 @@ class AnalyzeUrl(
             Platform.rhino.getRuntimeScope(bindings)
         } else {
             bindings.apply {
-                prototype = sharedScope
+                prototypeScope = sharedScope
             }
         }
         return Platform.rhino.eval(jsStr, scope, coroutineContext)

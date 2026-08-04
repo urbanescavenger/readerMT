@@ -11,7 +11,7 @@ import kotlin.coroutines.CoroutineContext
  *   该源的 init JS 一次),后续 eval 经原型链复用——对应 rhino-android 的 SharedJsScope。
  *   `initJs` 为空时返回 null(无共享作用域)。完整语义(JSON-URL jsLib 下载+磁盘缓存+
  *   preventExtensions)由实现端提供,parity 验留 §5c。
- * - **原型绑定**:[ScriptBindings.prototype] 可指向共享 scope,形成原型链(`bindings.prototype = sharedScope`)。
+ * - **原型绑定**:[ScriptBindings.prototypeScope] 可指向共享 scope,形成原型链(`bindings.prototypeScope = sharedScope`)。
  * - **运行作用域**:`getRuntimeScope(bindings)` 由 bindings 构造 eval 用的 scope(无共享作用域时)。
  * - **eval**:`eval(js, scope)` 在给定 scope 执行;`eval(js, bindings)` 便捷重载;
  *   `eval(js, scope, coroutineContext)` 带 cancellation hook(AnalyzeRule/AnalyzeUrl evalJS 传 ctx)。
@@ -71,8 +71,14 @@ interface ScriptBindings {
     operator fun set(key: String, value: Any?)
     operator fun get(key: String): Any?
     fun putAll(map: Map<String, Any?>)
-    /** 原型链:可指向共享作用域(`bindings.prototype = sharedScope`)。 */
-    var prototype: Any?
+    /**
+     * 原型链:可指向共享作用域(`bindings.prototypeScope = sharedScope`)。
+     *
+     * 命名 `prototypeScope` 而非 `prototype`,以避开 `NativeObject.getPrototype():Scriptable`
+     * 的返回类型 widening override 冲突(实现端 `DirectScriptBindings : NativeObject()` 内部
+     * 委托 `super.setPrototype(value as? Scriptable)` / `super.getPrototype()`)。
+     */
+    var prototypeScope: Any?
 }
 
 interface CompiledScript {

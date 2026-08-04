@@ -1,6 +1,7 @@
 package io.legado.app.parity
 
 import io.legado.app.platform.Platform
+import io.legado.app.platform.js.DirectRhinoEngine
 import io.legado.app.platform.repo.NoOpCacheRepository
 import io.legado.app.platform.repo.NoOpCookieRepository
 import io.legado.app.platform.repo.Repositories
@@ -36,6 +37,7 @@ class BookSourceParityTest {
     /** 防御性赋值:纯规则路径不触达,但兜底避免后续 fixture 误触时裸 NPE。 */
     @Before
     fun setUp() {
+        Platform.rhino = DirectRhinoEngine
         Repositories.cookie = NoOpCookieRepository
         Repositories.cache = NoOpCacheRepository
         Platform.repositories = Repositories
@@ -95,6 +97,33 @@ class BookSourceParityTest {
         )
     }
 
+    // ---------- JS-rule fixture(验证 §3.3 seam:end-to-end AnalyzeRule → Platform.rhino) ----------
+
+    @Test
+    fun jsRuleSearchParsesExpectedBooks() {
+        val source = loadSource("/parity/synthetic_js/source.json")
+        val html = resourceText("/parity/synthetic_js/search.html")
+        val books = ParityDriver.parseSearch(source, html, baseUrl)
+
+        assertEquals("应解析出 3 本书", 3, books.size)
+        // name 走 @js:java.getString(...) + ' [' + java.getString(...) + ']' → JS 引擎 + JsExtensions 回调
+        assertBook(books[0], "书名A [作者A]", "作者A", "https://synthetic.test/book/1", "https://synthetic.test/cover/1.jpg", "简介A", "玄幻", "第10章", "10.0万字")
+        assertBook(books[1], "书名B [作者B]", "作者B", "https://synthetic.test/book/2", "https://synthetic.test/cover/2.jpg", "简介B", "都市", "第20章", "20.0万字")
+        assertBook(books[2], "书名C [作者C]", "作者C", "https://synthetic.test/book/3", "https://synthetic.test/cover/3.jpg", "简介C", "科幻", "第30章", "30.0万字")
+    }
+
+    @Test
+    fun jsRuleSearchHashIsStable() {
+        val source = loadSource("/parity/synthetic_js/source.json")
+        val html = resourceText("/parity/synthetic_js/search.html")
+        val books = ParityDriver.parseSearch(source, html, baseUrl)
+        val actual = ParityDriver.normalizedHash(books)
+        assertEquals(
+            "JS-rule fixture hash 变更:引擎解析逻辑可能回归(核对输出后更新 JS_HASH)。",
+            JS_HASH, actual
+        )
+    }
+
     // ---------- helpers ----------
 
     private fun loadSource(path: String): BookSourceFixture =
@@ -123,5 +152,7 @@ class BookSourceParityTest {
         private const val JSOUP_HASH = "210c6e1b824feebb920318fad717c0f100c0e0fadb04b156a9daf9078b88da2a"
         /** §5c 契约常量:JsonPath fixture 规范化结果 SHA-256。变更需人工核对输出。 */
         private const val JSONPATH_HASH = "40ce6aa1fdc843ea6e2e915e48bb90af0a7d3292c18dacd9e31de09f5ccc314a"
+        /** §5c 契约常量:JS-rule fixture(@js:java.getString...)规范化结果 SHA-256。变更需人工核对输出。 */
+        private const val JS_HASH = "83e1745cc4219670601673558778d60e8456afdb5be13ca54f442e0e1d3918ef"
     }
 }
