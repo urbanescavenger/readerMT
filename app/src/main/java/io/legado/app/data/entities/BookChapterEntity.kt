@@ -39,7 +39,7 @@ import splitties.init.appCtx
         onDelete = ForeignKey.CASCADE
     ))]
 )    // 删除书籍时自动删除章节
-data class BookChapter(
+data class BookChapterEntity(
     var url: String = "",               // 章节地址
     var title: String = "",             // 章节标题
     var isVolume: Boolean = false,      // 是否是卷名
@@ -111,7 +111,7 @@ data class BookChapter(
     override fun hashCode() = url.hashCode()
 
     override fun equals(other: Any?): Boolean {
-        if (other is BookChapter) {
+        if (other is BookChapterEntity) {
             return other.url == url
         }
         return false
@@ -144,7 +144,7 @@ data class BookChapter(
                                 item.regex,
                                 item.replacement,
                                 item.getValidTimeoutMillisecond(),
-                                this@BookChapter,
+                                this@BookChapterEntity,
                                 replaceBook
                             )
                         } else {

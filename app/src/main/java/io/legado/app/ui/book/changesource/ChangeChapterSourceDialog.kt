@@ -21,8 +21,8 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogChapterChangeSourceBinding
 import io.legado.app.help.book.BookHelp
@@ -310,7 +310,7 @@ class ChangeChapterSourceDialog() : BaseDialogFragment(R.layout.dialog_chapter_c
         binding.clToc.visible()
         binding.loadingToc.visible()
         val book = searchBook.toBook()
-        viewModel.getToc(book, { toc: List<BookChapter>, _: BookSource ->
+        viewModel.getToc(book, { toc: List<BookChapterEntity>, _: BookSourceEntity ->
             tocAdapter.durChapterIndex =
                 BookHelp.getDurChapter(viewModel.chapterIndex, viewModel.chapterTitle, toc)
             binding.loadingToc.gone()
@@ -360,7 +360,7 @@ class ChangeChapterSourceDialog() : BaseDialogFragment(R.layout.dialog_chapter_c
         return viewModel.getBookScore(searchBook)
     }
 
-    override fun clickChapter(bookChapter: BookChapter, nextChapterUrl: String?) {
+    override fun clickChapter(bookChapter: BookChapterEntity, nextChapterUrl: String?) {
         searchBook?.let {
             binding.loadingToc.visible()
             viewModel.getContent(it.toBook(), bookChapter, nextChapterUrl, contentSuccess) { msg ->
@@ -407,7 +407,7 @@ class ChangeChapterSourceDialog() : BaseDialogFragment(R.layout.dialog_chapter_c
 
     interface CallBack {
         val oldBook: Book?
-        fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>)
+        fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>)
         fun replaceContent(content: String)
     }
 

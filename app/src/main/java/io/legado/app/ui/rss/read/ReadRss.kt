@@ -6,7 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.SourceType
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssReadRecord
 import io.legado.app.data.entities.RssSource
 import io.legado.app.exception.ContentEmptyException
@@ -45,7 +45,7 @@ object ReadRss {
         readNoHtml(activity, record, type)
     }
 
-    fun readRss(fragment: Fragment, rssArticle: RssArticle,rssSource: RssSource? = null) {
+    fun readRss(fragment: Fragment, rssArticle: RssArticleEntity,rssSource: RssSource? = null) {
         val rssReadRecord = rssArticle.toRecord()
         appDb.rssReadRecordDao.insertRecord(rssReadRecord)
         val type = rssArticle.type
@@ -72,7 +72,7 @@ object ReadRss {
         readNoHtml(fragment, rssArticle, rssSource, type)
     }
 
-    private fun readNoHtml(fragment: Fragment, rssArticle: RssArticle, rssSource: RssSource? = null, type: Int) {
+    private fun readNoHtml(fragment: Fragment, rssArticle: RssArticleEntity, rssSource: RssSource? = null, type: Int) {
         val rssSource = rssSource ?: appDb.rssSourceDao.getByKey(rssArticle.origin)
         rssSource?.let { s ->
             val ruleContent = s.ruleContent

@@ -24,12 +24,12 @@ import kotlinx.parcelize.Parcelize
 
 @Suppress("unused")
 @Parcelize
-@TypeConverters(BookSource.Converters::class)
+@TypeConverters(BookSourceEntity.Converters::class)
 @Entity(
     tableName = "book_sources",
     indices = [(Index(value = ["bookSourceUrl"], unique = false))]
 )
-data class BookSource(
+data class BookSourceEntity(
     // 地址，包括 http/https
     @PrimaryKey
     var bookSourceUrl: String = "",
@@ -115,7 +115,7 @@ data class BookSource(
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other is BookSource) other.bookSourceUrl == bookSourceUrl else false
+        return if (other is BookSourceEntity) other.bookSourceUrl == bookSourceUrl else false
     }
 
     fun getSearchRule(): SearchRule {
@@ -168,7 +168,7 @@ data class BookSource(
         }
     }
 
-    fun addGroup(groups: String): BookSource {
+    fun addGroup(groups: String): BookSourceEntity {
         bookSourceGroup?.splitNotBlank(AppPattern.splitGroupRegex)?.toHashSet()?.let {
             it.addAll(groups.splitNotBlank(AppPattern.splitGroupRegex))
             bookSourceGroup = TextUtils.join(",", it)
@@ -177,7 +177,7 @@ data class BookSource(
         return this
     }
 
-    fun removeGroup(groups: String): BookSource {
+    fun removeGroup(groups: String): BookSourceEntity {
         bookSourceGroup?.splitNotBlank(AppPattern.splitGroupRegex)?.toHashSet()?.let {
             it.removeAll(groups.splitNotBlank(AppPattern.splitGroupRegex).toSet())
             bookSourceGroup = TextUtils.join(",", it)
@@ -233,7 +233,7 @@ data class BookSource(
         }
     }
 
-    fun equal(source: BookSource): Boolean {
+    fun equal(source: BookSourceEntity): Boolean {
         return equal(bookSourceName, source.bookSourceName)
                 && equal(bookSourceUrl, source.bookSourceUrl)
                 && equal(bookSourceGroup, source.bookSourceGroup)

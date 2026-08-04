@@ -8,7 +8,7 @@ import io.legado.app.api.ReturnData
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.CacheManager
 import io.legado.app.help.book.BookHelp
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit
 object BookController {
 
     private lateinit var book: Book
-    private var bookSource: BookSource? = null
+    private var bookSource: BookSourceEntity? = null
     private var bookUrl: String = ""
     private val defaultCoverCache by lazy { WeakHashMap<Drawable, Bitmap>() }
 

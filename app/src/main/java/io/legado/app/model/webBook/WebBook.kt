@@ -2,8 +2,8 @@ package io.legado.app.model.webBook
 
 import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.exception.NoStackTraceException
@@ -34,7 +34,7 @@ object WebBook {
      */
     fun searchBook(
         scope: CoroutineScope,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         key: String,
         page: Int? = 1,
         context: CoroutineContext = Dispatchers.IO,
@@ -47,7 +47,7 @@ object WebBook {
     }
 
     suspend fun searchBookAwait(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         key: String,
         page: Int? = 1,
         filter: ((name: String, author: String, kind: String?) -> Boolean)? = null,
@@ -111,7 +111,7 @@ object WebBook {
      */
     fun exploreBook(
         scope: CoroutineScope,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         url: String,
         page: Int? = 1,
         context: CoroutineContext = Dispatchers.IO,
@@ -122,7 +122,7 @@ object WebBook {
     }
 
     suspend fun exploreBookAwait(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         url: String,
         page: Int? = 1,
     ): ArrayList<SearchBook> {
@@ -179,7 +179,7 @@ object WebBook {
      */
     fun getBookInfo(
         scope: CoroutineScope,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
         context: CoroutineContext = Dispatchers.IO,
         canReName: Boolean = true,
@@ -190,7 +190,7 @@ object WebBook {
     }
 
     suspend fun getBookInfoAwait(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
         canReName: Boolean = true,
     ): Book {
@@ -256,18 +256,18 @@ object WebBook {
      */
     fun getChapterList(
         scope: CoroutineScope,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
         runPerJs: Boolean = false,
         context: CoroutineContext = Dispatchers.IO,
         isFromBookInfo : Boolean = false
-    ): Coroutine<List<BookChapter>> {
+    ): Coroutine<List<BookChapterEntity>> {
         return Coroutine.async(scope, context) {
             getChapterListAwait(bookSource, book, runPerJs,isFromBookInfo).getOrThrow()
         }
     }
 
-    suspend fun runPreUpdateJs(bookSource: BookSource, book: Book, isFromBookInfo : Boolean = false): Result<Unit> {
+    suspend fun runPreUpdateJs(bookSource: BookSourceEntity, book: Book, isFromBookInfo : Boolean = false): Result<Unit> {
         return kotlin.runCatching {
             val preUpdateJs = bookSource.ruleToc?.preUpdateJs
             if (!preUpdateJs.isNullOrBlank()) {
@@ -282,11 +282,11 @@ object WebBook {
     }
 
     suspend fun getChapterListAwait(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
         runPerJs: Boolean = false,
         isFromBookInfo : Boolean = false
-    ): Result<List<BookChapter>> {
+    ): Result<List<BookChapterEntity>> {
         book.removeAllBookType()
         book.addType(bookSource.getBookType())
         return kotlin.runCatching {
@@ -355,9 +355,9 @@ object WebBook {
      */
     fun getContent(
         scope: CoroutineScope,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         nextChapterUrl: String? = null,
         needSave: Boolean = true,
         context: CoroutineContext = Dispatchers.IO,
@@ -377,9 +377,9 @@ object WebBook {
     }
 
     suspend fun getContentAwait(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         nextChapterUrl: String? = null,
         needSave: Boolean = true
     ): String {
@@ -464,7 +464,7 @@ object WebBook {
         author: String,
         context: CoroutineContext = Dispatchers.IO,
         semaphore: Semaphore? = null,
-    ): Coroutine<Pair<Book, BookSource>> {
+    ): Coroutine<Pair<Book, BookSourceEntity>> {
         return Coroutine.async(scope, context, semaphore = semaphore) {
             for (s in bookSourceParts) {
                 val source = s.getBookSource() ?: continue
@@ -478,7 +478,7 @@ object WebBook {
     }
 
     suspend fun preciseSearchAwait(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         name: String,
         author: String,
     ): Result<Book> {
@@ -501,7 +501,7 @@ object WebBook {
     /**
      * 检测重定向
      */
-    private fun checkRedirect(bookSource: BookSource, response: StrResponse) {
+    private fun checkRedirect(bookSource: BookSourceEntity, response: StrResponse) {
         response.raw.priorResponse?.let {
             if (it.isRedirect) {
                 Debug.log(bookSource.bookSourceUrl, "≡检测到重定向(${it.code})")

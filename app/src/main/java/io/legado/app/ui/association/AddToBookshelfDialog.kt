@@ -14,7 +14,7 @@ import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.databinding.DialogAddToBookshelfBinding
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.analyzeRule.AnalyzeUrl
@@ -161,7 +161,7 @@ class AddToBookshelfDialog() : BaseDialogFragment(R.layout.dialog_add_to_bookshe
             }
         }
 
-        private suspend fun getBookInfo(bookUrl: String, source: BookSource): Book? {
+        private suspend fun getBookInfo(bookUrl: String, source: BookSourceEntity): Book? {
             return kotlin.runCatching {
                 val book = Book(
                     bookUrl = bookUrl,

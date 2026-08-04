@@ -34,8 +34,8 @@ import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssSource
 import io.legado.app.databinding.ActivityVideoPlayerBinding
 import io.legado.app.help.GlideImageGetter
@@ -141,7 +141,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
         registerForActivityResult(StartActivityContract(BookSourceEditActivity::class.java)) {
             if (it.resultCode == RESULT_OK) {
                 viewModel.upSource {
-                    menuCustomBtn?.isVisible = (VideoPlay.source as? BookSource)?.customButton == true
+                    menuCustomBtn?.isVisible = (VideoPlay.source as? BookSourceEntity)?.customButton == true
                 }
             }
         }
@@ -398,7 +398,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
         binding.ivCover.load(book, false)
     }
 
-    private fun showToc(toc: List<BookChapter>) {
+    private fun showToc(toc: List<BookChapterEntity>) {
         binding.ivChapter.setOnClickListener {
             VideoPlay.book?.bookUrl?.let {
                 tocActivityResult.launch(it)
@@ -419,7 +419,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
         scrollToDurChapter(recyclerView, VideoPlay.chapterInVolumeIndex)
     }
 
-    private fun showVolumes(volumes: List<BookChapter>) {
+    private fun showVolumes(volumes: List<BookChapterEntity>) {
         val recyclerView = binding.volumes
         val layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         recyclerView.layoutManager = layoutManager
@@ -592,7 +592,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         menuCustomBtn = menu.findItem(R.id.menu_custom_btn)?.also {
-            it.isVisible = (VideoPlay.source as? BookSource)?.customButton == true
+            it.isVisible = (VideoPlay.source as? BookSourceEntity)?.customButton == true
         }
         starMenuItem = menu.findItem(R.id.menu_rss_star)
         upStarMenu()
@@ -623,7 +623,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
     override fun onCompatOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_custom_btn -> {
-                (VideoPlay.source as? BookSource)?.let {source ->
+                (VideoPlay.source as? BookSourceEntity)?.let {source ->
                     VideoPlay.book?.let { book ->
                         SourceCallBack.callBackBtn(
                             this,
@@ -643,7 +643,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
             R.id.menu_config_settings -> showDialogFragment(SettingsDialog(this))
             R.id.menu_login -> VideoPlay.source?.let {s ->
                when (s) {
-                    is BookSource -> {
+                    is BookSourceEntity -> {
                         startActivity<SourceLoginActivity> {
                             putExtra("bookType", BookType.video)
                         }
@@ -667,7 +667,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
                     SourceCallBack.callBackBtn(
                         this,
                         SourceCallBack.CLICK_COPY_PLAY_URL,
-                        VideoPlay.source as? BookSource,
+                        VideoPlay.source as? BookSourceEntity,
                         it,
                         VideoPlay.chapter,
                         BookType.video,
@@ -690,7 +690,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
             }
             R.id.menu_edit_source -> VideoPlay.source?.let {s  ->
                 when (s) {
-                    is BookSource -> bookSourceEditResult.launch {
+                    is BookSourceEntity -> bookSourceEditResult.launch {
                         putExtra("sourceUrl", s.getKey())
                     }
                     is RssSource -> rssSourceEditResult.launch {
@@ -758,7 +758,7 @@ class VideoPlayerActivity : VMBaseActivity<ActivityVideoPlayerBinding, VideoPlay
     }
 
     private fun callBackBookEnd() {
-        SourceCallBack.callBackBook(SourceCallBack.END_READ, VideoPlay.source as BookSource?, VideoPlay.book, VideoPlay.chapter)
+        SourceCallBack.callBackBook(SourceCallBack.END_READ, VideoPlay.source as BookSourceEntity?, VideoPlay.book, VideoPlay.chapter)
     }
 
     override fun updateFavorite(title: String?, group: String?) {

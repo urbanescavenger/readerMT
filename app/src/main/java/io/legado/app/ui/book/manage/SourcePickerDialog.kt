@@ -16,7 +16,7 @@ import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.databinding.DialogSourcePickerBinding
 import io.legado.app.databinding.Item1lineTextBinding
@@ -155,7 +155,7 @@ class SourcePickerDialog : BaseDialogFragment(R.layout.dialog_source_picker),
         }
 
     interface Callback {
-        fun sourceOnClick(source: BookSource)
+        fun sourceOnClick(source: BookSourceEntity)
     }
 
 }

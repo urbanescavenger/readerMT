@@ -11,8 +11,8 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.exception.NoStackTraceException
@@ -73,7 +73,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
         get() = bookSourceParts.size
     private var searchBookList = arrayListOf<SearchBook>()
     private val searchBooks = Collections.synchronizedList(arrayListOf<SearchBook>())
-    private val tocMap = ConcurrentHashMap<String, List<BookChapter>>()
+    private val tocMap = ConcurrentHashMap<String, List<BookChapterEntity>>()
     private val _changeSourceProgress = MutableStateFlow(0 to "")
     val changeSourceProgress = _changeSourceProgress.asStateFlow()
     private var tocMapChapterCount = 0
@@ -257,7 +257,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
         }
     }
 
-    private suspend fun search(source: BookSource) {
+    private suspend fun search(source: BookSourceEntity) {
         val checkAuthor = AppConfig.changeSourceCheckAuthor
         val loadInfo = AppConfig.changeSourceLoadInfo
         val loadToc = AppConfig.changeSourceLoadToc
@@ -280,7 +280,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
         }
     }
 
-    private suspend fun loadBookInfo(source: BookSource, book: Book) {
+    private suspend fun loadBookInfo(source: BookSourceEntity, book: Book) {
         if (book.tocUrl.isEmpty()) {
             WebBook.getBookInfoAwait(source, book)
         }
@@ -293,7 +293,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
         }
     }
 
-    private suspend fun loadBookToc(source: BookSource, book: Book) {
+    private suspend fun loadBookToc(source: BookSourceEntity, book: Book) {
         val chapters = WebBook.getChapterListAwait(source, book).getOrThrow()
         for (chapter in chapters) {
             chapter.internString()
@@ -313,9 +313,9 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
     }
 
     private suspend fun loadBookWordCount(
-        source: BookSource,
+        source: BookSourceEntity,
         book: Book,
-        chapters: List<BookChapter>
+        chapters: List<BookChapterEntity>
     ) = coroutineScope {
         val chapterIndex = if (fromReadBookActivity) {
             BookHelp.getDurChapter(oldBook!!, chapters)
@@ -450,9 +450,9 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
 
     fun getToc(
         book: Book,
-        onSuccess: (toc: List<BookChapter>, source: BookSource) -> Unit,
+        onSuccess: (toc: List<BookChapterEntity>, source: BookSourceEntity) -> Unit,
         onError: (e: Throwable) -> Unit
-    ): Coroutine<Pair<List<BookChapter>, BookSource>> {
+    ): Coroutine<Pair<List<BookChapterEntity>, BookSourceEntity>> {
         return execute {
             val toc = tocMap[book.primaryStr()]
             if (toc != null) {
@@ -469,7 +469,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
         }
     }
 
-    suspend fun getToc(book: Book): Result<Pair<List<BookChapter>, BookSource>> {
+    suspend fun getToc(book: Book): Result<Pair<List<BookChapterEntity>, BookSourceEntity>> {
         return kotlin.runCatching {
             val source = appDb.bookSourceDao.getBookSource(book.origin)
                 ?: throw NoStackTraceException("书源不存在")
@@ -533,7 +533,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
 
     fun autoChangeSource(
         bookType: Int?,
-        onSuccess: (book: Book, toc: List<BookChapter>, source: BookSource) -> Unit
+        onSuccess: (book: Book, toc: List<BookChapterEntity>, source: BookSourceEntity) -> Unit
     ) {
         execute {
             searchBooks.forEach {

@@ -11,7 +11,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.databinding.ItemRssArticleBinding
 import io.legado.app.help.glide.ImageLoader
 import io.legado.app.help.glide.OkHttpModelLoader
@@ -31,7 +31,7 @@ class RssArticlesAdapter(context: Context, callBack: CallBack) :
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemRssArticleBinding,
-        item: RssArticle,
+        item: RssArticleEntity,
         payloads: MutableList<Any>
     ) {
         if (payloads.isNotEmpty()) {

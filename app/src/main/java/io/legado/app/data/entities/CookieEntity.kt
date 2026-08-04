@@ -5,7 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "cookies", indices = [(Index(value = ["url"], unique = true))])
-data class Cookie(
+data class CookieEntity(
     @PrimaryKey
     var url: String = "",
     var cookie: String = ""

@@ -3,7 +3,7 @@ package io.legado.app.ui.book.search
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.help.config.AppConfig
 import io.legado.app.utils.splitNotBlank
@@ -17,7 +17,7 @@ data class SearchScope(private var scope: String) {
 
     constructor(groups: List<String>) : this(groups.joinToString(","))
 
-    constructor(source: BookSource) : this(
+    constructor(source: BookSourceEntity) : this(
         "${source.bookSourceName.replace(":", "")}::${source.bookSourceUrl}"
     )
 
@@ -45,7 +45,7 @@ data class SearchScope(private var scope: String) {
         save()
     }
 
-    fun update(source: BookSource) {
+    fun update(source: BookSourceEntity) {
         scope = "${source.bookSourceName}::${source.bookSourceUrl}"
         stateLiveData.postValue(scope)
         if (!isSource()) {

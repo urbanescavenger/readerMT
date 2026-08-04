@@ -2,7 +2,7 @@ package io.legado.app.model
 
 import io.legado.app.constant.AppConst
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.data.entities.RssSource
 import io.legado.app.data.entities.RuleSub
@@ -17,7 +17,7 @@ import io.legado.app.utils.fromJsonArray
 import java.util.concurrent.ConcurrentHashMap
 
 object RuleUpdate {
-    val cacheBookSourceMap = ConcurrentHashMap<String, List<BookSource>>()
+    val cacheBookSourceMap = ConcurrentHashMap<String, List<BookSourceEntity>>()
     val cacheRssSourceMap = ConcurrentHashMap<String, List<RssSource>>()
     val cacheReplaceRuleMap = ConcurrentHashMap<String, List<ReplaceRule>>()
 
@@ -43,7 +43,7 @@ object RuleUpdate {
             }
         }.decompressed().byteStream().use {
             when (type) {
-                0 -> GSON.fromJsonArray<BookSource>(it).getOrThrow().let { lists ->
+                0 -> GSON.fromJsonArray<BookSourceEntity>(it).getOrThrow().let { lists ->
                     val source = lists.firstOrNull() ?: return@let
                     if (source.bookSourceUrl.isEmpty()) {
                         throw NoStackTraceException("不是书源")

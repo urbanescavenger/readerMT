@@ -3,7 +3,7 @@ package io.legado.app.help.source
 import com.script.rhino.runScriptWithContext
 import io.legado.app.constant.BookSourceType
 import io.legado.app.constant.BookType
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.ui.main.explore.ExploreAdapter.Companion.exploreInfoMapList
@@ -28,7 +28,7 @@ private val mutexMap by lazy { hashMapOf<String, Mutex>() }
 private val exploreKindsMap by lazy { ConcurrentHashMap<String, List<ExploreKind>>() }
 private val aCache by lazy { ACache.get("explore") }
 
-private fun BookSource.getExploreKindsKey(): String {
+private fun BookSourceEntity.getExploreKindsKey(): String {
     return MD5Utils.md5Encode(bookSourceUrl + exploreUrl)
 }
 
@@ -40,7 +40,7 @@ suspend fun BookSourcePart.exploreKinds(): List<ExploreKind> {
     return getBookSource()!!.exploreKinds()
 }
 
-suspend fun BookSource.exploreKinds(): List<ExploreKind> {
+suspend fun BookSourceEntity.exploreKinds(): List<ExploreKind> {
     val exploreKindsKey = getExploreKindsKey()
     exploreKindsMap[exploreKindsKey]?.let { return it }
     val exploreUrl = exploreUrl
@@ -112,7 +112,7 @@ suspend fun BookSourcePart.clearExploreKindsCache() {
     }
 }
 
-suspend fun BookSource.clearExploreKindsCache() {
+suspend fun BookSourceEntity.clearExploreKindsCache() {
     withContext(Dispatchers.IO) {
         val exploreKindsKey = getExploreKindsKey()
         aCache.remove(exploreKindsKey)
@@ -120,14 +120,14 @@ suspend fun BookSource.clearExploreKindsCache() {
     }
 }
 
-fun BookSource.exploreKindsJson(): String {
+fun BookSourceEntity.exploreKindsJson(): String {
     val exploreKindsKey = getExploreKindsKey()
     return aCache.getAsString(exploreKindsKey)?.takeIf { it.isJsonArray() }
         ?: exploreUrl.takeIf { it.isJsonArray() }
         ?: ""
 }
 
-fun BookSource.getBookType(): Int {
+fun BookSourceEntity.getBookType(): Int {
     return when (bookSourceType) {
         BookSourceType.file -> BookType.text or BookType.webFile
         BookSourceType.image -> BookType.image

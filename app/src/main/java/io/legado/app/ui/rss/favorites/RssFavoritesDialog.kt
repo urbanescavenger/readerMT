@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssStar
 import io.legado.app.databinding.DialogRssFavoriteConfigBinding
 import io.legado.app.lib.theme.primaryColor
@@ -14,7 +14,7 @@ import io.legado.app.utils.viewbindingdelegate.viewBinding
 
 class RssFavoritesDialog() : BaseDialogFragment(R.layout.dialog_rss_favorite_config, true) {
 
-    constructor(rssArticle: RssArticle) : this() {
+    constructor(rssArticle: RssArticleEntity) : this() {
         arguments = Bundle().apply {
             putString("title", rssArticle.title)
             putString("group", rssArticle.group)

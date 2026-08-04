@@ -16,7 +16,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.BookSourceType
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.rule.BookInfoRule
 import io.legado.app.data.entities.rule.ContentRule
 import io.legado.app.data.entities.rule.ExploreRule
@@ -258,7 +258,7 @@ class BookSourceEditActivity :
 
     override fun finish() {
         val source = getSource()
-        if (!source.equal(viewModel.bookSource ?: BookSource())) {
+        if (!source.equal(viewModel.bookSource ?: BookSourceEntity())) {
             alert(R.string.exit) {
                 setMessage(R.string.exit_no_save)
                 positiveButton(R.string.yes)
@@ -290,8 +290,8 @@ class BookSourceEditActivity :
         window.decorView.rootView.clearFocus()
     }
 
-    private fun upSourceView(bookSource: BookSource?) {
-        val bs = bookSource ?: BookSource()
+    private fun upSourceView(bookSource: BookSourceEntity?) {
+        val bs = bookSource ?: BookSourceEntity()
         bs.let {
             binding.cbIsEnable.isChecked = it.enabled
             binding.cbIsEnableExplore.isChecked = it.enabledExplore
@@ -422,8 +422,8 @@ class BookSourceEditActivity :
         setEditEntities(0)
     }
 
-    private fun getSource(): BookSource {
-        val source = viewModel.bookSource?.copy() ?: BookSource()
+    private fun getSource(): BookSourceEntity {
+        val source = viewModel.bookSource?.copy() ?: BookSourceEntity()
         source.enabled = binding.cbIsEnable.isChecked
         source.enabledExplore = binding.cbIsEnableExplore.isChecked
         source.enabledCookieJar = binding.cbIsEnableCookie.isChecked

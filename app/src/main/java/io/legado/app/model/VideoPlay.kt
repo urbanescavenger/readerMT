@@ -19,8 +19,8 @@ import io.legado.app.constant.SourceType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssReadRecord
 import io.legado.app.data.entities.RssSource
 import io.legado.app.data.entities.RssStar
@@ -101,16 +101,16 @@ object VideoPlay : CoroutineScope by MainScope(){
     var videoTitle: String? = null
     var source: BaseSource? = null
     var book: Book? = null
-    var toc: List<BookChapter>? =  null
-    var chapter: BookChapter? = null
-    var volumes = arrayListOf<BookChapter>()
-    var episodes: List<BookChapter>? =  null
+    var toc: List<BookChapterEntity>? =  null
+    var chapter: BookChapterEntity? = null
+    var volumes = arrayListOf<BookChapterEntity>()
+    var episodes: List<BookChapterEntity>? =  null
     /**  在当前episodes中的位置  **/
     var chapterInVolumeIndex = 0
     /**  卷章节 -> 线路或者季数  **/
     var durVolumeIndex = 0
     /**  当前卷  **/
-    var durVolume: BookChapter? = null
+    var durVolume: BookChapterEntity? = null
     /**  本集的进度  **/
     var durChapterPos = 0
     var inBookshelf = true
@@ -248,7 +248,7 @@ object VideoPlay : CoroutineScope by MainScope(){
             appCtx.toastOnUi("未找到章节")
             return
         }
-        WebBook.getContent(loadScope, source as BookSource, book, chapter)
+        WebBook.getContent(loadScope, source as BookSourceEntity, book, chapter)
             .onSuccess(IO) { content ->
                 val content = content.trim()
                 val mUrl = if (content.isEmpty()) {
@@ -422,7 +422,7 @@ object VideoPlay : CoroutineScope by MainScope(){
             durVolumeIndex = b.durVolumeIndex
             durChapterPos = b.durChapterPos
             source = appDb.bookSourceDao.getBookSource(b.origin)
-            SourceCallBack.callBackBook(SourceCallBack.START_READ, source as BookSource?, b, chapter)
+            SourceCallBack.callBackBook(SourceCallBack.START_READ, source as BookSourceEntity?, b, chapter)
         }
         upEpisodes()
         if (source == null) {
@@ -511,7 +511,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                 val chapter = toc?.getOrNull(durChapterIndex)
                 videoTitle = chapter?.title
                 book.durChapterTitle = chapter?.title
-                SourceCallBack.callBackBook(SourceCallBack.SAVE_READ, source as BookSource?, book, chapter, durTime.toString())
+                SourceCallBack.callBackBook(SourceCallBack.SAVE_READ, source as BookSourceEntity?, book, chapter, durTime.toString())
                 book.update()
             }
             rssStar?.let {

@@ -3,7 +3,7 @@ package io.legado.app.utils
 import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssSource
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -62,7 +62,7 @@ object ImageUtils {
         source: BaseSource?, isCover: Boolean
     ): String? {
         return when (source) {
-            is BookSource ->
+            is BookSourceEntity ->
                 if (isCover) source.coverDecodeJs
                 else source.getContentRule().imageDecode
 

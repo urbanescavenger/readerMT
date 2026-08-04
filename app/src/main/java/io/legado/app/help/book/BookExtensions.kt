@@ -13,7 +13,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseBook
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.RuleBigDataHelp
 import io.legado.app.help.config.AppConfig
@@ -296,7 +296,7 @@ fun Book.getFolderNameNoCache(): String {
     }
 }
 
-fun Book.getBookSource(): BookSource? {
+fun Book.getBookSource(): BookSourceEntity? {
     return appDb.bookSourceDao.getBookSource(origin)
 }
 

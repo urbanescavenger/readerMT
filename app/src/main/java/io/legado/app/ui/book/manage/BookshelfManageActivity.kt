@@ -18,7 +18,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.databinding.ActivityArrangeBookBinding
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.DirectLinkUpload
@@ -420,7 +420,7 @@ class BookshelfManageActivity :
         }
     }
 
-    override fun sourceOnClick(source: BookSource) {
+    override fun sourceOnClick(source: BookSourceEntity) {
         viewModel.changeSource(adapter.selection, source)
         viewModel.batchChangeSourceState.value = true
     }

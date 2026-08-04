@@ -5,8 +5,8 @@ import androidx.lifecycle.lifecycleScope
 import com.script.rhino.runScriptWithContext
 import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.ui.login.SourceLoginJsExtensions
 import io.legado.app.utils.isTrue
@@ -44,9 +44,9 @@ object SourceCallBack {
     fun callBackBtn(
         activity: AppCompatActivity,
         event: String,
-        source: BookSource?,
+        source: BookSourceEntity?,
         book: Book,
-        chapter: BookChapter?,
+        chapter: BookChapterEntity?,
         bookType: Int = 0,
         result: String? = null,
         noCall: (() -> Unit)? = null
@@ -85,9 +85,9 @@ object SourceCallBack {
 
     fun callBackBook(
         event: String,
-        source: BookSource?,
+        source: BookSourceEntity?,
         book: Book?,
-        chapter: BookChapter? = null,
+        chapter: BookChapterEntity? = null,
         result: String? = null
     ) {
         if (source == null || book == null || !source.eventListener) return
@@ -109,7 +109,7 @@ object SourceCallBack {
         }
     }
 
-    fun callBackSource(scope: CoroutineScope, event: String, source: BookSource) {
+    fun callBackSource(scope: CoroutineScope, event: String, source: BookSourceEntity) {
         val jsStr = source.getContentRule().callBackJs
         if (jsStr.isNullOrEmpty()) return
         scope.launch(IO) {

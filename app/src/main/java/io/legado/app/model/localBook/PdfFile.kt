@@ -7,7 +7,7 @@ import android.os.ParcelFileDescriptor
 import androidx.core.graphics.createBitmap
 import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.book.getLocalUri
 import io.legado.app.utils.BitmapUtils
 import io.legado.app.utils.FileUtils
@@ -46,12 +46,12 @@ class PdfFile(var book: Book) {
         }
 
         @Synchronized
-        override fun getChapterList(book: Book): ArrayList<BookChapter> {
+        override fun getChapterList(book: Book): ArrayList<BookChapterEntity> {
             return getPFile(book).getChapterList()
         }
 
         @Synchronized
-        override fun getContent(book: Book, chapter: BookChapter): String? {
+        override fun getContent(book: Book, chapter: BookChapterEntity): String? {
             return getPFile(book).getContent(chapter)
         }
 
@@ -134,7 +134,7 @@ class PdfFile(var book: Book) {
 
     }
 
-    private fun getContent(chapter: BookChapter): String? =
+    private fun getContent(chapter: BookChapterEntity): String? =
         if (pdfRenderer == null) {
             null
         } else {
@@ -172,14 +172,14 @@ class PdfFile(var book: Book) {
         }
     }
 
-    private fun getChapterList(): ArrayList<BookChapter> {
-        val chapterList = ArrayList<BookChapter>()
+    private fun getChapterList(): ArrayList<BookChapterEntity> {
+        val chapterList = ArrayList<BookChapterEntity>()
 
         pdfRenderer?.let { renderer ->
             if (renderer.pageCount > 0) {
                 val chapterCount = ceil((renderer.pageCount.toDouble() / PAGE_SIZE)).toInt()
                 (0 until chapterCount).forEach {
-                    val chapter = BookChapter()
+                    val chapter = BookChapterEntity()
                     chapter.index = it
                     chapter.bookUrl = book.bookUrl
                     chapter.title = "分段_${it}"

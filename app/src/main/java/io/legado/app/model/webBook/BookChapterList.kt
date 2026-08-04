@@ -6,8 +6,8 @@ import com.script.rhino.RhinoScriptEngine
 import io.legado.app.R
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.rule.TocRule
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.exception.TocEmptyException
@@ -34,17 +34,17 @@ import kotlinx.coroutines.currentCoroutineContext
 object BookChapterList {
 
     suspend fun analyzeChapterList(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
         baseUrl: String,
         redirectUrl: String,
         body: String?,
         isFromBookInfo: Boolean = false
-    ): List<BookChapter> {
+    ): List<BookChapterEntity> {
         body ?: throw NoStackTraceException(
             appCtx.getString(R.string.error_get_web_content, baseUrl)
         )
-        val chapterList = ArrayList<BookChapter>()
+        val chapterList = ArrayList<BookChapterEntity>()
         Debug.log(bookSource.bookSourceUrl, "≡获取成功:${baseUrl}")
         Debug.log(bookSource.bookSourceUrl, body, state = 30)
         val tocRule = bookSource.getTocRule()
@@ -188,17 +188,17 @@ object BookChapterList {
         body: String,
         tocRule: TocRule,
         listRule: String,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         getNextUrl: Boolean = true,
         log: Boolean = false,
         isFromBookInfo:Boolean
-    ): Pair<List<BookChapter>, List<String>> {
+    ): Pair<List<BookChapterEntity>, List<String>> {
         val analyzeRule = AnalyzeRule(book, bookSource, false, isFromBookInfo)
         analyzeRule.setContent(body).setBaseUrl(baseUrl)
         analyzeRule.setRedirectUrl(redirectUrl)
         analyzeRule.setCoroutineContext(currentCoroutineContext())
         //获取目录列表
-        val chapterList = arrayListOf<BookChapter>()
+        val chapterList = arrayListOf<BookChapterEntity>()
         Debug.log(bookSource.bookSourceUrl, "┌获取目录列表", log)
         val elements = analyzeRule.getElements(listRule)
         Debug.log(bookSource.bookSourceUrl, "└列表大小:${elements.size}", log)
@@ -233,7 +233,7 @@ object BookChapterList {
             elements.forEachIndexed { index, item ->
                 currentCoroutineContext().ensureActive()
                 analyzeRule.setContent(item)
-                val bookChapter = BookChapter(bookUrl = book.bookUrl, baseUrl = redirectUrl)
+                val bookChapter = BookChapterEntity(bookUrl = book.bookUrl, baseUrl = redirectUrl)
                 analyzeRule.setChapter(bookChapter)
                 bookChapter.title = analyzeRule.getString(nameRule)
                 bookChapter.url = analyzeRule.getString(urlRule)
@@ -302,7 +302,7 @@ object BookChapterList {
         return Pair(chapterList, nextUrlList)
     }
 
-    private fun upChapterInfo(list: ArrayList<BookChapter>, book: Book) {
+    private fun upChapterInfo(list: ArrayList<BookChapterEntity>, book: Book) {
         if (!AppConfig.tocCountWords) {
             return
         }

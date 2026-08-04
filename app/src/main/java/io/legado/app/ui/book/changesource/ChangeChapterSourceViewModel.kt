@@ -4,7 +4,7 @@ import android.app.Application
 import android.os.Bundle
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.webBook.WebBook
 
@@ -27,7 +27,7 @@ class ChangeChapterSourceViewModel(application: Application) :
 
     fun getContent(
         book: Book,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         nextChapterUrl: String?,
         success: (content: String) -> Unit,
         error: (msg: String) -> Unit

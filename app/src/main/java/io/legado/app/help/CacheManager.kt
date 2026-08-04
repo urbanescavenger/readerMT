@@ -4,7 +4,7 @@ import android.webkit.JavascriptInterface
 import androidx.annotation.Keep
 import androidx.collection.LruCache
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.Cache
+import io.legado.app.data.entities.CacheEntity
 import io.legado.app.model.analyzeRule.QueryTTF
 import io.legado.app.utils.ACache
 import io.legado.app.utils.memorySize
@@ -63,7 +63,7 @@ object CacheManager {
             else -> {
                 val valueStr = value.toString()
                 putMemory(key, valueStr)
-                val cache = Cache(key, valueStr, deadline)
+                val cache = CacheEntity(key, valueStr, deadline)
                 appDb.cacheDao.insert(cache)
             }
         }

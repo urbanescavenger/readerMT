@@ -7,7 +7,7 @@ import androidx.core.content.ContextCompat
 import io.legado.app.constant.SourceType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.RssSource
 import io.legado.app.help.AppCacheManager
@@ -79,7 +79,7 @@ object SourceHelp {
         AppCacheManager.clearSourceVariables()
     }
 
-    fun deleteBookSources(sources: List<BookSource>) {
+    fun deleteBookSources(sources: List<BookSourceEntity>) {
         appDb.runInTransaction {
             sources.forEach {
                 deleteBookSourceInternal(it.bookSourceUrl)
@@ -138,7 +138,7 @@ object SourceHelp {
         }
     }
 
-    fun insertBookSource(vararg bookSources: BookSource) {
+    fun insertBookSource(vararg bookSources: BookSourceEntity) {
         val bookSourcesGroup = bookSources.groupBy {
             is18Plus(it.bookSourceUrl)
         }

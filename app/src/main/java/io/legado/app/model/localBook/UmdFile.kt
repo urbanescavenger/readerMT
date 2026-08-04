@@ -1,7 +1,7 @@
 package io.legado.app.model.localBook
 
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.utils.DebugLog
 import io.legado.app.utils.FileUtils
 import io.legado.app.utils.printOnDebug
@@ -25,12 +25,12 @@ class UmdFile(var book: Book) {
         }
 
         @Synchronized
-        override fun getChapterList(book: Book): ArrayList<BookChapter> {
+        override fun getChapterList(book: Book): ArrayList<BookChapterEntity> {
             return getUFile(book).getChapterList()
         }
 
         @Synchronized
-        override fun getContent(book: Book, chapter: BookChapter): String? {
+        override fun getContent(book: Book, chapter: BookChapterEntity): String? {
             return getUFile(book).getContent(chapter)
         }
 
@@ -97,15 +97,15 @@ class UmdFile(var book: Book) {
         }
     }
 
-    private fun getContent(chapter: BookChapter): String? {
+    private fun getContent(chapter: BookChapterEntity): String? {
         return umdBook?.chapters?.getContentString(chapter.index)
     }
 
-    private fun getChapterList(): ArrayList<BookChapter> {
-        val chapterList = ArrayList<BookChapter>()
+    private fun getChapterList(): ArrayList<BookChapterEntity> {
+        val chapterList = ArrayList<BookChapterEntity>()
         umdBook?.chapters?.titles?.forEachIndexed { index, _ ->
             val title = umdBook!!.chapters.getTitle(index)
-            val chapter = BookChapter()
+            val chapter = BookChapterEntity()
             chapter.title = title
             chapter.index = index
             chapter.bookUrl = book.bookUrl

@@ -59,7 +59,7 @@ data class BookSourcePart(
         }
     }
 
-    fun getBookSource(): BookSource? {
+    fun getBookSource(): BookSourceEntity? {
         return appDb.bookSourceDao.getBookSource(bookSourceUrl)
     }
 
@@ -80,6 +80,6 @@ data class BookSourcePart(
 
 }
 
-fun List<BookSourcePart>.toBookSource(): List<BookSource> {
+fun List<BookSourcePart>.toBookSource(): List<BookSourceEntity> {
     return mapNotNull { it.getBookSource() }
 }

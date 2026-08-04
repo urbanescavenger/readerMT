@@ -2,7 +2,7 @@ package io.legado.app
 
 import com.script.ScriptBindings
 import com.script.rhino.RhinoScriptEngine
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import org.intellij.lang.annotations.Language
 import org.junit.Assert
 import org.junit.Test
@@ -96,7 +96,7 @@ class JsTest {
 
     @Test
     fun chapterText() {
-        val chapter = BookChapter(title = "xxxyyy")
+        val chapter = BookChapterEntity(title = "xxxyyy")
         val bindings = ScriptBindings()
         bindings["chapter"] = chapter
         @Language("js")

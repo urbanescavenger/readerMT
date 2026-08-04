@@ -9,7 +9,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.AudioPlay
 import io.legado.app.model.ReadBook
@@ -22,7 +22,7 @@ class SourceLoginViewModel(application: Application) : BaseViewModel(application
     var headerMap: Map<String, String> = emptyMap()
     var book: Book? = null
     var bookType: Int = 0
-    var chapter: BookChapter? = null
+    var chapter: BookChapterEntity? = null
     var loginInfo: MutableMap<String, String> = mutableMapOf()
 
     fun initData(intent: Intent, success: (bookSource: BaseSource) -> Unit, error: () -> Unit) {

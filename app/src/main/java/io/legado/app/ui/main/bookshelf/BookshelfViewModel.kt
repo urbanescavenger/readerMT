@@ -8,7 +8,7 @@ import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.config.AppConfig
@@ -53,7 +53,7 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                     continue
                 }
                 val baseUrl = NetworkUtils.getBaseUrl(bookUrl) ?: continue
-                var source: BookSource? = null
+                var source: BookSourceEntity? = null
                 val urlMatcher = AnalyzeUrl.paramPattern.matcher(bookUrl)
                 if (urlMatcher.find()) { //指定书源
                     val origin = GSON.fromJsonObject<AnalyzeUrl.UrlOption>(

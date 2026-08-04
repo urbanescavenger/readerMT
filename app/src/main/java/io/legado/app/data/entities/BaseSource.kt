@@ -150,7 +150,7 @@ interface BaseSource : JsExtensions {
      */
     fun putLoginHeader(header: String) {
         val headerMap = GSON.fromJsonObject<Map<String, String>>(header).getOrNull()
-        val cookie = headerMap?.get("Cookie") ?: headerMap?.get("cookie")
+        val cookie = headerMap?.get("CookieEntity") ?: headerMap?.get("cookie")
         cookie?.let {
             CookieStore.replaceCookie(getKey(), it)
         }
@@ -293,7 +293,7 @@ interface BaseSource : JsExtensions {
             error("refreshExplore must be called on a background thread")
         }
         runBlocking {
-            if (this@BaseSource is BookSource) {
+            if (this@BaseSource is BookSourceEntity) {
                 this@BaseSource.clearExploreKindsCache()
             }
         }

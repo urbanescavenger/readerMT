@@ -1,6 +1,6 @@
 package io.legado.app.model.rss
 
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.model.Debug
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
@@ -16,10 +16,10 @@ object RssParserDefault {
         sortName: String,
         xml: String,
         sourceUrl: String
-    ): Pair<MutableList<RssArticle>, String?> {
+    ): Pair<MutableList<RssArticleEntity>, String?> {
 
-        val articleList = mutableListOf<RssArticle>()
-        var currentArticle = RssArticle()
+        val articleList = mutableListOf<RssArticleEntity>()
+        var currentArticle = RssArticleEntity()
 
         val factory = XmlPullParserFactory.newInstance()
         factory.isNamespaceAware = false
@@ -94,7 +94,7 @@ object RssParserDefault {
                 currentArticle.origin = sourceUrl
                 currentArticle.sort = sortName
                 articleList.add(currentArticle)
-                currentArticle = RssArticle()
+                currentArticle = RssArticleEntity()
             }
             eventType = xmlPullParser.next()
         }

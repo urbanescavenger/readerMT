@@ -4,8 +4,8 @@ import io.legado.app.R
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.rule.ContentRule
 import io.legado.app.exception.ContentEmptyException
 import io.legado.app.exception.NoStackTraceException
@@ -36,9 +36,9 @@ object BookContent {
 
     @Throws(Exception::class)
     suspend fun analyzeContent(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         baseUrl: String,
         redirectUrl: String,
         body: String?,
@@ -217,8 +217,8 @@ object BookContent {
         redirectUrl: String,
         body: String,
         contentRule: ContentRule,
-        chapter: BookChapter,
-        bookSource: BookSource,
+        chapter: BookChapterEntity,
+        bookSource: BookSourceEntity,
         nextChapterUrl: String?,
         getNextPageUrl: Boolean = true,
         printLog: Boolean = true

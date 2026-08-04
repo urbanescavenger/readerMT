@@ -8,7 +8,7 @@ import io.legado.app.BuildConfig
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.help.book.isNotShelf
 import io.legado.app.model.webBook.WebBook
@@ -30,7 +30,7 @@ class ExploreShowViewModel(application: Application) : BaseViewModel(application
     val errorLiveData = MutableLiveData<String>()
     val errorTopLiveData = MutableLiveData<String>()
     val pageLiveData = MutableLiveData<Int>()
-    private var bookSource: BookSource? = null
+    private var bookSource: BookSourceEntity? = null
     private var exploreUrl: String? = null
     private var page = 1
     private var books = linkedSetOf<SearchBook>()

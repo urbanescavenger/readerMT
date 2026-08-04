@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssSource
 import io.legado.app.model.rss.Rss
 import io.legado.app.utils.stackTraceStr
@@ -76,7 +76,7 @@ class RssArticlesViewModel(application: Application) : BaseViewModel(application
         }
     }
 
-    private fun loadMoreSuccess(articles: MutableList<RssArticle>) {
+    private fun loadMoreSuccess(articles: MutableList<RssArticleEntity>) {
         if (articles.isEmpty()) {
             loadFinallyLiveData.postValue(false)
             return

@@ -9,8 +9,8 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.config.AppConfig
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.localBook.LocalBook
@@ -158,9 +158,9 @@ object BookHelp {
     }
 
     suspend fun saveContent(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         content: String
     ) {
         try {
@@ -175,7 +175,7 @@ object BookHelp {
 
     fun saveText(
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         content: String
     ) {
         if (content.isEmpty()) return
@@ -193,7 +193,7 @@ object BookHelp {
         }
     }
 
-    fun flowImages(bookChapter: BookChapter, content: String): Flow<String> {
+    fun flowImages(bookChapter: BookChapterEntity, content: String): Flow<String> {
         return flow {
             val matcher = AppPattern.imgPattern.matcher(content)
             while (matcher.find()) {
@@ -205,9 +205,9 @@ object BookHelp {
     }
 
     suspend fun saveImages(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         content: String,
         concurrency: Int = AppConfig.threadCount
     ) = coroutineScope {
@@ -217,10 +217,10 @@ object BookHelp {
     }
 
     suspend fun saveImage(
-        bookSource: BookSource?,
+        bookSource: BookSourceEntity?,
         book: Book,
         src: String,
-        chapter: BookChapter? = null
+        chapter: BookChapterEntity? = null
     ) {
         if (isImageExist(book, src)) {
             return
@@ -338,7 +338,7 @@ object BookHelp {
     /**
      * 检测该章节是否下载
      */
-    fun hasContent(book: Book, bookChapter: BookChapter): Boolean {
+    fun hasContent(book: Book, bookChapter: BookChapterEntity): Boolean {
         return if (book.isLocalTxt ||
             (bookChapter.isVolume && bookChapter.url.startsWith(bookChapter.title))
         ) {
@@ -355,7 +355,7 @@ object BookHelp {
     /**
      * 检测图片是否下载
      */
-    fun hasImageContent(book: Book, bookChapter: BookChapter): Boolean {
+    fun hasImageContent(book: Book, bookChapter: BookChapterEntity): Boolean {
         if (!hasContent(book, bookChapter)) {
             return false
         }
@@ -397,7 +397,7 @@ object BookHelp {
     /**
      * 读取章节内容
      */
-    fun getContent(book: Book, bookChapter: BookChapter): String? {
+    fun getContent(book: Book, bookChapter: BookChapterEntity): String? {
         val file = downloadDir.getFile(
             cacheFolderName,
             book.getFolderName(),
@@ -423,7 +423,7 @@ object BookHelp {
     /**
      * 删除章节内容
      */
-    fun delContent(book: Book, bookChapter: BookChapter) {
+    fun delContent(book: Book, bookChapter: BookChapterEntity) {
         FileUtils.createFileIfNotExist(
             downloadDir,
             cacheFolderName,
@@ -435,7 +435,7 @@ object BookHelp {
     /**
      * 设置是否禁用正文的去除重复标题,针对单个章节
      */
-    fun setRemoveSameTitle(book: Book, bookChapter: BookChapter, removeSameTitle: Boolean) {
+    fun setRemoveSameTitle(book: Book, bookChapter: BookChapterEntity, removeSameTitle: Boolean) {
         val fileName = bookChapter.getFileName("nr")
         val contentProcessor = ContentProcessor.get(book)
         if (removeSameTitle) {
@@ -461,7 +461,7 @@ object BookHelp {
     /**
      * 获取是否去除重复标题
      */
-    fun removeSameTitle(book: Book, bookChapter: BookChapter): Boolean {
+    fun removeSameTitle(book: Book, bookChapter: BookChapterEntity): Boolean {
         val path = FileUtils.getPath(
             downloadDir,
             cacheFolderName,
@@ -499,7 +499,7 @@ object BookHelp {
     fun getDurChapter(
         oldDurChapterIndex: Int,
         oldDurChapterName: String?,
-        newChapterList: List<BookChapter>,
+        newChapterList: List<BookChapterEntity>,
         oldChapterListSize: Int = 0
     ): Int {
         if (oldDurChapterIndex <= 0) return 0
@@ -547,7 +547,7 @@ object BookHelp {
 
     fun getDurChapter(
         oldBook: Book,
-        newChapterList: List<BookChapter>
+        newChapterList: List<BookChapterEntity>
     ): Int {
         return oldBook.run {
             getDurChapter(durChapterIndex, durChapterTitle, newChapterList, totalChapterNum)

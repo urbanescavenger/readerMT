@@ -21,8 +21,8 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.databinding.DialogBookChangeSourceBinding
 import io.legado.app.help.book.isWebFile
@@ -468,7 +468,7 @@ class ChangeBookSourceDialog() : BaseDialogFragment(R.layout.dialog_book_change_
 
     interface CallBack {
         val oldBook: Book?
-        fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>)
+        fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>)
     }
 
 }

@@ -7,7 +7,7 @@ import com.script.rhino.runScriptWithContext
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssSource
 import io.legado.app.model.VideoPlay
 import io.legado.app.ui.login.SourceLoginJsExtensions
@@ -64,7 +64,7 @@ class VideoPlayerViewModel(application: Application) : BaseViewModel(application
 
     fun upSource(success: (() -> Unit)? = null) {
         when (val source = VideoPlay.source) {
-            is BookSource -> {
+            is BookSourceEntity -> {
                 VideoPlay.source = appDb.bookSourceDao.getBookSource(source.getKey())?.also {
                     success?.invoke()
                 }

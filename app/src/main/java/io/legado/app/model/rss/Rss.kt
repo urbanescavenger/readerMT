@@ -1,6 +1,6 @@
 package io.legado.app.model.rss
 
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssSource
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.http.StrResponse
@@ -26,7 +26,7 @@ object Rss {
         page: Int,
         key: String? = null,
         context: CoroutineContext = Dispatchers.IO
-    ): Coroutine<Pair<MutableList<RssArticle>, String?>> {
+    ): Coroutine<Pair<MutableList<RssArticleEntity>, String?>> {
         return Coroutine.async(scope, context) {
             getArticlesAwait(sortName, sortUrl, rssSource, page, key)
         }
@@ -38,7 +38,7 @@ object Rss {
         rssSource: RssSource,
         page: Int,
         key: String? = null
-    ): Pair<MutableList<RssArticle>, String?> {
+    ): Pair<MutableList<RssArticleEntity>, String?> {
         val ruleData = RuleData()
         val analyzeUrl = AnalyzeUrl(
             sortUrl,
@@ -82,7 +82,7 @@ object Rss {
 
     fun getContent(
         scope: CoroutineScope,
-        rssArticle: RssArticle,
+        rssArticle: RssArticleEntity,
         ruleContent: String,
         rssSource: RssSource,
         context: CoroutineContext = Dispatchers.IO
@@ -93,7 +93,7 @@ object Rss {
     }
 
     suspend fun getContentAwait(
-        rssArticle: RssArticle,
+        rssArticle: RssArticleEntity,
         ruleContent: String,
         rssSource: RssSource,
     ): String {

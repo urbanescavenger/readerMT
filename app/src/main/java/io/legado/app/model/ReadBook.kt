@@ -5,9 +5,9 @@ import io.legado.app.constant.EventBus
 import io.legado.app.constant.PageAnim.scrollPageAnim
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.ReadRecord
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
@@ -71,7 +71,7 @@ object ReadBook : CoroutineScope by MainScope() {
     var prevTextChapter: TextChapter? = null
     var curTextChapter: TextChapter? = null
     var nextTextChapter: TextChapter? = null
-    var bookSource: BookSource? = null
+    var bookSource: BookSourceEntity? = null
     var msg: String? = null
     private val loadingChapters = arrayListOf<Int>()
     private val readRecord = ReadRecord()
@@ -642,7 +642,7 @@ object ReadBook : CoroutineScope by MainScope() {
      */
     private fun download(
         scope: CoroutineScope,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         resetPageOffset: Boolean,
         semaphore: Semaphore? = null,
         success: (() -> Unit)? = null
@@ -663,7 +663,7 @@ object ReadBook : CoroutineScope by MainScope() {
         }
     }
 
-    private suspend fun downloadAwait(chapter: BookChapter): String {
+    private suspend fun downloadAwait(chapter: BookChapterEntity): String {
         val book = book!!
         val bookSource = bookSource
         if (bookSource != null) {
@@ -692,7 +692,7 @@ object ReadBook : CoroutineScope by MainScope() {
     @Synchronized
     fun contentLoadFinish(
         book: Book,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         content: String,
         upContent: Boolean = true,
         resetPageOffset: Boolean,
@@ -784,7 +784,7 @@ object ReadBook : CoroutineScope by MainScope() {
 
     suspend fun contentLoadFinishAwait(
         book: Book,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         content: String,
         upContent: Boolean = true,
         resetPageOffset: Boolean

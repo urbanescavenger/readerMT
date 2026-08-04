@@ -21,7 +21,7 @@ import kotlinx.parcelize.Parcelize
     indices = [(Index(value = ["bookUrl"], unique = true)),
         (Index(value = ["origin"], unique = false))],
     foreignKeys = [(ForeignKey(
-        entity = BookSource::class,
+        entity = BookSourceEntity::class,
         parentColumns = ["bookSourceUrl"],
         childColumns = ["origin"],
         onDelete = ForeignKey.CASCADE

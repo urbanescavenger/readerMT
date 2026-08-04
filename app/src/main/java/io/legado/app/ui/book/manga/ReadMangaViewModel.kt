@@ -9,7 +9,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookProgress
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
@@ -235,7 +235,7 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
     /**
      * 换源
      */
-    fun changeTo(book: Book, toc: List<BookChapter>) {
+    fun changeTo(book: Book, toc: List<BookChapterEntity>) {
         changeSourceCoroutine?.cancel()
         changeSourceCoroutine = execute {
             //换源中

@@ -31,8 +31,8 @@ import io.legado.app.constant.Theme
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.databinding.ActivityBookInfoBinding
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
@@ -704,7 +704,7 @@ class BookInfoActivity :
         }
     }
 
-    private fun upLoading(isLoading: Boolean, chapterList: List<BookChapter>? = null) {
+    private fun upLoading(isLoading: Boolean, chapterList: List<BookChapterEntity>? = null) {
         when {
             isLoading -> {
                 binding.tvToc.text = getString(R.string.toc_s, getString(R.string.loading))
@@ -1109,7 +1109,7 @@ class BookInfoActivity :
     override val oldBook: Book?
         get() = viewModel.bookData.value
 
-    override fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>) {
+    override fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>) {
         viewModel.changeTo(source, book, toc)
     }
 

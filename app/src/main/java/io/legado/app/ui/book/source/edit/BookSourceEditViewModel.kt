@@ -5,7 +5,7 @@ import android.content.Intent
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.ConcurrentRateLimiter.Companion.concurrentRecordMap
 import io.legado.app.help.RuleComplete
@@ -32,12 +32,12 @@ import kotlinx.coroutines.Dispatchers
 
 class BookSourceEditViewModel(application: Application) : BaseViewModel(application) {
     var autoComplete = false
-    var bookSource: BookSource? = null
+    var bookSource: BookSourceEntity? = null
 
     fun initData(intent: Intent, onFinally: () -> Unit) {
         execute {
             val sourceUrl = intent.getStringExtra("sourceUrl")
-            var source: BookSource? = null
+            var source: BookSourceEntity? = null
             if (sourceUrl != null) {
                 source = appDb.bookSourceDao.getBookSource(sourceUrl)
             }
@@ -49,12 +49,12 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
         }
     }
 
-    fun save(source: BookSource, success: ((BookSource) -> Unit)? = null) {
+    fun save(source: BookSourceEntity, success: ((BookSourceEntity) -> Unit)? = null) {
         execute {
             if (source.bookSourceUrl.isBlank() || source.bookSourceName.isBlank()) {
                 throw NoStackTraceException(context.getString(R.string.non_null_name_url))
             }
-            val oldSource = bookSource ?: BookSource()
+            val oldSource = bookSource ?: BookSourceEntity()
             if (!source.equal(oldSource)) {
                 source.lastUpdateTime = System.currentTimeMillis()
                 if (oldSource.exploreUrl != source.exploreUrl) {
@@ -84,7 +84,7 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
         }
     }
 
-    fun pasteSource(onSuccess: (source: BookSource) -> Unit) {
+    fun pasteSource(onSuccess: (source: BookSourceEntity) -> Unit) {
         execute(context = Dispatchers.Main) {
             val text = context.getClipText()
             if (text.isNullOrBlank()) {
@@ -98,7 +98,7 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
         }
     }
 
-    fun importSource(text: String, finally: (source: BookSource) -> Unit) {
+    fun importSource(text: String, finally: (source: BookSourceEntity) -> Unit) {
         execute {
             importSource(text)
         }.onSuccess {
@@ -109,7 +109,7 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
         }
     }
 
-    suspend fun importSource(text: String): BookSource {
+    suspend fun importSource(text: String): BookSourceEntity {
         return when {
             text.isAbsUrl() -> {
                 val text1 = okHttpClient.newCallStrResponse { url(text) }.body
@@ -122,7 +122,7 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
                     val jsonItem = jsonPath.parse(items[0])
                     ImportOldData.fromOldBookSource(jsonItem)
                 } else {
-                    GSON.fromJsonArray<BookSource>(text).getOrThrow()[0]
+                    GSON.fromJsonArray<BookSourceEntity>(text).getOrThrow()[0]
                 }
             }
 
@@ -131,7 +131,7 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
                     val jsonItem = jsonPath.parse(text)
                     ImportOldData.fromOldBookSource(jsonItem)
                 } else {
-                    GSON.fromJsonObject<BookSource>(text).getOrThrow()
+                    GSON.fromJsonObject<BookSourceEntity>(text).getOrThrow()
                 }
             }
 

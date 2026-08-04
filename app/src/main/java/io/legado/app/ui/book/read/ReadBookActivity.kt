@@ -30,9 +30,9 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.constant.Status
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.IntentData
@@ -1097,7 +1097,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     override val oldBook: Book?
         get() = ReadBook.book
 
-    override fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>) {
+    override fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>) {
         if (!book.isAudio) {
             viewModel.changeTo(book, toc)
         } else {

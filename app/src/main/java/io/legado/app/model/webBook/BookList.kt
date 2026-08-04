@@ -2,7 +2,7 @@ package io.legado.app.model.webBook
 
 import io.legado.app.R
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.data.entities.rule.BookListRule
 import io.legado.app.data.entities.rule.ExploreKind
@@ -33,7 +33,7 @@ object BookList {
 
     @Throws(Exception::class)
     suspend fun analyzeBookList(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         ruleData: RuleData,
         analyzeUrl: AnalyzeUrl,
         baseUrl: String,
@@ -152,7 +152,7 @@ object BookList {
 
     @Throws(Exception::class)
     private suspend fun getInfoItem(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         analyzeRule: AnalyzeRule,
         analyzeUrl: AnalyzeUrl,
         body: String,
@@ -192,7 +192,7 @@ object BookList {
 
     @Throws(Exception::class)
     private suspend fun getSearchItem(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         analyzeRule: AnalyzeRule,
         item: Any,
         baseUrl: String,
@@ -288,7 +288,7 @@ object BookList {
         return null
     }
 
-    private fun checkExploreJson(bookSource: BookSource) {
+    private fun checkExploreJson(bookSource: BookSourceEntity) {
         if (Debug.callback == null) {
             return
         }

@@ -1,8 +1,8 @@
 package io.legado.app.utils
 
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 
-fun BookChapter.internString() {
+fun BookChapterEntity.internString() {
     title = title.intern()
     bookUrl = bookUrl.intern()
 }

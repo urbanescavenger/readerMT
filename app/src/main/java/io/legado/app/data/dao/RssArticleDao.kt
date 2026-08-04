@@ -1,17 +1,17 @@
 package io.legado.app.data.dao
 
 import androidx.room.*
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RssArticleDao {
 
     @Query("select * from rssArticles where origin = :origin and link = :link and sort = :sort")
-    fun get(origin: String, link: String, sort: String): RssArticle?
+    fun get(origin: String, link: String, sort: String): RssArticleEntity?
 
     @Query("select * from rssArticles where origin = :origin and link = :link")
-    fun getByLink(origin: String, link: String): RssArticle?
+    fun getByLink(origin: String, link: String): RssArticleEntity?
 
     @Query(
         """select t1.link, t1.sort, t1.origin, t1.`order`, t1.title, t1.content, 
@@ -20,19 +20,19 @@ interface RssArticleDao {
         on t1.link = t2.record  where t1.origin = :origin and t1.sort = :sort
         order by `order` desc"""
     )
-    fun flowByOriginSort(origin: String, sort: String): Flow<List<RssArticle>>
+    fun flowByOriginSort(origin: String, sort: String): Flow<List<RssArticleEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg rssArticle: RssArticle)
+    fun insert(vararg rssArticle: RssArticleEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun append(vararg rssArticle: RssArticle)
+    fun append(vararg rssArticle: RssArticleEntity)
 
     @Query("delete from rssArticles where origin = :origin and sort = :sort and `order` < :order")
     fun clearOld(origin: String, sort: String, order: Long)
 
     @Update
-    fun update(vararg rssArticle: RssArticle)
+    fun update(vararg rssArticle: RssArticleEntity)
 
     @Query("update rssArticles set origin = :origin where origin = :oldOrigin")
     fun updateOrigin(origin: String, oldOrigin: String)

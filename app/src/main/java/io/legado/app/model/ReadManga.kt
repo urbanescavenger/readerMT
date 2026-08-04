@@ -3,9 +3,9 @@ package io.legado.app.model
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookProgress
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.ReadRecord
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.ConcurrentRateLimiter
@@ -53,7 +53,7 @@ object ReadManga : CoroutineScope by MainScope() {
     var prevMangaChapter: MangaChapter? = null
     var curMangaChapter: MangaChapter? = null
     var nextMangaChapter: MangaChapter? = null
-    var bookSource: BookSource? = null
+    var bookSource: BookSourceEntity? = null
     var readStartTime: Long = System.currentTimeMillis()
     private val readRecord = ReadRecord()
     private val loadingChapters = arrayListOf<Int>()
@@ -192,7 +192,7 @@ object ReadManga : CoroutineScope by MainScope() {
      * 内容加载完成
      */
     suspend fun contentLoadFinish(
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         content: String?,
         errorMsg: String = "加载内容失败",
         canceled: Boolean = false
@@ -351,9 +351,9 @@ object ReadManga : CoroutineScope by MainScope() {
     }
 
     private fun downloadNetworkContent(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         scope: CoroutineScope,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         book: Book,
         semaphore: Semaphore?,
         success: suspend (String) -> Unit = {},
@@ -438,7 +438,7 @@ object ReadManga : CoroutineScope by MainScope() {
      */
     private suspend fun download(
         scope: CoroutineScope,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         semaphore: Semaphore? = null,
     ) {
         val book = book ?: return removeLoading(chapter.index)
@@ -596,7 +596,7 @@ object ReadManga : CoroutineScope by MainScope() {
         coroutineContext.cancelChildren()
     }
 
-    private suspend fun getManageChapter(chapter: BookChapter, content: String): MangaChapter {
+    private suspend fun getManageChapter(chapter: BookChapterEntity, content: String): MangaChapter {
         val list = BookHelp.flowImages(chapter, content)
             .distinctUntilChanged().mapIndexed { index, src ->
                 MangaPage(

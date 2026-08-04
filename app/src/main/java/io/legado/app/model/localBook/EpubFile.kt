@@ -7,7 +7,7 @@ import android.text.TextUtils
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.config.AppConfig
 import io.legado.app.utils.FileUtils
@@ -50,12 +50,12 @@ class EpubFile(var book: Book) {
         }
 
         @Synchronized
-        override fun getChapterList(book: Book): ArrayList<BookChapter> {
+        override fun getChapterList(book: Book): ArrayList<BookChapterEntity> {
             return getEFile(book).getChapterList()
         }
 
         @Synchronized
-        override fun getContent(book: Book, chapter: BookChapter): String? {
+        override fun getContent(book: Book, chapter: BookChapterEntity): String? {
             return getEFile(book).getContent(chapter)
         }
 
@@ -122,7 +122,7 @@ class EpubFile(var book: Book) {
         }.getOrThrow()
     }
 
-    private fun getContent(chapter: BookChapter): String? {
+    private fun getContent(chapter: BookChapterEntity): String? {
         /*获取当前章节文本*/
         val contents = epubBookContents ?: return null
         val nextChapterFirstResourceHref = chapter.getVariable("nextUrl").substringBeforeLast("#")
@@ -309,8 +309,8 @@ class EpubFile(var book: Book) {
         }
     }
 
-    private fun getChapterList(): ArrayList<BookChapter> {
-        val chapterList = ArrayList<BookChapter>()
+    private fun getChapterList(): ArrayList<BookChapterEntity> {
+        val chapterList = ArrayList<BookChapterEntity>()
         epubBook?.let { eBook ->
             val refs = eBook.tableOfContents.tocReferences
             if (refs == null || refs.isEmpty()) {
@@ -333,7 +333,7 @@ class EpubFile(var book: Book) {
                             e.printStackTrace()
                         }
                     }
-                    val chapter = BookChapter()
+                    val chapter = BookChapterEntity()
                     chapter.index = i
                     chapter.bookUrl = book.bookUrl
                     chapter.url = resource.href
@@ -362,7 +362,7 @@ class EpubFile(var book: Book) {
     /*tile获取不同书籍风格杂乱，格式化处理待优化*/
     private var durIndex = 0
     private fun parseFirstPage(
-        chapterList: ArrayList<BookChapter>,
+        chapterList: ArrayList<BookChapterEntity>,
         refs: List<TOCReference>?
     ) {
         val contents = epubBook?.contents
@@ -382,7 +382,7 @@ class EpubFile(var book: Book) {
              * fix https://github.com/gedoor/legado/issues/1932
              */
             if (firstRef.completeHref.substringBeforeLast("#") == content.href) break
-            val chapter = BookChapter()
+            val chapter = BookChapterEntity()
             var title = content.title
             if (TextUtils.isEmpty(title)) {
                 val elements = Jsoup.parse(
@@ -410,13 +410,13 @@ class EpubFile(var book: Book) {
     }
 
     private fun parseMenu(
-        chapterList: ArrayList<BookChapter>,
+        chapterList: ArrayList<BookChapterEntity>,
         refs: List<TOCReference>?,
         level: Int
     ) {
         refs?.forEach { ref ->
             if (ref.resource != null) {
-                val chapter = BookChapter()
+                val chapter = BookChapterEntity()
                 chapter.bookUrl = book.bookUrl
                 chapter.title = ref.title
                 chapter.url = ref.completeHref
@@ -438,7 +438,7 @@ class EpubFile(var book: Book) {
         fileDescriptor?.close()
     }
 
-    private fun getWordCount(list: ArrayList<BookChapter>, book: Book) {
+    private fun getWordCount(list: ArrayList<BookChapterEntity>, book: Book) {
         if (!AppConfig.tocCountWords) {
             return
         }

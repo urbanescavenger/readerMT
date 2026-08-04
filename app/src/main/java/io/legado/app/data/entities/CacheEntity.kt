@@ -5,7 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "caches", indices = [(Index(value = ["key"], unique = true))])
-data class Cache(
+data class CacheEntity(
     @PrimaryKey
     val key: String = "",
     var value: String? = null,

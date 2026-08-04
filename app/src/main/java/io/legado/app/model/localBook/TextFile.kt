@@ -6,7 +6,7 @@ import com.script.rhino.RhinoScriptEngine
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.TxtTocRule
 import io.legado.app.exception.EmptyFileException
 import io.legado.app.help.DefaultData
@@ -43,13 +43,13 @@ class TextFile(private var book: Book) {
         }
 
         @Throws(FileNotFoundException::class)
-        fun getChapterList(book: Book): ArrayList<BookChapter> {
+        fun getChapterList(book: Book): ArrayList<BookChapterEntity> {
             return getTextFile(book).getChapterList()
         }
 
         @Synchronized
         @Throws(FileNotFoundException::class)
-        fun getContent(book: Book, bookChapter: BookChapter): String {
+        fun getContent(book: Book, bookChapter: BookChapterEntity): String {
             return getTextFile(book).getContent(bookChapter)
         }
 
@@ -86,7 +86,7 @@ class TextFile(private var book: Book) {
      * 获取目录
      */
     @Throws(FileNotFoundException::class, SecurityException::class, EmptyFileException::class)
-    fun getChapterList(): ArrayList<BookChapter> {
+    fun getChapterList(): ArrayList<BookChapterEntity> {
         val modified = book.isLocalModified()
         if (book.charset == null || book.tocUrl.isBlank() || modified) {
             LocalBook.getBookInputStream(book).use { bis ->
@@ -115,7 +115,7 @@ class TextFile(private var book: Book) {
         return toc
     }
 
-    fun getContent(chapter: BookChapter): String {
+    fun getContent(chapter: BookChapterEntity): String {
         val start = chapter.start!!
         val end = chapter.end!!
         if (txtBuffer == null || start > bufferEnd || end < bufferStart) {
@@ -156,14 +156,14 @@ class TextFile(private var book: Book) {
     /**
      * 按规则解析目录
      */
-    private fun analyze(rr: List<String>): Pair<ArrayList<BookChapter>, Int> {
+    private fun analyze(rr: List<String>): Pair<ArrayList<BookChapterEntity>, Int> {
         val pattern = rr[0].toPattern(Pattern.MULTILINE)
         val jsStr = rr.getOrNull(1)
         if (rr[0].isEmpty()) {
             return analyze()
         }
         lastVolumeTitle.value = ""
-        val toc = arrayListOf<BookChapter>()
+        val toc = arrayListOf<BookChapterEntity>()
         var bookWordCount = 0
         LocalBook.getBookInputStream(book).use { bis ->
             var blockContent: String
@@ -236,7 +236,7 @@ class TextFile(private var book: Book) {
                         toc.addAll(chapters)
                         bookWordCount += wordCount
                         //创建当前章节
-                        val curChapter = BookChapter()
+                        val curChapter = BookChapterEntity()
                         curChapter.title = title
                         curChapter.start = curOffset + chapterLength
                         curChapter.end = curChapter.start
@@ -253,7 +253,7 @@ class TextFile(private var book: Book) {
                                 val title = replacement("前言", jsStr, toc)
                                 if (title.isNotEmpty()) {
                                     //如果js把"前言"处理成空了，那么就不要前言,并且前言内容会全部放到简介里面去
-                                    val qyChapter = BookChapter()
+                                    val qyChapter = BookChapterEntity()
                                     qyChapter.title = title
                                     qyChapter.start = curOffset
                                     qyChapter.end = curOffset + chapterLength
@@ -273,7 +273,7 @@ class TextFile(private var book: Book) {
                                 toc
                             ).takeIf { it.isNotEmpty() } ?: continue
                             //创建当前章节
-                            val curChapter = BookChapter()
+                            val curChapter = BookChapterEntity()
                             curChapter.title = title
                             curChapter.start = curOffset + chapterLength + titleLength
                             curChapter.end = curChapter.start
@@ -300,7 +300,7 @@ class TextFile(private var book: Book) {
                             lastChapter.wordCount =
                                 StringUtils.wordCountFormat(lastChapterWordCount)
                             //创建当前章节
-                            val curChapter = BookChapter()
+                            val curChapter = BookChapterEntity()
                             curChapter.title = title
                             curChapter.start = lastChapter.end!! + titleLength
                             curChapter.end = curChapter.start
@@ -331,7 +331,7 @@ class TextFile(private var book: Book) {
                             lastChapter.wordCount =
                                 StringUtils.wordCountFormat(chapterContentLength)
                             //创建当前章节
-                            val curChapter = BookChapter()
+                            val curChapter = BookChapterEntity()
                             curChapter.title = title
                             curChapter.start = lastChapter.end!! + titleLength
                             curChapter.end = curChapter.start
@@ -339,7 +339,7 @@ class TextFile(private var book: Book) {
                         } else { //如果章节不存在则创建章节
                             val title = replacement(matcher.group(), jsStr, toc).takeIf { it.isNotEmpty() }
                                 ?: continue
-                            val curChapter = BookChapter()
+                            val curChapter = BookChapterEntity()
                             curChapter.title = title
                             curChapter.start = curOffset + titleLength
                             curChapter.end = curChapter.start
@@ -393,8 +393,8 @@ class TextFile(private var book: Book) {
      */
     private fun analyze(
         fileStart: Long = 0L, fileEnd: Long = Long.MAX_VALUE
-    ): Pair<ArrayList<BookChapter>, Int> {
-        val toc = arrayListOf<BookChapter>()
+    ): Pair<ArrayList<BookChapterEntity>, Int> {
+        val toc = arrayListOf<BookChapterEntity>()
         var bookWordCount = 0
         LocalBook.getBookInputStream(book).use { bis ->
             //block的个数
@@ -450,7 +450,7 @@ class TextFile(private var book: Book) {
                         val content = String(buffer, chapterOffset, end - chapterOffset, charset)
                         bookWordCount += content.length
                         lastChapterWordCount = content.length
-                        val chapter = BookChapter()
+                        val chapter = BookChapterEntity()
                         chapter.title = "第${blockPos}章($chapterPos)"
                         chapter.start = toc.lastOrNull()?.end ?: curOffset
                         chapter.end = chapter.start!! + end - chapterOffset
@@ -474,7 +474,7 @@ class TextFile(private var book: Book) {
             val content = String(buffer, 0, bufferStart, charset)
             bookWordCount += content.length
             if (bufferStart > 100 || toc.isEmpty()) {
-                val chapter = BookChapter()
+                val chapter = BookChapterEntity()
                 chapter.title = "第${blockPos}章(${chapterPos})"
                 chapter.start = toc.lastOrNull()?.end ?: curOffset
                 chapter.end = chapter.start!! + bufferStart
@@ -536,12 +536,12 @@ class TextFile(private var book: Book) {
 
     @Keep
     @Suppress("unused")
-    class JsExtensions(val lastVolumeTitle: MutableRef<String>, val toc: ArrayList<BookChapter>? = null) {
+    class JsExtensions(val lastVolumeTitle: MutableRef<String>, val toc: ArrayList<BookChapterEntity>? = null) {
         fun putVolume(title: String) {
             lastVolumeTitle.value = title
             if (toc != null) {
                 val start = toc.lastOrNull()?.end ?: 0
-                toc.add(BookChapter(title = title, isVolume = true, start = start, end = start))
+                toc.add(BookChapterEntity(title = title, isVolume = true, start = start, end = start))
             }
         }
     }
@@ -552,7 +552,7 @@ class TextFile(private var book: Book) {
     private fun replacement(
         content: String,
         jsStr: String?,
-        toc: ArrayList<BookChapter>,
+        toc: ArrayList<BookChapterEntity>,
         prevTitle: String? = null,
         prevLength: Int = -1
     ): String {
@@ -575,7 +575,7 @@ class TextFile(private var book: Book) {
         return evalJs(content, jsStr, index + 1, prevTitle, prevLength)
     }
 
-    private fun evalJs(content: String, jsStr: String, index: Int, prevTitle: String?, prevLength: Int = -1, toc: ArrayList<BookChapter>? = null):String {
+    private fun evalJs(content: String, jsStr: String, index: Int, prevTitle: String?, prevLength: Int = -1, toc: ArrayList<BookChapterEntity>? = null):String {
         return RhinoScriptEngine.run {
             val bindings = ScriptBindings()
             bindings["result"] = content
@@ -605,7 +605,7 @@ class TextFile(private var book: Book) {
         return rules
     }
 
-    private fun getWordCount(list: ArrayList<BookChapter>, book: Book) {
+    private fun getWordCount(list: ArrayList<BookChapterEntity>, book: Book) {
         if (!AppConfig.tocCountWords) {
             return
         }

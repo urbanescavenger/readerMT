@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.databinding.ItemChapterListBinding
 import io.legado.app.lib.theme.ThemeUtils
 import io.legado.app.lib.theme.accentColor
@@ -14,7 +14,7 @@ import io.legado.app.utils.gone
 import io.legado.app.utils.visible
 
 class ChangeChapterTocAdapter(context: Context, val callback: Callback) :
-    RecyclerAdapter<BookChapter, ItemChapterListBinding>(context) {
+    RecyclerAdapter<BookChapterEntity, ItemChapterListBinding>(context) {
 
     var durChapterIndex = 0
 
@@ -25,7 +25,7 @@ class ChangeChapterTocAdapter(context: Context, val callback: Callback) :
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemChapterListBinding,
-        item: BookChapter,
+        item: BookChapterEntity,
         payloads: MutableList<Any>
     ) {
         binding.run {
@@ -65,6 +65,6 @@ class ChangeChapterTocAdapter(context: Context, val callback: Callback) :
     }
 
     interface Callback {
-        fun clickChapter(bookChapter: BookChapter, nextChapterUrl: String?)
+        fun clickChapter(bookChapter: BookChapterEntity, nextChapterUrl: String?)
     }
 }

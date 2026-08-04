@@ -25,8 +25,8 @@ data class RssReadRecord(
     var durPos: Int = 0,
     var pubDate: String? = null
 ) {
-    fun toRssArticle(): RssArticle {
-        return RssArticle(
+    fun toRssArticle(): RssArticleEntity {
+        return RssArticleEntity(
             title = title ?: "",
             origin = origin,
             link = record,

@@ -9,7 +9,7 @@ import io.legado.app.R
 import io.legado.app.base.adapter.DiffRecyclerAdapter
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.databinding.ItemChapterListBinding
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.config.AppConfig
@@ -26,25 +26,25 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 class ChapterListAdapter(context: Context, val callback: Callback) :
-    DiffRecyclerAdapter<BookChapter, ItemChapterListBinding>(context) {
+    DiffRecyclerAdapter<BookChapterEntity, ItemChapterListBinding>(context) {
 
     val cacheFileNames = hashSetOf<String>()
     private val displayTitleMap = ConcurrentHashMap<String, String>()
     private val handler = Handler(Looper.getMainLooper())
 
-    override val diffItemCallback: DiffUtil.ItemCallback<BookChapter>
-        get() = object : DiffUtil.ItemCallback<BookChapter>() {
+    override val diffItemCallback: DiffUtil.ItemCallback<BookChapterEntity>
+        get() = object : DiffUtil.ItemCallback<BookChapterEntity>() {
 
             override fun areItemsTheSame(
-                oldItem: BookChapter,
-                newItem: BookChapter
+                oldItem: BookChapterEntity,
+                newItem: BookChapterEntity
             ): Boolean {
                 return oldItem.index == newItem.index
             }
 
             override fun areContentsTheSame(
-                oldItem: BookChapter,
-                newItem: BookChapter
+                oldItem: BookChapterEntity,
+                newItem: BookChapterEntity
             ): Boolean {
                 return oldItem.bookUrl == newItem.bookUrl
                         && oldItem.url == newItem.url
@@ -109,7 +109,7 @@ class ChapterListAdapter(context: Context, val callback: Callback) :
         }
     }
 
-    private fun getDisplayTitle(chapter: BookChapter): String {
+    private fun getDisplayTitle(chapter: BookChapterEntity): String {
         return displayTitleMap[chapter.title] ?: chapter.title
     }
 
@@ -120,7 +120,7 @@ class ChapterListAdapter(context: Context, val callback: Callback) :
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemChapterListBinding,
-        item: BookChapter,
+        item: BookChapterEntity,
         payloads: MutableList<Any>
     ) {
         binding.run {
@@ -202,7 +202,7 @@ class ChapterListAdapter(context: Context, val callback: Callback) :
         val scope: CoroutineScope
         val book: Book?
         val isLocalBook: Boolean
-        fun openChapter(bookChapter: BookChapter)
+        fun openChapter(bookChapter: BookChapterEntity)
         fun durChapterIndex(): Int
         fun onListChanged()
     }

@@ -84,7 +84,7 @@ object Debug {
         }
     }
 
-    fun startChecking(source: BookSource) {
+    fun startChecking(source: BookSourceEntity) {
         isChecking = true
         debugTimeMap[source.bookSourceUrl] = System.currentTimeMillis()
         debugMessageMap[source.bookSourceUrl] = "${debugTimeFormat.format(Date(0))} 开始校验"
@@ -158,7 +158,7 @@ object Debug {
                     if (ruleContent.isNullOrEmpty()) {
                         log(debugSource, "⇒内容规则为空，默认获取整个网页", state = 1000)
                     } else {
-                        val rssArticle = RssArticle()
+                        val rssArticle = RssArticleEntity()
                         rssArticle.origin = rssSource.sourceUrl
                         rssArticle.link = key
                         log(debugSource, "⇒开始访问内容页:$key")
@@ -212,7 +212,7 @@ object Debug {
 
     private fun rssContentDebug(
         scope: CoroutineScope,
-        rssArticle: RssArticle,
+        rssArticle: RssArticleEntity,
         ruleContent: String,
         rssSource: RssSource
     ) {
@@ -227,7 +227,7 @@ object Debug {
             }
     }
 
-    fun startDebug(scope: CoroutineScope, bookSource: BookSource, key: String) {
+    fun startDebug(scope: CoroutineScope, bookSource: BookSourceEntity, key: String) {
         cancelDebug()
         debugSource = bookSource.bookSourceUrl
         startTime = System.currentTimeMillis()
@@ -260,7 +260,7 @@ object Debug {
                 val book = Book()
                 book.origin = bookSource.bookSourceUrl
                 log(debugSource, "⇒开始访正文页:$url")
-                val chapter = BookChapter()
+                val chapter = BookChapterEntity()
                 chapter.title = "调试"
                 chapter.url = url
                 contentDebug(scope, bookSource, book, chapter, null)
@@ -273,7 +273,7 @@ object Debug {
         }
     }
 
-    private fun exploreDebug(scope: CoroutineScope, bookSource: BookSource, url: String) {
+    private fun exploreDebug(scope: CoroutineScope, bookSource: BookSourceEntity, url: String) {
         log(debugSource, "︾开始解析发现页")
         val explore = WebBook.exploreBook(scope, bookSource, url, 1)
             .onSuccess { exploreBooks ->
@@ -291,7 +291,7 @@ object Debug {
         tasks.add(explore)
     }
 
-    private fun searchDebug(scope: CoroutineScope, bookSource: BookSource, key: String) {
+    private fun searchDebug(scope: CoroutineScope, bookSource: BookSourceEntity, key: String) {
         log(debugSource, "︾开始解析搜索页")
         val search = WebBook.searchBook(scope, bookSource, key, 1)
             .onSuccess { searchBooks ->
@@ -309,7 +309,7 @@ object Debug {
         tasks.add(search)
     }
 
-    private fun infoDebug(scope: CoroutineScope, bookSource: BookSource, book: Book) {
+    private fun infoDebug(scope: CoroutineScope, bookSource: BookSourceEntity, book: Book) {
         if (book.tocUrl.isNotBlank()) {
             log(debugSource, "≡已获取目录链接,跳过详情页")
             log(debugSource, showTime = false)
@@ -333,7 +333,7 @@ object Debug {
         tasks.add(info)
     }
 
-    private fun tocDebug(scope: CoroutineScope, bookSource: BookSource, book: Book) {
+    private fun tocDebug(scope: CoroutineScope, bookSource: BookSourceEntity, book: Book) {
         log(debugSource, "︾开始解析目录页")
         val chapterList = WebBook.getChapterList(scope, bookSource, book)
             .onSuccess { chapters ->
@@ -355,9 +355,9 @@ object Debug {
 
     private fun contentDebug(
         scope: CoroutineScope,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         nextChapterUrl: String?
     ) {
         log(debugSource, "︾开始解析正文页")

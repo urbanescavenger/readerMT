@@ -6,7 +6,7 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.constant.AppPattern.spaceRegex
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.exception.RegexTimeoutException
 import io.legado.app.help.config.AppConfig
@@ -91,7 +91,7 @@ class ContentProcessor private constructor(
 
     fun getContent(
         book: Book,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         content: String,
         includeTitle: Boolean = true,
         useReplace: Boolean = true,

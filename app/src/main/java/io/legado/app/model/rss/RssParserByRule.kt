@@ -2,7 +2,7 @@ package io.legado.app.model.rss
 
 import androidx.annotation.Keep
 import io.legado.app.R
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssSource
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.Debug
@@ -26,7 +26,7 @@ object RssParserByRule {
         body: String?,
         rssSource: RssSource,
         ruleData: RuleData
-    ): Pair<MutableList<RssArticle>, String?> {
+    ): Pair<MutableList<RssArticleEntity>, String?> {
         val sourceUrl = rssSource.sourceUrl
         var nextUrl: String? = null
         if (body.isNullOrBlank()) {
@@ -40,7 +40,7 @@ object RssParserByRule {
             Debug.log(sourceUrl, "⇒列表规则为空, 使用默认规则解析")
             return RssParserDefault.parseXML(sortName, body, sourceUrl)
         } else {
-            val articleList = mutableListOf<RssArticle>()
+            val articleList = mutableListOf<RssArticleEntity>()
             val analyzeRule = AnalyzeRule(ruleData, rssSource)
             analyzeRule.setCoroutineContext(currentCoroutineContext())
             analyzeRule.setContent(body).setBaseUrl(sortUrl)
@@ -100,8 +100,8 @@ object RssParserByRule {
         ruleDescription: List<AnalyzeRule.SourceRule>,
         ruleImage: List<AnalyzeRule.SourceRule>,
         ruleLink: List<AnalyzeRule.SourceRule>
-    ): RssArticle? {
-        val rssArticle = RssArticle(variable = variable)
+    ): RssArticleEntity? {
+        val rssArticle = RssArticleEntity(variable = variable)
         analyzeRule.setRuleData(rssArticle)
         analyzeRule.setContent(item)
         Debug.log(sourceUrl, "┌获取标题", log)

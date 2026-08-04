@@ -5,7 +5,7 @@ import android.text.TextUtils
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.toBookSource
 import io.legado.app.help.source.SourceHelp
@@ -57,7 +57,7 @@ class BookSourceViewModel(application: Application) : BaseViewModel(application)
         }
     }
 
-    fun update(vararg bookSource: BookSource) {
+    fun update(vararg bookSource: BookSourceEntity) {
         execute { appDb.bookSourceDao.update(*bookSource) }
     }
 
@@ -126,7 +126,7 @@ class BookSourceViewModel(application: Application) : BaseViewModel(application)
         }
     }
 
-    private fun saveToFile(sources: List<BookSource>, name: String, success: (file: File, name: String) -> Unit) {
+    private fun saveToFile(sources: List<BookSourceEntity>, name: String, success: (file: File, name: String) -> Unit) {
         execute {
             val path = "${context.filesDir}/shareBookSource.json"
             FileUtils.delete(path)
@@ -178,7 +178,7 @@ class BookSourceViewModel(application: Application) : BaseViewModel(application)
         searchKey: String?,
         sortAscending: Boolean,
         sort: BookSourceSort
-    ): List<BookSource> {
+    ): List<BookSourceEntity> {
         return when {
             searchKey.isNullOrEmpty() -> {
                 appDb.bookSourceDao.all

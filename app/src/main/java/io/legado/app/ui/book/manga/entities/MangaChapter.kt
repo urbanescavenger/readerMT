@@ -1,9 +1,9 @@
 package io.legado.app.ui.book.manga.entities
 
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 
 data class MangaChapter(
-    val chapter: BookChapter,
+    val chapter: BookChapterEntity,
     val pages: List<BaseMangaPage>,
     val imageCount: Int
 )

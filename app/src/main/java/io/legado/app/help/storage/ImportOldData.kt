@@ -10,7 +10,7 @@ import io.legado.app.constant.BookSourceType
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.rule.*
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.ReplaceAnalyzer
@@ -160,8 +160,8 @@ object ImportOldData {
         return books
     }
 
-    private fun fromOldBookSources(json: String): MutableList<BookSource> {
-        val sources = mutableListOf<BookSource>()
+    private fun fromOldBookSources(json: String): MutableList<BookSourceEntity> {
+        val sources = mutableListOf<BookSourceEntity>()
         val items: List<Map<String, Any>> = jsonPath.parse(json).read("$")
         for (item in items) {
             val jsonItem = jsonPath.parse(item)
@@ -171,8 +171,8 @@ object ImportOldData {
         return sources
     }
 
-    fun fromOldBookSource(jsonItem: DocumentContext): BookSource {
-        val source = BookSource()
+    fun fromOldBookSource(jsonItem: DocumentContext): BookSourceEntity {
+        val source = BookSourceEntity()
         return source.apply {
             bookSourceUrl = jsonItem.readString("bookSourceUrl")
                 ?: throw NoStackTraceException(appCtx.getString(R.string.wrong_format))

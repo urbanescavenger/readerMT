@@ -12,7 +12,7 @@ import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.Bookmark
 import io.legado.app.data.entities.DictRule
 import io.legado.app.data.entities.HttpTTS
@@ -132,7 +132,7 @@ object Restore {
         fileToListT<BookGroup>(path, "bookGroup.json")?.let {
             appDb.bookGroupDao.insert(*it.toTypedArray())
         }
-        fileToListT<BookSource>(path, "bookSource.json")?.let {
+        fileToListT<BookSourceEntity>(path, "bookSource.json")?.let {
             appDb.bookSourceDao.insert(*it.toTypedArray())
         } ?: run {
             val bookSourceFile = File(path, "bookSource.json")

@@ -10,7 +10,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.help.config.AppConfig
@@ -167,7 +167,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
         }
     }
 
-    private suspend fun search(source: BookSource) {
+    private suspend fun search(source: BookSourceEntity) {
         if (source.getSearchRule().coverUrl.isNullOrBlank()) {
             return
         }

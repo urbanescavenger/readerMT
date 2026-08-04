@@ -15,7 +15,7 @@ import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
@@ -305,7 +305,7 @@ class ExportBookService : BaseService() {
 
     private fun getExportData(
         book: Book,
-        chapter: BookChapter,
+        chapter: BookChapterEntity,
         contentProcessor: ContentProcessor,
         useReplace: Boolean
     ): Pair<String, ArrayList<SrcData>?> {
@@ -589,13 +589,13 @@ class ExportBookService : BaseService() {
         val title: String,
         val chapterResource: Resource,
         val resources: ArrayList<Resource>,
-        val chapter: BookChapter
+        val chapter: BookChapterEntity
     )
 
     private fun fixPic(
         book: Book,
         content: String,
-        chapter: BookChapter
+        chapter: BookChapterEntity
     ): Pair<String, ArrayList<Resource>> {
         val data = StringBuilder("")
         val resources = arrayListOf<Resource>()
@@ -707,13 +707,13 @@ class ExportBookService : BaseService() {
             book: Book,
             epubBook: EpubBook,
             epubBookIndex: Int,
-            updateProgress: (chapterList: MutableList<BookChapter>, index: Int) -> Unit
+            updateProgress: (chapterList: MutableList<BookChapterEntity>, index: Int) -> Unit
         ) {
             //正文
             val useReplace = AppConfig.exportUseReplace && book.getUseReplaceRule()
             val contentProcessor = ContentProcessor.get(book.name, book.origin)
             val replaceBook = book.toReplaceBook()
-            var chapterList: MutableList<BookChapter> = ArrayList()
+            var chapterList: MutableList<BookChapterEntity> = ArrayList()
             appDb.bookChapterDao.getChapterList(book.bookUrl).forEachIndexed { index, chapter ->
                 if (scope.contains(index)) {
                     chapterList.add(chapter)

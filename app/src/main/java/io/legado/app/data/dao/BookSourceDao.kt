@@ -8,7 +8,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import io.legado.app.constant.AppPattern
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.splitNotBlank
@@ -42,7 +42,7 @@ interface BookSourceDao {
         or bookSourceComment like '%' || :searchKey || '%' 
         order by customOrder asc"""
     )
-    fun search(searchKey: String): List<BookSource>
+    fun search(searchKey: String): List<BookSourceEntity>
 
     @Query(
         """select bp.*
@@ -74,7 +74,7 @@ interface BookSourceDao {
         or bookSourceGroup like  '%,' || :searchKey || ',%' 
         order by customOrder asc"""
     )
-    fun groupSearch(searchKey: String): List<BookSource>
+    fun groupSearch(searchKey: String): List<BookSourceEntity>
 
     @Query("select * from book_sources_part where enabled = 1 order by customOrder asc")
     fun flowEnabled(): Flow<List<BookSourcePart>>
@@ -148,7 +148,7 @@ interface BookSourceDao {
         """select * from book_sources 
         where bookSourceGroup like '%' || :group || '%' order by customOrder asc"""
     )
-    fun getByGroup(group: String): List<BookSource>
+    fun getByGroup(group: String): List<BookSourceEntity>
 
     @Query(
         """select * from book_sources 
@@ -159,7 +159,7 @@ interface BookSourceDao {
             or bookSourceGroup like  '%,' || :group || ',%')
         order by customOrder asc"""
     )
-    fun getEnabledByGroup(group: String): List<BookSource>
+    fun getEnabledByGroup(group: String): List<BookSourceEntity>
 
     @Query(
         """select * from book_sources_part 
@@ -176,10 +176,10 @@ interface BookSourceDao {
         """select * from book_sources 
         where bookUrlPattern != 'NONE' and bookSourceType = :type order by customOrder asc"""
     )
-    fun getEnabledByType(type: Int): List<BookSource>
+    fun getEnabledByType(type: Int): List<BookSourceEntity>
 
     @Query("select * from book_sources where enabled = 1 and bookSourceUrl = :baseUrl")
-    fun getBookSourceAddBook(baseUrl: String): BookSource?
+    fun getBookSourceAddBook(baseUrl: String): BookSourceEntity?
 
     @get:Query(
         """select bp.* 
@@ -192,37 +192,37 @@ interface BookSourceDao {
     val hasBookUrlPattern: List<BookSourcePart>
 
     @get:Query("select * from book_sources where bookSourceGroup is null or bookSourceGroup = ''")
-    val noGroup: List<BookSource>
+    val noGroup: List<BookSourceEntity>
 
     @get:Query("select * from book_sources order by customOrder asc")
-    val all: List<BookSource>
+    val all: List<BookSourceEntity>
 
     @get:Query("select * from book_sources_part order by customOrder asc")
     val allPart: List<BookSourcePart>
 
     @get:Query("select * from book_sources where enabled = 1 order by customOrder")
-    val allEnabled: List<BookSource>
+    val allEnabled: List<BookSourceEntity>
 
     @get:Query("select * from book_sources_part where enabled = 1 order by customOrder asc")
     val allEnabledPart: List<BookSourcePart>
 
     @get:Query("select * from book_sources where enabled = 0 order by customOrder")
-    val allDisabled: List<BookSource>
+    val allDisabled: List<BookSourceEntity>
 
     @get:Query(
         """select * from book_sources 
         where bookSourceGroup is null or bookSourceGroup = '' or bookSourceGroup like '%未分组%'"""
     )
-    val allNoGroup: List<BookSource>
+    val allNoGroup: List<BookSourceEntity>
 
     @get:Query("select * from book_sources where enabledExplore = 1 order by customOrder")
-    val allEnabledExplore: List<BookSource>
+    val allEnabledExplore: List<BookSourceEntity>
 
     @get:Query("select * from book_sources where enabledExplore = 0 order by customOrder")
-    val allDisabledExplore: List<BookSource>
+    val allDisabledExplore: List<BookSourceEntity>
 
     @get:Query("select * from book_sources where loginUrl is not null and loginUrl != ''")
-    val allLogin: List<BookSource>
+    val allLogin: List<BookSourceEntity>
 
     @get:Query(
         """select bp.*
@@ -244,7 +244,7 @@ interface BookSourceDao {
     val allEnabledGroupsUnProcessed: List<String>
 
     @Query("select * from book_sources where bookSourceUrl = :key")
-    fun getBookSource(key: String): BookSource?
+    fun getBookSource(key: String): BookSourceEntity?
 
     @Query("select * from book_sources_part where bookSourceUrl = :key")
     fun getBookSourcePart(key: String): BookSourcePart?
@@ -256,13 +256,13 @@ interface BookSourceDao {
     fun has(key: String): Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg bookSource: BookSource)
+    fun insert(vararg bookSource: BookSourceEntity)
 
     @Update
-    fun update(vararg bookSource: BookSource)
+    fun update(vararg bookSource: BookSourceEntity)
 
     @Delete
-    fun delete(vararg bookSource: BookSource)
+    fun delete(vararg bookSource: BookSourceEntity)
 
     @Query("delete from book_sources where bookSourceUrl = :key")
     fun delete(key: String)

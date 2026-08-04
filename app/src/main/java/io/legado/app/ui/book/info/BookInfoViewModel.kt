@@ -15,8 +15,8 @@ import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.NoBooksDirException
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
@@ -50,11 +50,11 @@ import kotlinx.coroutines.Dispatchers.IO
 
 class BookInfoViewModel(application: Application) : BaseViewModel(application) {
     val bookData = MutableLiveData<Book>()
-    val chapterListData = MutableLiveData<List<BookChapter>>()
+    val chapterListData = MutableLiveData<List<BookChapterEntity>>()
     val webFiles = mutableListOf<WebFile>()
     var inBookshelf = false
     var hasCustomBtn = false
-    var bookSource: BookSource? = null
+    var bookSource: BookSourceEntity? = null
     private var changeSourceCoroutine: Coroutine<*>? = null
     val waitDialogData = MutableLiveData<Boolean>()
     val actionLive = MutableLiveData<String>()
@@ -377,7 +377,7 @@ class BookInfoViewModel(application: Application) : BaseViewModel(application) {
         }
     }
 
-    fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>) {
+    fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>) {
         changeSourceCoroutine?.cancel()
         changeSourceCoroutine = execute {
             bookSource = source.also {

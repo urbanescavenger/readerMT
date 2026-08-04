@@ -18,7 +18,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseFragment
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.databinding.FragmentRssArticlesBinding
 import io.legado.app.databinding.ViewLoadMoreBinding
 import io.legado.app.lib.theme.accentColor
@@ -174,21 +174,21 @@ class RssArticlesFragment() : VMBaseFragment<RssArticlesViewModel>(R.layout.frag
                     } else {
                         //用DiffUtil只对差异数据进行更新
                         //注意RecyclerView的复用机制,切换标签时采用差异化更新会报ViewHolder的状态管理混乱
-                        adapter.setItems(newList, object : DiffUtil.ItemCallback<RssArticle>() {
+                        adapter.setItems(newList, object : DiffUtil.ItemCallback<RssArticleEntity>() {
                             override fun areItemsTheSame(
-                                oldItem: RssArticle, newItem: RssArticle
+                                oldItem: RssArticleEntity, newItem: RssArticleEntity
                             ): Boolean {
                                 return oldItem.link == newItem.link
                             }
 
                             override fun areContentsTheSame(
-                                oldItem: RssArticle, newItem: RssArticle
+                                oldItem: RssArticleEntity, newItem: RssArticleEntity
                             ): Boolean {
                                 return oldItem.title == newItem.title && oldItem.image == newItem.image && oldItem.read == newItem.read
                             }
 
                             override fun getChangePayload(
-                                oldItem: RssArticle, newItem: RssArticle
+                                oldItem: RssArticleEntity, newItem: RssArticleEntity
                             ): Any? {
                                 return if (oldItem.read != newItem.read) { "read" }
                                 else if (oldItem.title != newItem.title) { "title" }
@@ -243,7 +243,7 @@ class RssArticlesFragment() : VMBaseFragment<RssArticlesViewModel>(R.layout.frag
         }
     }
 
-    override fun readRss(rssArticle: RssArticle) {
+    override fun readRss(rssArticle: RssArticleEntity) {
         fullRefresh = false //read会触发数据库更新,此时进行差异化更新
         ReadRss.readRss(this, rssArticle, activityViewModel.rssSource)
     }

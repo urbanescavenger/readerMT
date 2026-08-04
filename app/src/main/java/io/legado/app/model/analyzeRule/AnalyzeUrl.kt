@@ -15,7 +15,7 @@ import io.legado.app.constant.AppConst.UA_NAME
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.CacheManager
 import io.legado.app.help.ConcurrentRateLimiter
 import io.legado.app.help.JsExtensions
@@ -87,7 +87,7 @@ class AnalyzeUrl(
     private var baseUrl: String = "",
     private val source: BaseSource? = null,
     private val ruleData: RuleDataInterface? = null,
-    private val chapter: BookChapter? = null,
+    private val chapter: BookChapterEntity? = null,
     private val readTimeout: Long? = null,
     private val callTimeout: Long? = null,
     private var coroutineContext: CoroutineContext = EmptyCoroutineContext,
@@ -713,8 +713,8 @@ class AnalyzeUrl(
             CookieStore.getCookie(domain)
         }
         if (cookie.isNotEmpty()) {
-            mergeCookies(cookie, headerMap["Cookie"])?.let {
-                headerMap.put("Cookie", it)
+            mergeCookies(cookie, headerMap["CookieEntity"])?.let {
+                headerMap.put("CookieEntity", it)
             }
         }
         if (enabledCookieJar) {

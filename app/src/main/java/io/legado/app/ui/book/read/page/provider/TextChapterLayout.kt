@@ -14,7 +14,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.PageAnim
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.book.BookContent
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.getBookSource
@@ -211,7 +211,7 @@ class TextChapterLayout(
      */
     private suspend fun getTextChapter(
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         displayTitle: String,
         bookContent: BookContent,
     ) {

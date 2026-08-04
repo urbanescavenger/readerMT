@@ -8,7 +8,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.removeType
@@ -83,7 +83,7 @@ class BookshelfManageViewModel(application: Application) : BaseViewModel(applica
         }
     }
 
-    fun changeSource(books: List<Book>, source: BookSource) {
+    fun changeSource(books: List<Book>, source: BookSourceEntity) {
         batchChangeSourceCoroutine?.cancel()
         batchChangeSourceCoroutine = execute {
             val changeSourceDelay = AppConfig.batchChangeSourceDelay * 1000L

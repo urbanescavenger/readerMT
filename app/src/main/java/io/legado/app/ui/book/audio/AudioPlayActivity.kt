@@ -17,8 +17,8 @@ import io.legado.app.constant.Status
 import io.legado.app.constant.Theme
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.databinding.ActivityAudioPlayBinding
 import io.legado.app.help.book.isAudio
 import io.legado.app.help.book.removeType
@@ -306,7 +306,7 @@ class AudioPlayActivity :
     override val oldBook: Book?
         get() = AudioPlay.book
 
-    override fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>) {
+    override fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>) {
         if (book.isAudio) {
             viewModel.changeTo(source, book, toc)
         } else {

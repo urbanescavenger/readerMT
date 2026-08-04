@@ -10,7 +10,7 @@ import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.ContentProcessor
@@ -37,7 +37,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
     val errorLiveData = MutableLiveData<String>()
     val successLiveData = MutableLiveData<Int>()
 
-    val allSources = arrayListOf<BookSource>()
+    val allSources = arrayListOf<BookSourceEntity>()
     val checkSources = arrayListOf<BookSourcePart?>()
     val selectStatus = arrayListOf<Boolean>()
     val newSourceStatus = arrayListOf<Boolean>()
@@ -90,7 +90,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
             val keepName = AppConfig.importKeepName
             val keepGroup = AppConfig.importKeepGroup
             val keepEnable = AppConfig.importKeepEnable
-            val selectSource = arrayListOf<BookSource>()
+            val selectSource = arrayListOf<BookSourceEntity>()
             selectStatus.forEachIndexed { index, b ->
                 if (b) {
                     val source = allSources[index]
@@ -142,7 +142,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                             importSourceUrl(it)
                         }
                     }.onFailure {
-                        GSON.fromJsonObject<BookSource>(mText).getOrThrow().let {
+                        GSON.fromJsonObject<BookSourceEntity>(mText).getOrThrow().let {
                             if (it.bookSourceUrl.isEmpty()) {
                                 throw NoStackTraceException("不是书源")
                             }
@@ -151,7 +151,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                     }
                 }
 
-                mText.isJsonArray() -> GSON.fromJsonArray<BookSource>(mText).getOrThrow()
+                mText.isJsonArray() -> GSON.fromJsonArray<BookSourceEntity>(mText).getOrThrow()
                     .let { items ->
                         val source = items.firstOrNull() ?: return@let
                         if (source.bookSourceUrl.isEmpty()) {
@@ -167,7 +167,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                 mText.isUri() -> {
                     val uri = Uri.parse(mText)
                     uri.inputStream(context).getOrThrow().use { inputS ->
-                        GSON.fromJsonArray<BookSource>(inputS).getOrThrow().let {
+                        GSON.fromJsonArray<BookSourceEntity>(inputS).getOrThrow().let {
                             val source = it.firstOrNull() ?: return@let
                             if (source.bookSourceUrl.isEmpty()) {
                                 throw NoStackTraceException("不是书源")
@@ -201,7 +201,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                 url(url)
             }
         }.decompressed().byteStream().use {
-            GSON.fromJsonArray<BookSource>(it).getOrThrow().let { list ->
+            GSON.fromJsonArray<BookSourceEntity>(it).getOrThrow().let { list ->
                 val source = list.firstOrNull() ?: return@let
                 if (source.bookSourceUrl.isEmpty()) {
                     throw NoStackTraceException("不是书源")

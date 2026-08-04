@@ -395,7 +395,7 @@ data class Book(
     /**
      * 迁移旧的书籍的一些信息到新的书籍中
      */
-    fun migrateTo(newBook: Book, toc: List<BookChapter>): Book {
+    fun migrateTo(newBook: Book, toc: List<BookChapterEntity>): Book {
         if (toc.isNotEmpty()) {
             newBook.durChapterIndex = BookHelp
                 .getDurChapter(durChapterIndex, durChapterTitle, toc, totalChapterNum)

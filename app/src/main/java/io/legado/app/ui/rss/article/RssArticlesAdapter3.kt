@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import com.bumptech.glide.request.RequestOptions
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.databinding.ItemRssArticle3Binding
 import io.legado.app.help.glide.ImageLoader
 import io.legado.app.help.glide.OkHttpModelLoader
@@ -59,7 +59,7 @@ class RssArticlesAdapter3(context: Context, callBack: CallBack) :
     override fun convert(
         holder: ItemViewHolder,
         binding: ItemRssArticle3Binding,
-        item: RssArticle,
+        item: RssArticleEntity,
         payloads: MutableList<Any>
     ) {
         if (payloads.isNotEmpty()) {

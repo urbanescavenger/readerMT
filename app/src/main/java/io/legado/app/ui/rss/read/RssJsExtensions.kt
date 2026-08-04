@@ -8,8 +8,8 @@ import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssReadRecord
 import io.legado.app.data.entities.RssSource
 import io.legado.app.help.JsExtensions
@@ -75,7 +75,7 @@ open class RssJsExtensions(
         }
     }
 
-    fun searchBook(key: String, source: BookSource) {
+    fun searchBook(key: String, source: BookSourceEntity) {
         activityRef.get()?.let {
             SearchActivity.start(it, source, key)
         }
@@ -112,7 +112,7 @@ open class RssJsExtensions(
                         return@launch
                     }
                     when (toSource) {
-                        is BookSource -> {
+                        is BookSourceEntity -> {
                             withContext(Main) {
                                 activity.startActivity<SourceLoginActivity> {
                                     putExtra("bookType", bookType)
@@ -229,7 +229,7 @@ open class RssJsExtensions(
                 "explore" -> {
                     val toSource = origin?.let { o ->
                         appDb.bookSourceDao.getBookSource(o)
-                    } ?: (source as? BookSource) ?: return@launch
+                    } ?: (source as? BookSourceEntity) ?: return@launch
                     val sourceUrl = toSource.bookSourceUrl
                     withContext(Main) {
                         activity.startActivity<ExploreShowActivity> {
@@ -246,7 +246,7 @@ open class RssJsExtensions(
     /** AnalyzeRule实现 **/
     private val bookAndChapter by lazy {
         var book: Book? = null
-        var chapter: BookChapter? = null
+        var chapter: BookChapterEntity? = null
         when (bookType) {
             BookType.text -> {
                 book = ReadBook.book?.also {
@@ -270,7 +270,7 @@ open class RssJsExtensions(
         Pair(book, chapter)
     }
     private val book: Book? get() = bookAndChapter.first
-    private val chapter: BookChapter? get() = bookAndChapter.second
+    private val chapter: BookChapterEntity? get() = bookAndChapter.second
 
     val analyzeRule by lazy {
         AnalyzeRule(book, source = getSource()).setChapter(chapter)

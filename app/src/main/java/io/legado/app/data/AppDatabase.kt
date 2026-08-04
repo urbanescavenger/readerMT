@@ -31,19 +31,19 @@ import io.legado.app.data.dao.SearchKeywordDao
 import io.legado.app.data.dao.ServerDao
 import io.legado.app.data.dao.TxtTocRuleDao
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookGroup
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.Bookmark
-import io.legado.app.data.entities.Cache
-import io.legado.app.data.entities.Cookie
+import io.legado.app.data.entities.CacheEntity
+import io.legado.app.data.entities.CookieEntity
 import io.legado.app.data.entities.DictRule
 import io.legado.app.data.entities.HttpTTS
 import io.legado.app.data.entities.KeyboardAssist
 import io.legado.app.data.entities.ReadRecord
 import io.legado.app.data.entities.ReplaceRule
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssReadRecord
 import io.legado.app.data.entities.RssSource
 import io.legado.app.data.entities.RssStar
@@ -69,10 +69,10 @@ val appDb by lazy {
 @Database(
     version = 89,
     exportSchema = true,
-    entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
-        ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
-        RssSource::class, Bookmark::class, RssArticle::class, RssReadRecord::class,
-        RssStar::class, TxtTocRule::class, ReadRecord::class, HttpTTS::class, Cache::class,
+    entities = [Book::class, BookGroup::class, BookSourceEntity::class, BookChapterEntity::class,
+        ReplaceRule::class, SearchBook::class, SearchKeyword::class, CookieEntity::class,
+        RssSource::class, Bookmark::class, RssArticleEntity::class, RssReadRecord::class,
+        RssStar::class, TxtTocRule::class, ReadRecord::class, HttpTTS::class, CacheEntity::class,
         RuleSub::class, DictRule::class, KeyboardAssist::class, Server::class],
     views = [BookSourcePart::class],
     autoMigrations = [

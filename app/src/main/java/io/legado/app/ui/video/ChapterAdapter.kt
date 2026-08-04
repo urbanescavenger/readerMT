@@ -8,14 +8,14 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.R
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.lib.theme.ThemeStore.Companion.accentColor
 
 class ChapterAdapter(
-    private var chapters: List<BookChapter>,
+    private var chapters: List<BookChapterEntity>,
     private var selectedPosition: Int = -1,
     private val isVolume: Boolean = false,
-    private val onChapterClick: (BookChapter, Int) -> Unit
+    private val onChapterClick: (BookChapterEntity, Int) -> Unit
 ) : RecyclerView.Adapter<ChapterAdapter.ChapterViewHolder>() {
 
     override fun onCreateViewHolder(
@@ -53,7 +53,7 @@ class ChapterAdapter(
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun updateData(newToc: List<BookChapter>?) {
+    fun updateData(newToc: List<BookChapterEntity>?) {
         this.chapters = newToc ?: return
         notifyDataSetChanged() //全量更新
     }
@@ -61,7 +61,7 @@ class ChapterAdapter(
     inner class ChapterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvChapterName: TextView = itemView.findViewById(R.id.tvChapterName)
 
-        fun bind(chapter: BookChapter, isSelected: Boolean) {
+        fun bind(chapter: BookChapterEntity, isSelected: Boolean) {
             tvChapterName.text = chapter.title
             if (isSelected) {
                 tvChapterName.setTextColor(accentColor)

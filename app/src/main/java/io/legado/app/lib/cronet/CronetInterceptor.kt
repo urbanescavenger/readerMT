@@ -85,7 +85,7 @@ class CronetInterceptor(private val cookieJar: CookieJar) : Interceptor {
     }
 
 
-    /** Returns a 'Cookie' HTTP request header with all cookies, like `a=b; c=d`. */
+    /** Returns a 'CookieEntity' HTTP request header with all cookies, like `a=b; c=d`. */
     private fun getCookie(url: HttpUrl): String = buildString {
         val cookies = cookieJar.loadForRequest(url)
         cookies.forEachIndexed { index, cookie ->

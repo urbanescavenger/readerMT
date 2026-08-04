@@ -13,7 +13,7 @@ import io.legado.app.base.VMBaseFragment
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.databinding.FragmentChapterListBinding
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isLocal
@@ -100,7 +100,7 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
     }
 
     override fun observeLiveBus() {
-        observeEvent<Pair<Book, BookChapter>>(EventBus.SAVE_CONTENT) { (book, chapter) ->
+        observeEvent<Pair<Book, BookChapterEntity>>(EventBus.SAVE_CONTENT) { (book, chapter) ->
             viewModel.bookData.value?.bookUrl?.let { bookUrl ->
                 if (book.bookUrl == bookUrl) {
                     adapter.cacheFileNames.add(chapter.getFileName())
@@ -173,12 +173,12 @@ class ChapterListFragment : VMBaseFragment<TocViewModel>(R.layout.fragment_chapt
     override fun durChapterIndex(): Int {
         return durChapterIndex
     }
-    private var chapterList: List<BookChapter>? = null
+    private var chapterList: List<BookChapterEntity>? = null
 
-    override fun openChapter(bookChapter: BookChapter) {
+    override fun openChapter(bookChapter: BookChapterEntity) {
         activity?.run {
             if (book?.isVideo == true) {
-                val volumes = arrayListOf<BookChapter>()
+                val volumes = arrayListOf<BookChapterEntity>()
                 chapterList?.forEach { chapter ->
                     if (chapter.isVolume) {
                         volumes.add(chapter)

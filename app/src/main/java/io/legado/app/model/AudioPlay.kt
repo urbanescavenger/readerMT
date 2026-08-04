@@ -10,8 +10,8 @@ import io.legado.app.constant.IntentAction
 import io.legado.app.constant.Status
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.ReadRecord
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.getBookSource
@@ -66,12 +66,12 @@ object AudioPlay : CoroutineScope by MainScope() {
     var simulatedChapterSize = 0
     var durChapterIndex = 0
     var durChapterPos = 0
-    var durChapter: BookChapter? = null
+    var durChapter: BookChapterEntity? = null
     var durPlayUrl = ""
     var durLyric: String? = null
     var durAudioSize = 0
     var inBookshelf = false
-    var bookSource: BookSource? = null
+    var bookSource: BookSourceEntity? = null
     val loadingChapters = arrayListOf<Int>()
     private val readRecord = ReadRecord()
     var readStartTime: Long = System.currentTimeMillis()
@@ -213,7 +213,7 @@ object AudioPlay : CoroutineScope by MainScope() {
     /**
      * 加载完成
      */
-    private fun contentLoadFinish(chapter: BookChapter, content: String) {
+    private fun contentLoadFinish(chapter: BookChapterEntity, content: String) {
         if (chapter.index == book?.durChapterIndex) {
             durPlayUrl = content
             durLyric = chapter.getVariable("lyric")

@@ -5,7 +5,7 @@ import android.app.Application
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.config.AppConfig
@@ -40,7 +40,7 @@ class SearchContentViewModel(application: Application) : BaseViewModel(applicati
 
     suspend fun searchChapter(
         query: String,
-        chapter: BookChapter
+        chapter: BookChapterEntity
     ): List<SearchResult> {
         val searchResultsWithinChapter: MutableList<SearchResult> = mutableListOf()
         val book = book ?: return searchResultsWithinChapter

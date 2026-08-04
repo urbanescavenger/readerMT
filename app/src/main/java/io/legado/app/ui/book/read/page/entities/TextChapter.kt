@@ -3,7 +3,7 @@ package io.legado.app.ui.book.read.page.entities
 
 import androidx.annotation.Keep
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.help.book.BookContent
 import io.legado.app.ui.book.read.page.provider.LayoutProgressListener
@@ -19,7 +19,7 @@ import kotlin.math.min
 @Keep
 @Suppress("unused")
 data class TextChapter(
-    val chapter: BookChapter,
+    val chapter: BookChapterEntity,
     val position: Int,
     val title: String,
     val chaptersSize: Int,
@@ -310,7 +310,7 @@ data class TextChapter(
 
     companion object {
         val emptyTextChapter = TextChapter(
-            BookChapter(), -1, "emptyTextChapter", -1,
+            BookChapterEntity(), -1, "emptyTextChapter", -1,
             sameTitleRemoved = false,
             isVip = false,
             isPay = false,

@@ -16,7 +16,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.databinding.ActivitySearchContentBinding
 import io.legado.app.help.IntentData
 import io.legado.app.help.book.BookHelp
@@ -180,7 +180,7 @@ class SearchContentActivity :
     }
 
     override fun observeLiveBus() {
-        observeEvent<Pair<Book, BookChapter>>(EventBus.SAVE_CONTENT) { (book, chapter) ->
+        observeEvent<Pair<Book, BookChapterEntity>>(EventBus.SAVE_CONTENT) { (book, chapter) ->
             viewModel.book?.bookUrl?.let { bookUrl ->
                 if (book.bookUrl == bookUrl) {
                     viewModel.cacheChapterNames.add(chapter.getFileName())

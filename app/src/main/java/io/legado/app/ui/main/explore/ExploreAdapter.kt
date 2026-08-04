@@ -26,7 +26,7 @@ import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.data.entities.rule.ExploreKind.Type
@@ -499,7 +499,7 @@ class ExploreAdapter(context: Context, val callBack: CallBack) :
         }
     }
 
-    private suspend fun evalUiJs(jsStr: String, source: BookSource?, infoMap: InfoMap): String? {
+    private suspend fun evalUiJs(jsStr: String, source: BookSourceEntity?, infoMap: InfoMap): String? {
         val source = source ?: return null
         return try {
             runScriptWithContext {

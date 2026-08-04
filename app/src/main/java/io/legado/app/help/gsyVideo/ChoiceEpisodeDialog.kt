@@ -12,18 +12,18 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import io.legado.app.R
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 
 class ChoiceEpisodeDialog(private val mContext: Context) : Dialog(
     mContext, R.style.dialog_style
 ) {
     private var listView: ListView? = null
 
-    private var adapter: ArrayAdapter<BookChapter>? = null
+    private var adapter: ArrayAdapter<BookChapterEntity>? = null
 
     private var onItemClickListener: OnListItemClickListener? = null
 
-    private var data: List<BookChapter>? = null
+    private var data: List<BookChapterEntity>? = null
 
     interface OnListItemClickListener {
         fun onItemClick(position: Int)
@@ -41,7 +41,7 @@ class ChoiceEpisodeDialog(private val mContext: Context) : Dialog(
 
     @SuppressLint("SetTextI18n")
     fun initList(
-        data: List<BookChapter>,
+        data: List<BookChapterEntity>,
         onItemClickListener: OnListItemClickListener,
         initialSelection: Int = -1
     ) {

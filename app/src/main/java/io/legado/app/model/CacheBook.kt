@@ -6,8 +6,8 @@ import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.ConcurrentException
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isLocal
@@ -64,7 +64,7 @@ object CacheBook {
     }
 
     @Synchronized
-    fun getOrCreate(bookSource: BookSource, book: Book): CacheBookModel {
+    fun getOrCreate(bookSource: BookSourceEntity, book: Book): CacheBookModel {
         updateBookSource(bookSource)
         var cacheBook = cacheBookMap[book.bookUrl]
         if (cacheBook != null) {
@@ -78,7 +78,7 @@ object CacheBook {
         return cacheBook
     }
 
-    private fun updateBookSource(newBookSource: BookSource) {
+    private fun updateBookSource(newBookSource: BookSourceEntity) {
         cacheBookMap.forEach {
             val model = it.value
             if (model.bookSource.bookSourceUrl == newBookSource.bookSourceUrl) {
@@ -190,7 +190,7 @@ object CacheBook {
     val successDownloadSet = linkedSetOf<String>()
     val errorDownloadMap = hashMapOf<String, Int>()
 
-    class CacheBookModel(var bookSource: BookSource, var book: Book) {
+    class CacheBookModel(var bookSource: BookSourceEntity, var book: Book) {
 
         private val waitDownloadSet = linkedSetOf<Int>()
         private val onDownloadSet = linkedSetOf<Int>()
@@ -249,14 +249,14 @@ object CacheBook {
         }
 
         @Synchronized
-        private fun onSuccess(chapter: BookChapter) {
+        private fun onSuccess(chapter: BookChapterEntity) {
             onDownloadSet.remove(chapter.index)
             successDownloadSet.add(chapter.primaryStr())
             errorDownloadMap.remove(chapter.primaryStr())
         }
 
         @Synchronized
-        private fun onPreError(chapter: BookChapter, error: Throwable) {
+        private fun onPreError(chapter: BookChapterEntity, error: Throwable) {
             waitingRetry = true
             if (error !is ConcurrentException) {
                 errorDownloadMap[chapter.primaryStr()] =
@@ -266,7 +266,7 @@ object CacheBook {
         }
 
         @Synchronized
-        private fun onPostError(chapter: BookChapter, error: Throwable) {
+        private fun onPostError(chapter: BookChapterEntity, error: Throwable) {
             //重试3次
             if ((errorDownloadMap[chapter.primaryStr()] ?: 0) < 3 && !isStopped) {
                 waitDownloadSet.add(chapter.index)
@@ -280,7 +280,7 @@ object CacheBook {
         }
 
         @Synchronized
-        private fun onError(chapter: BookChapter, error: Throwable) {
+        private fun onError(chapter: BookChapterEntity, error: Throwable) {
             onPreError(chapter, error)
             onPostError(chapter, error)
         }
@@ -378,7 +378,7 @@ object CacheBook {
             }.start()
         }
 
-        suspend fun downloadAwait(chapter: BookChapter): String {
+        suspend fun downloadAwait(chapter: BookChapterEntity): String {
             synchronized(this) {
                 onDownloadSet.add(chapter.index)
                 waitDownloadSet.remove(chapter.index)
@@ -405,7 +405,7 @@ object CacheBook {
         @Synchronized
         fun download(
             scope: CoroutineScope,
-            chapter: BookChapter,
+            chapter: BookChapterEntity,
             semaphore: Semaphore?,
             resetPageOffset: Boolean = false
         ) {
@@ -441,7 +441,7 @@ object CacheBook {
         }
 
         private fun downloadFinish(
-            chapter: BookChapter,
+            chapter: BookChapterEntity,
             content: String,
             resetPageOffset: Boolean = false,
             canceled: Boolean = false

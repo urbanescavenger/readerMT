@@ -40,7 +40,7 @@ data class RssStar(
         GSON.fromJsonObject<HashMap<String, String>>(variable).getOrNull() ?: hashMapOf()
     }
 
-    fun toRssArticle() = RssArticle(
+    fun toRssArticle() = RssArticleEntity(
         origin = origin,
         sort = sort,
         title = title,

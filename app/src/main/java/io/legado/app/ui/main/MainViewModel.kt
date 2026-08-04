@@ -12,7 +12,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.DefaultData
 import io.legado.app.help.book.BookHelp
@@ -54,7 +54,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     private var upTocPool = Executors.newFixedThreadPool(poolSize).asCoroutineDispatcher()
     private val waitUpTocBooks = LinkedList<String>()
     private val onUpTocBooks = ConcurrentHashMap.newKeySet<String>()
-    private val eventListenerSource = ConcurrentHashMap<BookSource, Boolean>()
+    private val eventListenerSource = ConcurrentHashMap<BookSourceEntity, Boolean>()
     val onUpBooksLiveData = MutableLiveData<Int>()
     private var upTocJob: Job? = null
     private var cacheBookJob: Job? = null
@@ -233,7 +233,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     }
 
     @Synchronized
-    private fun addDownload(source: BookSource, book: Book) {
+    private fun addDownload(source: BookSourceEntity, book: Book) {
         if (AppConfig.preDownloadNum == 0) return
         val endIndex = min(
             book.totalChapterNum - 1,

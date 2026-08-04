@@ -10,8 +10,8 @@ import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.book.getBookSource
 import io.legado.app.help.book.removeType
 import io.legado.app.help.book.simulatedTotalChapterNum
@@ -101,7 +101,7 @@ class AudioPlayViewModel(application: Application) : BaseViewModel(application) 
         }
     }
 
-    fun changeTo(source: BookSource, book: Book, toc: List<BookChapter>) {
+    fun changeTo(source: BookSourceEntity, book: Book, toc: List<BookChapterEntity>) {
         execute {
             AudioPlay.book?.migrateTo(book, toc)
             book.removeType(BookType.updateError)

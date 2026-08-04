@@ -13,7 +13,7 @@ import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.ContentEmptyException
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.exception.TocEmptyException
@@ -134,7 +134,7 @@ class CheckSourceService : BaseService() {
         }
     }
 
-    private suspend fun checkSource(source: BookSource) {
+    private suspend fun checkSource(source: BookSourceEntity) {
         kotlin.runCatching {
             withTimeout(CheckSource.timeout) {
                 doCheckSource(source)
@@ -169,7 +169,7 @@ class CheckSourceService : BaseService() {
         }.getOrDefault(false)
     }
 
-    private suspend fun doCheckSource(source: BookSource) {
+    private suspend fun doCheckSource(source: BookSourceEntity) {
         Debug.startChecking(source)
         source.removeInvalidGroups()
         if (CheckSource.wSourceComment) {
@@ -231,7 +231,7 @@ class CheckSourceService : BaseService() {
     /**
      *校验书源的详情目录正文
      */
-    private suspend fun checkBook(book: Book, source: BookSource, isSearchBook: Boolean = true) {
+    private suspend fun checkBook(book: Book, source: BookSourceEntity, isSearchBook: Boolean = true) {
         kotlin.runCatching {
             if (!CheckSource.checkInfo) {
                 return

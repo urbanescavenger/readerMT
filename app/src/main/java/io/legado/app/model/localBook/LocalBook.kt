@@ -12,7 +12,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.exception.EmptyFileException
 import io.legado.app.exception.NoBooksDirException
 import io.legado.app.exception.NoStackTraceException
@@ -117,7 +117,7 @@ object LocalBook {
     }
 
     @Throws(TocEmptyException::class)
-    fun getChapterList(book: Book): ArrayList<BookChapter> {
+    fun getChapterList(book: Book): ArrayList<BookChapterEntity> {
         val chapters = when {
             book.isEpub -> {
                 EpubFile.getChapterList(book)
@@ -169,7 +169,7 @@ object LocalBook {
         return list
     }
 
-    fun getContent(book: Book, chapter: BookChapter): String? {
+    fun getContent(book: Book, chapter: BookChapterEntity): String? {
         var content = try {
             when {
                 book.isEpub -> {

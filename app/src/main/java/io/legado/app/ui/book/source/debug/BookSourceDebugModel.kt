@@ -3,13 +3,13 @@ package io.legado.app.ui.book.source.debug
 import android.app.Application
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.model.Debug
 
 class BookSourceDebugModel(application: Application) : BaseViewModel(application),
     Debug.Callback {
 
-    var bookSource: BookSource? = null
+    var bookSource: BookSourceEntity? = null
     private var callback: ((Int, String) -> Unit)? = null
     var searchSrc: String? = null
     var bookSrc: String? = null

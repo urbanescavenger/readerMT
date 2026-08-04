@@ -2,7 +2,7 @@ package io.legado.app.utils
 
 import com.script.ScriptBindings
 import com.script.rhino.RhinoScriptEngine
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.ReplaceBook
 import io.legado.app.exception.RegexTimeoutException
 import io.legado.app.help.CrashHandler
@@ -30,7 +30,7 @@ fun CharSequence.replace(
     regex: Regex,
     replacement: String,
     timeout: Long,
-    chapter: BookChapter? = null,
+    chapter: BookChapterEntity? = null,
     book: ReplaceBook? = null
 ): String {
     val charSequence = this@replace

@@ -12,7 +12,7 @@ import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppConst.imagePathKey
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssSource
 import io.legado.app.data.entities.RssStar
 import io.legado.app.exception.NoStackTraceException
@@ -33,7 +33,7 @@ import java.util.Date
 
 class ReadRssViewModel(application: Application) : BaseViewModel(application) {
     var rssSource: RssSource? = null
-    var rssArticle: RssArticle? = null
+    var rssArticle: RssArticleEntity? = null
     var tts: TTS? = null
     val contentLiveData = MutableLiveData<String>()
     val urlLiveData = MutableLiveData<AnalyzeUrl>()
@@ -91,7 +91,7 @@ class ReadRssViewModel(application: Application) : BaseViewModel(application) {
                 } else if (ruleContent.isNullOrBlank() || rssSource!!.singleUrl) {
                     loadUrl(openUrl, origin)
                 } else if (openUrl != null) {
-                    val rssArticle = appDb.rssArticleDao.getByLink(origin, openUrl) ?: RssArticle(
+                    val rssArticle = appDb.rssArticleDao.getByLink(origin, openUrl) ?: RssArticleEntity(
                         origin, title, title, link = openUrl)
                     loadContent(rssArticle, ruleContent)
                 }
@@ -114,7 +114,7 @@ class ReadRssViewModel(application: Application) : BaseViewModel(application) {
         urlLiveData.postValue(analyzeUrl)
     }
 
-    private fun loadContent(rssArticle: RssArticle, ruleContent: String) {
+    private fun loadContent(rssArticle: RssArticleEntity, ruleContent: String) {
         val source = rssSource ?: return
         Rss.getContent(viewModelScope, rssArticle, ruleContent, source)
             .onSuccess(IO) { body ->

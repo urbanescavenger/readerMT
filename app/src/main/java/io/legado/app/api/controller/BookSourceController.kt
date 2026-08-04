@@ -4,7 +4,7 @@ package io.legado.app.api.controller
 import android.text.TextUtils
 import io.legado.app.api.ReturnData
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.source.SourceHelp
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonArray
@@ -24,7 +24,7 @@ object BookSourceController {
     fun saveSource(postData: String?): ReturnData {
         val returnData = ReturnData()
         postData ?: return returnData.setErrorMsg("数据不能为空")
-        val bookSource = GSON.fromJsonObject<BookSource>(postData).getOrNull()
+        val bookSource = GSON.fromJsonObject<BookSourceEntity>(postData).getOrNull()
         if (bookSource != null) {
             if (TextUtils.isEmpty(bookSource.bookSourceName) || TextUtils.isEmpty(bookSource.bookSourceUrl)) {
                 returnData.setErrorMsg("源名称和URL不能为空")
@@ -40,8 +40,8 @@ object BookSourceController {
 
     fun saveSources(postData: String?): ReturnData {
         postData ?: return ReturnData().setErrorMsg("数据为空")
-        val okSources = arrayListOf<BookSource>()
-        val bookSources = GSON.fromJsonArray<BookSource>(postData).getOrNull()
+        val okSources = arrayListOf<BookSourceEntity>()
+        val bookSources = GSON.fromJsonArray<BookSourceEntity>(postData).getOrNull()
         if (bookSources.isNullOrEmpty()) {
             return ReturnData().setErrorMsg("转换源失败")
         }
@@ -69,7 +69,7 @@ object BookSourceController {
 
     fun deleteSources(postData: String?): ReturnData {
         kotlin.runCatching {
-            GSON.fromJsonArray<BookSource>(postData).getOrThrow().let {
+            GSON.fromJsonArray<BookSourceEntity>(postData).getOrThrow().let {
                 SourceHelp.deleteBookSources(it)
             }
         }.onFailure {

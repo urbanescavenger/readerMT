@@ -11,9 +11,9 @@ import io.legado.app.constant.AppPattern.WebJS_PATTERN
 import io.legado.app.data.entities.BaseBook
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
-import io.legado.app.data.entities.RssArticle
+import io.legado.app.data.entities.BookChapterEntity
+import io.legado.app.data.entities.BookSourceEntity
+import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.CacheManager
 import io.legado.app.help.JsExtensions
@@ -62,9 +62,9 @@ class AnalyzeRule(
 ) : JsExtensions {
 
     private val book get() = ruleData as? BaseBook
-    private val rssArticle get() = ruleData as? RssArticle
+    private val rssArticle get() = ruleData as? RssArticleEntity
 
-    private var chapter: BookChapter? = null
+    private var chapter: BookChapterEntity? = null
     private var nextChapterUrl: String? = null
     private var content: Any? = null
     private var baseUrl: String? = null
@@ -906,7 +906,7 @@ class AnalyzeRule(
         if (isFromBookInfo) {
             log("重新获取book")
         }
-        val bookSource = source as? BookSource
+        val bookSource = source as? BookSourceEntity
         val book = book as? Book
         if (bookSource == null || book == null) return
         runBlocking(coroutineContext) {
@@ -932,7 +932,7 @@ class AnalyzeRule(
             log("已跳过重复加载详情页，请优化代码")
             return
         }
-        val bookSource = source as? BookSource
+        val bookSource = source as? BookSourceEntity
         val book = book as? Book
         if (bookSource == null || book == null) return
         runBlocking(coroutineContext) {
@@ -963,7 +963,7 @@ class AnalyzeRule(
             return this
         }
 
-        fun AnalyzeRule.setChapter(chapter: BookChapter?): AnalyzeRule {
+        fun AnalyzeRule.setChapter(chapter: BookChapterEntity?): AnalyzeRule {
             this.chapter = chapter
             return this
         }

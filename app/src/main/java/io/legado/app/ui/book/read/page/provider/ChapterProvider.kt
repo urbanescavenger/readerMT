@@ -10,7 +10,7 @@ import androidx.core.os.postDelayed
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.book.BookContent
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
@@ -149,7 +149,7 @@ object ChapterProvider {
     fun getTextChapterAsync(
         scope: CoroutineScope,
         book: Book,
-        bookChapter: BookChapter,
+        bookChapter: BookChapterEntity,
         displayTitle: String,
         bookContent: BookContent,
         chapterSize: Int,

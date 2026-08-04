@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.os.ParcelFileDescriptor
 import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.help.book.BookHelp
 import io.legado.app.lib.mobi.KF6Book
 import io.legado.app.lib.mobi.KF8Book
@@ -38,12 +38,12 @@ class MobiFile(var book: Book) {
         }
 
         @Synchronized
-        override fun getChapterList(book: Book): ArrayList<BookChapter> {
+        override fun getChapterList(book: Book): ArrayList<BookChapterEntity> {
             return getMFile(book).getChapterList()
         }
 
         @Synchronized
-        override fun getContent(book: Book, chapter: BookChapter): String? {
+        override fun getContent(book: Book, chapter: BookChapterEntity): String? {
             return getMFile(book).getContent(chapter)
         }
 
@@ -87,7 +87,7 @@ class MobiFile(var book: Book) {
         }.getOrThrow()
     }
 
-    private fun getChapterList(): ArrayList<BookChapter> {
+    private fun getChapterList(): ArrayList<BookChapterEntity> {
         return when (val book = mobiBook) {
             is KF8Book -> getChapterListKF8(book)
             is KF6Book -> getChapterListKF6(book)
@@ -95,14 +95,14 @@ class MobiFile(var book: Book) {
         }
     }
 
-    private fun getChapterListKF6(kF6Book: KF6Book): ArrayList<BookChapter> {
-        val chapterList = arrayListOf<BookChapter>()
+    private fun getChapterListKF6(kF6Book: KF6Book): ArrayList<BookChapterEntity> {
+        val chapterList = arrayListOf<BookChapterEntity>()
         val toc = kF6Book.toc
 
         if (kF6Book.sectionIdMap[0] == null) {
             val section = kF6Book.sections.firstOrNull()
             if (section != null) {
-                val chapter = BookChapter()
+                val chapter = BookChapterEntity()
                 val content = kF6Book.getSectionText(section)
                 val soup = Jsoup.parse(content)
                 val title = soup.getElementsByTag("title").first()?.text() ?: "卷首"
@@ -114,7 +114,7 @@ class MobiFile(var book: Book) {
         }
 
         fun append(ref: TOC) {
-            val chapter = BookChapter()
+            val chapter = BookChapterEntity()
             chapter.bookUrl = book.bookUrl
             chapter.title = ref.label
             chapter.url = "${chapterList.size}:${ref.href}"
@@ -136,14 +136,14 @@ class MobiFile(var book: Book) {
         return chapterList
     }
 
-    private fun getChapterListKF8(kf8Book: KF8Book): ArrayList<BookChapter> {
-        val chapterList = arrayListOf<BookChapter>()
+    private fun getChapterListKF8(kf8Book: KF8Book): ArrayList<BookChapterEntity> {
+        val chapterList = arrayListOf<BookChapterEntity>()
         val toc = kf8Book.toc
 
         if (kf8Book.sectionIdMap[0] == null) {
             val section = kf8Book.sections.firstOrNull { it.href.isNotEmpty() }
             if (section != null) {
-                val chapter = BookChapter()
+                val chapter = BookChapterEntity()
                 val content = kf8Book.getSectionText(section)
                 val soup = Jsoup.parse(content)
                 val title = soup.getElementsByTag("title").first()?.text() ?: "卷首"
@@ -155,7 +155,7 @@ class MobiFile(var book: Book) {
         }
 
         fun append(ref: TOC) {
-            val chapter = BookChapter()
+            val chapter = BookChapterEntity()
             chapter.bookUrl = book.bookUrl
             chapter.title = ref.label
             chapter.url = "${chapterList.size}:${ref.href}"
@@ -177,7 +177,7 @@ class MobiFile(var book: Book) {
         return chapterList
     }
 
-    private fun getContent(chapter: BookChapter): String? {
+    private fun getContent(chapter: BookChapterEntity): String? {
         return when (val book = mobiBook) {
             is KF8Book -> getContentKF8(book, chapter)
             is KF6Book -> getContentKF6(book, chapter)
@@ -185,7 +185,7 @@ class MobiFile(var book: Book) {
         }
     }
 
-    private fun getContentKF6(kf6Book: KF6Book, chapter: BookChapter): String? {
+    private fun getContentKF6(kf6Book: KF6Book, chapter: BookChapterEntity): String? {
         if (chapter.isVolume && chapter.url.startsWith("skip:")) return ""
         var section = kf6Book.getSectionByHref(chapter.url) ?: return null
         val nextSectionHref = chapter.getVariable("nextUrl")
@@ -216,7 +216,7 @@ class MobiFile(var book: Book) {
         return format(soup.outerHtml())
     }
 
-    private fun getContentKF8(kf8Book: KF8Book, chapter: BookChapter): String? {
+    private fun getContentKF8(kf8Book: KF8Book, chapter: BookChapterEntity): String? {
         if (chapter.isVolume && chapter.url.startsWith("skip:")) return ""
         var section = kf8Book.getSectionByHref(chapter.url) ?: return null
         val nextSectionHref = chapter.getVariable("nextUrl")

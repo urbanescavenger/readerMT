@@ -12,7 +12,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.BaseViewModel
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookChapter
+import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.databinding.DialogContentEditBinding
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.book.BookHelp
@@ -96,7 +96,7 @@ class ContentEditDialog : BaseDialogFragment(R.layout.dialog_content_edit) {
         }
     }
 
-    private fun editTitle(chapter: BookChapter) {
+    private fun editTitle(chapter: BookChapterEntity) {
         alert {
             setTitle(R.string.edit)
             val alertBinding = DialogEditTextBinding.inflate(layoutInflater)

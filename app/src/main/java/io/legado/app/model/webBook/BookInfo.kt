@@ -3,7 +3,7 @@ package io.legado.app.model.webBook
 import android.text.TextUtils
 import io.legado.app.R
 import io.legado.app.data.entities.Book
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isWebFile
@@ -26,7 +26,7 @@ object BookInfo {
 
     @Throws(Exception::class)
     suspend fun analyzeBookInfo(
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         book: Book,
         baseUrl: String,
         redirectUrl: String,
@@ -49,7 +49,7 @@ object BookInfo {
         book: Book,
         body: String,
         analyzeRule: AnalyzeRule,
-        bookSource: BookSource,
+        bookSource: BookSourceEntity,
         baseUrl: String,
         redirectUrl: String,
         canReName: Boolean,

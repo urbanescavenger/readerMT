@@ -16,7 +16,7 @@ import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.BookSource
+import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.databinding.DialogCustomGroupBinding
 import io.legado.app.databinding.DialogRecyclerViewBinding
 import io.legado.app.databinding.ItemSourceImportBinding
@@ -238,7 +238,7 @@ class ImportBookSourceDialog() : BaseDialogFragment(R.layout.dialog_recycler_vie
 
     override fun onCodeSave(code: String, requestId: String?) {
         requestId?.toInt()?.let {
-            GSON.fromJsonObject<BookSource>(code).getOrNull()?.let { source ->
+            GSON.fromJsonObject<BookSourceEntity>(code).getOrNull()?.let { source ->
                 viewModel.allSources[it] = source
                 adapter.setItem(it, source)
             }
@@ -246,7 +246,7 @@ class ImportBookSourceDialog() : BaseDialogFragment(R.layout.dialog_recycler_vie
     }
 
     inner class SourcesAdapter(context: Context) :
-        RecyclerAdapter<BookSource, ItemSourceImportBinding>(context) {
+        RecyclerAdapter<BookSourceEntity, ItemSourceImportBinding>(context) {
 
         override fun getViewBinding(parent: ViewGroup): ItemSourceImportBinding {
             return ItemSourceImportBinding.inflate(inflater, parent, false)
@@ -255,7 +255,7 @@ class ImportBookSourceDialog() : BaseDialogFragment(R.layout.dialog_recycler_vie
         override fun convert(
             holder: ItemViewHolder,
             binding: ItemSourceImportBinding,
-            item: BookSource,
+            item: BookSourceEntity,
             payloads: MutableList<Any>
         ) {
             binding.apply {
