@@ -706,13 +706,16 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
         var page: Int
         var ruleFindUrl: String
         if (context.request().method() == HttpMethod.POST) {
-            // post 请求
-            ruleFindUrl = context.bodyAsJson.getString("ruleFindUrl")
+            // post 请求;bodyAsJson.getString 缺字段返回 null,赋给非空 String 会 NPE(和 GET 分支对称兜底)
+            ruleFindUrl = context.bodyAsJson.getString("ruleFindUrl") ?: ""
             page = context.bodyAsJson.getInteger("page", 1)
         } else {
             // get 请求
             ruleFindUrl = context.queryParam("ruleFindUrl").firstOrNull() ?: ""
             page = context.queryParam("page").firstOrNull()?.toInt() ?: 1
+        }
+        if (ruleFindUrl.isBlank()) {
+            return returnData.setErrorMsg("发现链接不能为空")
         }
 
         var result = WebBook(bookSource, false).exploreBook(ruleFindUrl, page)

@@ -202,6 +202,10 @@ export default {
               }
             } else {
               v = v.split("::");
+              // 无 "::" 的行是标题行(如 "===最近更新==="),没有可点 URL,跳过
+              if (v.length < 2 || !v[1]) {
+                return;
+              }
               zone.push({
                 name: v[0],
                 url: v[1]
