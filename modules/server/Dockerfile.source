@@ -17,6 +17,9 @@ RUN yarn install --ignore-engines && yarn build
 # Stage 2:构建服务端 bootJar(root Gradle,Java 17)
 FROM gradle:9-jdk17 AS build-env
 ENV JAVA_TOOL_OPTIONS="-Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3"
+# 纯 JVM 镜像无 Android SDK;SERVER_ONLY=true 让 root Gradle 只配置 :modules:server,
+# 跳过 :app/:modules:book/:modules:rhino(否则配置阶段 evaluate 这些 Android 模块会失败)
+ENV SERVER_ONLY=true
 WORKDIR /repo
 COPY . .
 # 同步 web/dist 到 server 资源(替代旧 build.sh sync)

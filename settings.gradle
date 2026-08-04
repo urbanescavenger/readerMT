@@ -47,11 +47,20 @@ dependencyResolutionManagement {
 }
 rootProject.name = 'legado'
 
-include ':app'
-include ':modules:book'
-include ':modules:rhino'
-include ':modules:legado-engine'
-include ':modules:server'
-// :modules:server 已纳入 root Gradle(M0 工具链升级:Kotlin 2.3.21/Java 17/Spring 2.7.18/Vert.x 4)。
+// M0 起 :modules:server 已纳入 root Gradle(Kotlin 2.3.21/Java 17/Spring 3.3.5/Vert.x 4)。
 // 原排除理由(旧工具链 Kotlin 1.5/Java 8 会被 monorepo 的 Kotlin 2.3/Java 17 压坏)随升级已失效。
 // M0 阶段 server 尚不依赖 :legado-engine(旧快照自洽编译),M1 再加 project 依赖切引擎。
+//
+// SERVER_ONLY=true(Docker 构建 server 用):只 include :modules:server,跳过所有 Android 模块
+// (:app/:modules:book/:modules:rhino)。因 gradle:9-jdk17 纯 JVM 镜像无 Android SDK,root Gradle
+// 配置阶段 evaluate 这些模块会失败(compileSdk/schema location 缺失)。server 自身不依赖它们,
+// maven 依赖解析走 settings.gradle 的 dependencyResolutionManagement,不受模块 include 影响。
+if (System.getenv("SERVER_ONLY") == "true") {
+    include ':modules:server'
+} else {
+    include ':app'
+    include ':modules:book'
+    include ':modules:rhino'
+    include ':modules:legado-engine'
+    include ':modules:server'
+}
