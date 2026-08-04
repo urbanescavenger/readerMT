@@ -30,6 +30,13 @@ fun String.isHex(): Boolean {
     }
 }
 
+fun String?.isContentScheme(): Boolean = this?.startsWith("content://") == true
+
+fun String?.isUri(): Boolean {
+    this ?: return false
+    return this.startsWith("file://", true) || isContentScheme()
+}
+
 fun String?.isAbsUrl(): Boolean =
     this?.let {
         it.startsWith("http://", true) || it.startsWith("https://", true)

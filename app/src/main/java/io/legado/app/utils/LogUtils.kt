@@ -7,7 +7,7 @@ import android.content.Context
 import android.os.Build
 import android.webkit.WebSettings
 import io.legado.app.BuildConfig
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AndroidAppLog
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.globalExecutor

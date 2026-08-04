@@ -26,6 +26,15 @@ fun File.createFolderIfNotExist(): File {
     return this
 }
 
+/** 删除已存在目录并重建(reader-mt `FileExtensions.createFolderReplace`)。 */
+fun File.createFolderReplace(): File {
+    if (exists()) {
+        FileUtils.delete(this, true)
+    }
+    mkdirs()
+    return this
+}
+
 /**
  * 在 [this] 目录下按子路径拼出 File(reader-mt `FileExtensions.getFile`)。
  * `:server` 的 `BookHelp` 用它定位书籍缓存目录。
