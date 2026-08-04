@@ -362,7 +362,7 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 - retrofit(-vertx)仅被 4 个服务器独有 help/http 文件用,换引擎 HTTP 后可整块删(连带解决 jcenter 死源)。
 - 服务器独有 WebBook(搜索/阅读编排)引擎**没有**对应实现,需保留并适配(引擎只提供 NoOpWebBookProvider SPI)。
 
-**用户决策**:① Spring Boot 升 **2.7.18**(保留 javax,不迁 jakarta,工作量最小);② 本轮先做 **M0 工具链升级**(隔离 Vert.x 3→4 最高风险)。
+**用户决策**:① 本轮先做 **M0 工具链升级**(隔离 Vert.x 3→4 最高风险);② Spring Boot 版本经踩坑修正为 **3.3.5**(见 §9.10,2.7.18 与 Gradle 9 不兼容)。
 
 **里程碑阶梯(每步独立可验证,不一次大爆炸)**:
 - **M0 工具链升级 + 纳入 root Gradle**(本轮,风险最高):`settings.gradle` `include ':modules:server'`(升级后排除理由消失;M0 服务器 build.gradle **不声明** project(:legado-engine) → 无同名冲突);新建 `modules/server/build.gradle`(Groovy,catalog:Kotlin 2.3.21/jvmTarget 17/Spring Boot 2.7.18/Vert.x 4.5.x/bootJar,删 JavaFX/cli.gradle/旧 build.gradle.kts);**Vert.x 3→4 API 迁移**(RestVerticle/YueduApi/BookController~1800行/ReaderApplication 的 Future/Promise/WebClientOptions/coroutineHandler);Docker 构建段 `gradle:9-jdk17` 跑 `./gradlew :modules:server:bootJar` + 运行时 `amazoncorretto:17-jre`(build context 需为仓库根);docker.yml 加 `push: branches: [monorepo/unify]`。**验证**:docker 绿 + `curl /` 返回 Vue(旧快照新工具链)。若 Vert.x 迁移卡住先只落 M0 绿 commit。
@@ -374,8 +374,33 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 
 **平台 SPI 映射**(M1):`SpringAppConfigProvider` 映射 AppConfig(remoteWebviewApi/remoteWebviewToken/cachePath=storagePath+cache/userAgent=AppConst/threadCount 需新增);`ServerPlatformContext`→appCtx.cacheDir;`BrowserlessWebViewRenderer` 仿 WebViewRenderHelp 扩 evalJS/html+js;`VertxRepositories` Cookie/Cache in-memory stub(M3 接真实存储)。
 
-**版本矩阵**:Kotlin 1.5→2.3.21、JVM 8→17、运行时 corretto 8→17、构建 gradle 7-jdk8→9-jdk17、Spring 2.1.6→2.7.18、Vert.x 3.8.1→4.5.x、gson/okhttp/jsoup 跟随引擎(2.13.2/5.3.2/1.16.2)、rhino com.script→libs.mozilla.rhino、retrofit 删。
+**版本矩阵**:Kotlin 1.5→2.3.21、JVM 8→17、运行时 corretto 8→17、构建 gradle 7-jdk8→9-jdk17、Spring 2.1.6→**3.3.5**(javax→jakarta,2.7.18 不兼容 Gradle 9)、Vert.x 3.8.1→4.5.14、jackson 2.13→2.17.3(对齐 Spring BOM)、gson/okhttp/jsoup 跟随引擎(2.13.2/5.3.2/1.16.2)、rhino com.script→libs.mozilla.rhino、retrofit 删。
 
 **风险**:Vert.x 3→4 迁移量最大(高);同名类冲突→引擎切换必须原子(高);BaseSource/BookSource 接口漂移(中);com.script→org.mozilla rhino 行为差异(中);本地 Java 1.8 无法加载引擎 → 编译/验证全走 CI docker.yml,每次推送后挂 Monitor。
 
 **不在本批(deferred)**:① JSON-map jsLib 下载(OkHttp+`Platform.context.cacheDir` 磁盘缓存,替 app ACache);② ClassShutter/WrapFactory 加固(服务器对不可信源前补回);③ mid-eval 指令级 cancellation;④ 真实「未来天王」fixture(用户抓 HTML);⑤ TOC/content driver;⑥ app `RhinoAndroidEngine` fallback(过渡期)+ Phase 1c switchover 切默认。
+
+### 9.10 M0 工具链升级已落地(三 CI 绿,commit `2a9e633a6`,2026-08-04)
+
+§9.9 的 M0 完成:服务器从旧独立工具链升级到 root Gradle 统一工具链,在新工具链上**编译运行旧引擎快照**成功。**Engine Cross-Check + Android CI + Build Docker Image 三绿**。这解除了"服务器消费引擎 jar"的死冲突(Java 8 加载不了 Java 17 字节码),为 M1 铺路。
+
+**落地**:
+- `settings.gradle`:`include ':modules:server'`(升级后排除理由失效)。**踩坑**:编辑时漏了 include 行导致 server 项目未注册,补上(`2fb5a2720`)。
+- 新建 `modules/server/build.gradle`(Groovy,catalog):kotlin-jvm + **kotlin-spring** + spring-boot 3.3.5 + Vert.x 4.5.14 + bootJar(archive=reader.jar, main=ReaderApplicationKt)。依赖保留旧快照兼容版(jsoup 1.14.1/okhttp 4.9.1/gson 2.8.5,统一到引擎版本留 M1)。删 `cli.gradle`、旧 `build.gradle.kts`(JavaFX 桌面)、`ReaderUIApplication.kt`(桌面入口,JavaFX,服务端不需要)。
+- `catalog`:`springBoot=3.3.5`/`vertx=4.5.14`/`jakartaAnnotation=2.1.1`;spring-boot 插件、spring-boot-starter、vertx 五件、jackson-module-kotlin(2.17.3 对齐 BOM)、kotlin-logging、sysout-over-slf4j、guava、retrofit、logging-interceptor。
+- `ReaderApplication.kt`:Vert.x 4 `Json.mapper/prettyMapper` → `DatabindCodec.mapper()/prettyMapper()`;`javax.annotation.PostConstruct` → `jakarta.annotation.PostConstruct`。
+- `RestVerticle.kt`/`WebdavController.kt`:Vert.x 4 `rawMethod()` → `method().name()`。
+- `Dockerfile.source`:构建段 `gradle:9-jdk17` 跑 `./gradlew :modules:server:bootJar`,运行时 `amazoncorretto:17-jre`;**`SERVER_ONLY=true`**(见下);docker.yml/dockerhub.yml context 改仓库根 + 加 monorepo/unify 分支触发。
+- 仓库根 `.dockerignore`(排除 build/.gradle/node_modules/.git 等防 context 过大)。
+- `engine-cross-check.yml`:加 `:modules:server:assemble`(JVM 编译反馈环,比 docker 快)。
+
+**踩坑 4 次(全修复)**:
+1. **`settings.gradle` 漏 include `:modules:server`** → server 项目 not found。
+2. **Gradle 9 `-x :modules:server:test` 排除语法无法定位项目** → server 用 `assemble`(不含 test;engine 仍 `build` 含 parity test)。server 的 JUnit4 空 SpringBootTest 端到端由 Docker smoke 验。
+3. **Spring Boot 2.7.18 与 Gradle 9 不兼容**:其 Gradle 插件用被 Gradle 9 移除的 `LenientConfiguration.getFiles()` → server compileKotlin 的 scriptExtensions 报 `NoSuchMethodError`(engine 同版 Kotlin 能编译是因未挂 spring-boot 插件)。**必须升 3.x**(javax→jakarta)。服务器唯一 javax→jakarta 点 = `ReaderApplication.kt:19` PostConstruct(其余 javax.* 为 JDK 标准库);SpringEvent extends ApplicationEvent 包在 Spring 3 不变。jackson-module-kotlin 2.13.5→2.17.3 对齐 Spring Boot 3.3.5 BOM。
+4. **Vert.x 4 `rawMethod()` 移除** → `method().name()`(RestVerticle 77/78、WebdavController 91)。
+5. **Docker 无 Android SDK**:`gradle:9-jdk17` 纯 JVM 镜像无 Android SDK,root Gradle 配置阶段 evaluate `:app` 等 Android 模块失败(compileSdk/schema location 缺失)。**方案**:`settings.gradle` 加 `SERVER_ONLY=true` 时只 include `:modules:server`,跳过 Android 模块;Dockerfile.source 设 `SERVER_ONLY=true`。server 自身不依赖 Android 模块,maven 解析走 dependencyResolutionManagement 不受影响。
+
+**M0 验证**:三 CI 绿。Engine Cross-Check 确认 server 在 Kotlin 2.3.21/Java 17/Spring 3.3.5/Vert.x 4 编译通过 + §5c parity 保持绿;Docker 构建成功 + `curl /` 返回 Vue 首页(旧快照新工具链跑通)。
+
+**下一步 M1 引擎切换(未动)**:删 50 同名快照(§9.9 清单)+ `implementation project(':legado-engine')` + 5 平台实现注入 Platform SPI(DirectRhinoEngine/NoOpWebBookProvider 引擎已给)+ 适配 6 差异类 + BookController com.script→DirectRhinoEngine + 删 retrofit。验证 docker 绿 + 自举无 NPE。
