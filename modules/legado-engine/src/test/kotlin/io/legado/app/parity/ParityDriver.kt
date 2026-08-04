@@ -1,5 +1,6 @@
 package io.legado.app.parity
 
+import io.legado.app.data.entities.BookSource
 import io.legado.app.model.analyzeRule.AnalyzeRule
 import java.security.MessageDigest
 
@@ -27,16 +28,16 @@ object ParityDriver {
     /**
      * 解析搜索结果页,返回每本书的原始字段 map(保持页面顺序)。
      *
-     * @param source 书源 fixture(读 `ruleSearch`)
+     * @param source 书源 DTO(读 `getSearchRule()`)
      * @param body 搜索结果页 body(HTML 或 JSON 文本)
      * @param baseUrl 站点根 URL(相对链接解析用)
      */
     fun parseSearch(
-        source: BookSourceFixture,
+        source: BookSource,
         body: String,
         baseUrl: String
     ): List<Map<String, String?>> {
-        val rule = source.searchRule()
+        val rule = source.getSearchRule()
         // 对应 BookList.kt:55-58
         val analyzeRule = AnalyzeRule(ruleData = null, source = null)
         analyzeRule.setContent(body, baseUrl)

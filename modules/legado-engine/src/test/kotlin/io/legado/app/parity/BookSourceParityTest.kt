@@ -1,5 +1,6 @@
 package io.legado.app.parity
 
+import io.legado.app.data.entities.BookSource
 import io.legado.app.platform.Platform
 import io.legado.app.platform.js.DirectRhinoEngine
 import io.legado.app.platform.repo.NoOpCacheRepository
@@ -126,8 +127,8 @@ class BookSourceParityTest {
 
     // ---------- helpers ----------
 
-    private fun loadSource(path: String): BookSourceFixture =
-        GSON.fromJson(resourceText(path), BookSourceFixture::class.java)
+    private fun loadSource(path: String): BookSource =
+        GSON.fromJson(resourceText(path), BookSource::class.java)
 
     private fun assertBook(
         book: Map<String, String?>,
