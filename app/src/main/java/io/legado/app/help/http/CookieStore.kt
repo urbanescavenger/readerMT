@@ -8,7 +8,7 @@ import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern.equalsRegex
 import io.legado.app.constant.AppPattern.semicolonRegex
 import io.legado.app.data.appDb
-import io.legado.app.data.entities.Cookie
+import io.legado.app.data.entities.CookieEntity
 import io.legado.app.help.CacheManager
 import io.legado.app.help.http.CookieManager.getCookieNoSession
 import io.legado.app.help.http.CookieManager.mergeCookiesToMap
@@ -27,7 +27,7 @@ object CookieStore : CookieManagerInterface {
         try {
             val domain = NetworkUtils.getSubDomain(url)
             CacheManager.putMemory("${domain}_cookie", cookie ?: "")
-            val cookieBean = Cookie(domain, cookie ?: "")
+            val cookieBean = CookieEntity(domain, cookie ?: "")
             appDb.cookieDao.insert(cookieBean)
         } catch (e: Exception) {
             AppLog.put("保存Cookie失败\n$e", e)
