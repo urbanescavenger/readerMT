@@ -404,3 +404,13 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 **M0 验证**:三 CI 绿。Engine Cross-Check 确认 server 在 Kotlin 2.3.21/Java 17/Spring 3.3.5/Vert.x 4 编译通过 + §5c parity 保持绿;Docker 构建成功 + `curl /` 返回 Vue 首页(旧快照新工具链跑通)。
 
 **下一步 M1 引擎切换(未动)**:删 50 同名快照(§9.9 清单)+ `implementation project(':legado-engine')` + 5 平台实现注入 Platform SPI(DirectRhinoEngine/NoOpWebBookProvider 引擎已给)+ 适配 6 差异类 + BookController com.script→DirectRhinoEngine + 删 retrofit。验证 docker 绿 + 自举无 NPE。
+### 9.12 Phase 1c switchover 开工:Batch A 绿 + Batch B 推进(2026-08-05)
+
+三份 Explore 勘探确认真实规模(app 76 引擎副本、5 Room @Entity 同名、app 无 platform SPI、引擎 BookSource/BookChapter/RssArticle 是 data class final 不能 extends)。用户选**全套 1c 大爆炸**;无本地编译 → 按依赖序分批、每批 Android CI 收敛绿。
+
+- **Batch A 三 CI 绿**(`c4b3ec6cd` + `eb4ce20f7`/`6dc7c7ffa`):5 个 Room `@Entity` 改名 `*Entity`(BookSource→BookSourceEntity 等)+ AppDatabase/DAO/引用。**关键**:改名后不再与引擎同名碰撞,加引擎依赖不冲突。踩坑:全量 `\bX\b` 替换误伤 okhttp3.Cookie/androidx.media3.Cache/Set-Cookie/Cache-Control(类 3 文件 + 字符串 + 注释),修 10 文件 + CookieStore app 实体被误还原(二次修)。
+- **Batch B part1 红(预期,`c66eeea44`)**:app 加 `:legado-engine` 依赖 + 删 70 个引擎副本(app vs 引擎同相对路径交集)。**实测 825 编译错、88 不同缺失符号**——引擎是"纯 JVM 子集",app 代码用的工具方法引擎缺。
+- **用户选"补引擎 + app 侧 shim"**:纯方法补引擎(engine-cross-check 验 android import 门禁),Android/UI 专属(~30 个)app 侧 shim。
+- **纯补齐已绿(`688be20bf`)**:FileUtils(+createFileIfNotExist/exist/getExtension/move/rename/separator/getDateTime 等)、StringExtensions(+cnCompare 用纯 JDK Collator+Locale.SIMPLIFIED_CHINESE 替 android.os.Build 分支、normalizeFileName/escapeRegex/quoteReplacementJs/toStringArray)。~105 错覆盖。
+- **剩余 Batch B**:~30+ 处修复(纯补齐 ~8 引擎文件 + ~30 Android app shim)+ 8 平台实现类 + Application 注入 → Batch C(composition 映射)→ Batch D(波及面)。dozens 轮 CI 马拉松。88 符号大头:LogUtils(65)/put(58)/createFileIfNotExist(34,已补)/cnCompare(33,已补)/putDebug(21,在被删 constant/AppLog,app shim)/isUri(19)/imagePathKey(19)/WebCacheManager(12) 等。
+- **回滚**:每 batch 独立 commit;Batch B 当前红,可 revert `688be20bf`+`c66eeea44` 回 Batch A 绿态。
