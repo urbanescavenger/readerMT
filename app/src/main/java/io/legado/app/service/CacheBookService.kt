@@ -5,7 +5,7 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
@@ -43,12 +43,12 @@ class CacheBookService : BaseService() {
 
     private val threadCount = AppConfig.threadCount
     private var cachePool =
-        Executors.newFixedThreadPool(min(threadCount, AppConst.MAX_THREAD)).asCoroutineDispatcher()
+        Executors.newFixedThreadPool(min(threadCount, AndroidAppConst.MAX_THREAD)).asCoroutineDispatcher()
     private var downloadJob: Job? = null
     private var notificationContent = appCtx.getString(R.string.service_starting)
     private var mutex = Mutex()
     private val notificationBuilder by lazy {
-        val builder = NotificationCompat.Builder(this, AppConst.channelIdDownload)
+        val builder = NotificationCompat.Builder(this, AndroidAppConst.channelIdDownload)
             .setSmallIcon(R.drawable.ic_download)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

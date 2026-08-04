@@ -34,7 +34,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
@@ -63,7 +63,7 @@ import io.legado.app.utils.viewbindingdelegate.viewBinding
 import io.legado.app.utils.visible
 import kotlinx.coroutines.launch
 import androidx.core.view.size
-import io.legado.app.constant.AppConst.imagePathKey
+import io.legado.app.constant.AndroidAppConst.imagePathKey
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.http.newCallResponse
@@ -545,7 +545,7 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
         currentWebView.webChromeClient = CustomWebChromeClient()
         currentWebView.addJavascriptInterface(JSInterface(this), nameBasic)
         currentWebView.webViewClient = CustomWebViewClient()
-        currentWebView.settings.userAgentString = headerMap.get(AppConst.UA_NAME, true)
+        currentWebView.settings.userAgentString = headerMap.get(AndroidAppConst.UA_NAME, true)
         source?.let { source ->
             (activity as? AppCompatActivity)?.let { currentActivity ->
                 val webJsExtensions =
@@ -582,7 +582,7 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
     private fun saveImage(webPic: String?, uri: Uri) {
         webPic ?: return
         Coroutine.async(lifecycleScope) {
-            val fileName = "${AppConst.fileNameFormat.format(Date(System.currentTimeMillis()))}.jpg"
+            val fileName = "${AndroidAppConst.fileNameFormat.format(Date(System.currentTimeMillis()))}.jpg"
             val byteArray = webData2bitmap(webPic) ?: throw NoStackTraceException("NULL")
             uri.writeBytes(requireContext(), fileName, byteArray)
         }.onError {

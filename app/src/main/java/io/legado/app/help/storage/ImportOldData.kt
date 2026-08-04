@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.jayway.jsonpath.DocumentContext
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.BookSourceType
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
@@ -366,7 +366,7 @@ object ImportOldData {
 
     private fun uaToHeader(ua: String?): String? {
         if (ua.isNullOrEmpty()) return null
-        val map = mapOf(Pair(AppConst.UA_NAME, ua))
+        val map = mapOf(Pair(AndroidAppConst.UA_NAME, ua))
         return GSON.toJson(map)
     }
 

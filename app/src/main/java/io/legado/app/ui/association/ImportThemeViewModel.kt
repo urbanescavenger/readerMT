@@ -5,7 +5,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.config.ThemeConfig
@@ -105,7 +105,7 @@ class ImportThemeViewModel(app: Application) : BaseViewModel(app) {
         okHttpClient.newCallResponseBody {
             if (url.endsWith("#requestWithoutUA")) {
                 url(url.substringBeforeLast("#requestWithoutUA"))
-                header(AppConst.UA_NAME, "null")
+                header(AndroidAppConst.UA_NAME, "null")
             } else {
                 url(url)
             }

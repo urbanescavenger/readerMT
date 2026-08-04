@@ -6,7 +6,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import io.legado.app.BuildConfig
 import io.legado.app.R
-import io.legado.app.constant.AppConst.androidId
+import io.legado.app.constant.AndroidAppConst.androidId
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb

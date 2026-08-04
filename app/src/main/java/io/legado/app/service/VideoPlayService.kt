@@ -36,7 +36,7 @@ import androidx.media3.common.util.UnstableApi
 import com.shuyu.gsyvideoplayer.listener.GSYSampleCallBack
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
@@ -368,7 +368,7 @@ class VideoPlayService : BaseService() {
     private fun createNotification(): NotificationCompat.Builder {
         val nTitle = getString(R.string.audio_play_t) + ": $VideoPlay.videoTitle"
         val nSubtitle = getString(R.string.audio_play_s)
-        val builder = NotificationCompat.Builder(this@VideoPlayService, AppConst.channelIdReadAloud)
+        val builder = NotificationCompat.Builder(this@VideoPlayService, AndroidAppConst.channelIdReadAloud)
             .setSmallIcon(R.drawable.ic_volume_up)
             .setSubText(getString(R.string.video))
             .setOngoing(true)

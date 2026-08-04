@@ -4,7 +4,7 @@ import androidx.room.DeleteColumn
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.BookSourceType
 import io.legado.app.constant.BookType
 
@@ -88,7 +88,7 @@ object DatabaseMigrations {
                 """CREATE TABLE IF NOT EXISTS `readRecordNew` (`androidId` TEXT NOT NULL, `bookName` TEXT NOT NULL, `readTime` INTEGER NOT NULL, 
                     PRIMARY KEY(`androidId`, `bookName`))"""
             )
-            db.execSQL("INSERT INTO readRecordNew(androidId, bookName, readTime) select '${AppConst.androidId}' as androidId, bookName, readTime from readRecord")
+            db.execSQL("INSERT INTO readRecordNew(androidId, bookName, readTime) select '${AndroidAppConst.androidId}' as androidId, bookName, readTime from readRecord")
             db.execSQL("DROP TABLE readRecord")
             db.execSQL("ALTER TABLE readRecordNew RENAME TO readRecord")
         }

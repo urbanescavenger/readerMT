@@ -6,7 +6,7 @@ import androidx.annotation.CallSuper
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
@@ -165,7 +165,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
 
     private fun initSearchPool() {
         searchPool = Executors
-            .newFixedThreadPool(min(threadCount, AppConst.MAX_THREAD)).asCoroutineDispatcher()
+            .newFixedThreadPool(min(threadCount, AndroidAppConst.MAX_THREAD)).asCoroutineDispatcher()
     }
 
     fun refresh(): Boolean {

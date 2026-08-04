@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.ViewGroup
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.databinding.DialogUrlOptionEditBinding
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.GSON
@@ -27,7 +27,7 @@ class UrlOptionDialog(context: Context, private val success: (String) -> Unit) :
         binding.root.setOnClickListener { dismiss() }
         binding.vwBg.setOnClickListener(null)
         binding.editMethod.setFilterValues("POST", "GET")
-        binding.editCharset.setFilterValues(AppConst.charsets)
+        binding.editCharset.setFilterValues(AndroidAppConst.charsets)
         binding.tvOk.setOnClickListener {
             success.invoke(GSON.toJson(getUrlOption()))
             dismiss()

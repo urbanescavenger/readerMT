@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import io.legado.app.R
 import io.legado.app.base.AppContextWrapper
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.DialogEditTextBinding
@@ -180,7 +180,7 @@ class ThemeConfigFragment : PreferenceFragment(),
                 .setMinValue(0)
                 .setValue(AppConfig.elevation)
                 .setCustomButton((R.string.btn_default_s)) {
-                    AppConfig.elevation = AppConst.sysElevation
+                    AppConfig.elevation = AndroidAppConst.sysElevation
                     recreateActivities()
                 }
                 .show {

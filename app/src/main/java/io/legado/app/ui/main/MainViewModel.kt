@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.RecyclerView.RecycledViewPool
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
@@ -50,7 +50,7 @@ import io.legado.app.model.SourceCallBack
 
 class MainViewModel(application: Application) : BaseViewModel(application) {
     private var threadCount = AppConfig.threadCount
-    private var poolSize = min(threadCount, AppConst.MAX_THREAD)
+    private var poolSize = min(threadCount, AndroidAppConst.MAX_THREAD)
     private var upTocPool = Executors.newFixedThreadPool(poolSize).asCoroutineDispatcher()
     private val waitUpTocBooks = LinkedList<String>()
     private val onUpTocBooks = ConcurrentHashMap.newKeySet<String>()
@@ -83,7 +83,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
         if (upTocJob?.isActive == true || cacheBookJob?.isActive == true) {
             return
         }
-        val newPoolSize = min(threadCount, AppConst.MAX_THREAD)
+        val newPoolSize = min(threadCount, AndroidAppConst.MAX_THREAD)
         if (poolSize == newPoolSize) {
             return
         }

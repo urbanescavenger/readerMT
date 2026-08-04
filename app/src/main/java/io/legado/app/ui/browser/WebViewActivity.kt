@@ -21,8 +21,8 @@ import androidx.activity.viewModels
 import androidx.core.view.size
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
-import io.legado.app.constant.AppConst
-import io.legado.app.constant.AppConst.imagePathKey
+import io.legado.app.constant.AndroidAppConst
+import io.legado.app.constant.AndroidAppConst.imagePathKey
 import io.legado.app.databinding.ActivityWebViewBinding
 import io.legado.app.help.http.CookieStore
 import io.legado.app.help.source.SourceVerificationHelp
@@ -245,7 +245,7 @@ class WebViewActivity : VMBaseActivity<ActivityWebViewBinding, WebViewModel>() {
         currentWebView.settings.apply {
             useWideViewPort = true
             loadWithOverviewMode = true
-            headerMap[AppConst.UA_NAME]?.let {
+            headerMap[AndroidAppConst.UA_NAME]?.let {
                 userAgentString = it
             }
         }

@@ -9,8 +9,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.script.rhino.runScriptWithContext
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
-import io.legado.app.constant.AppConst.imagePathKey
+import io.legado.app.constant.AndroidAppConst
+import io.legado.app.constant.AndroidAppConst.imagePathKey
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssSource
@@ -198,7 +198,7 @@ class ReadRssViewModel(application: Application) : BaseViewModel(application) {
     fun saveImage(webPic: String?, uri: Uri) {
         webPic ?: return
         execute {
-            val fileName = "${AppConst.fileNameFormat.format(Date(System.currentTimeMillis()))}.jpg"
+            val fileName = "${AndroidAppConst.fileNameFormat.format(Date(System.currentTimeMillis()))}.jpg"
             val byteArray = webData2bitmap(webPic) ?: throw NoStackTraceException("NULL")
             uri.writeBytes(context, fileName, byteArray)
         }.onError {

@@ -3,7 +3,7 @@ package io.legado.app.ui.association
 import android.app.Application
 import androidx.core.net.toUri
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.http.decompressed
 import io.legado.app.help.http.newCallResponseBody
@@ -21,7 +21,7 @@ class OnLineImportViewModel(app: Application) : BaseAssociationViewModel(app) {
             okHttpClient.newCallResponseBody {
                 if (url.endsWith("#requestWithoutUA")) {
                     url(url.substringBeforeLast("#requestWithoutUA"))
-                    header(AppConst.UA_NAME, "null")
+                    header(AndroidAppConst.UA_NAME, "null")
                 } else {
                     url(url)
                 }
@@ -40,7 +40,7 @@ class OnLineImportViewModel(app: Application) : BaseAssociationViewModel(app) {
             okHttpClient.newCallResponseBody {
                 if (url.endsWith("#requestWithoutUA")) {
                     url(url.substringBeforeLast("#requestWithoutUA"))
-                    header(AppConst.UA_NAME, "null")
+                    header(AndroidAppConst.UA_NAME, "null")
                 } else {
                     url(url)
                 }
@@ -80,7 +80,7 @@ class OnLineImportViewModel(app: Application) : BaseAssociationViewModel(app) {
             val rs = okHttpClient.newCallResponseBody {
                 if (url.endsWith("#requestWithoutUA")) {
                     url(url.substringBeforeLast("#requestWithoutUA"))
-                    header(AppConst.UA_NAME, "null")
+                    header(AndroidAppConst.UA_NAME, "null")
                 } else {
                     url(url)
                 }

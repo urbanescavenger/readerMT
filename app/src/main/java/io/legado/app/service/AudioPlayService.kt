@@ -25,7 +25,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
@@ -629,7 +629,7 @@ class AudioPlayService : BaseService(),
             nSubtitle = getString(R.string.audio_play_s)
         }
         val builder = NotificationCompat
-            .Builder(this@AudioPlayService, AppConst.channelIdReadAloud)
+            .Builder(this@AudioPlayService, AndroidAppConst.channelIdReadAloud)
             .setSmallIcon(R.drawable.ic_volume_up)
             .setSubText(getString(R.string.audio))
             .setOngoing(true)

@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.Debug
 import android.os.Looper
 import android.webkit.WebSettings
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.config.AppConfig
@@ -106,7 +106,7 @@ class CrashHandler(val context: Context) : Thread.UncaughtExceptionHandler {
                 map["packageName"] = appCtx.packageName
                 map["heapSize"] = Runtime.getRuntime().maxMemory().toString()
                 //获取app版本信息
-                AppConst.appInfo.let {
+                AndroidAppConst.appInfo.let {
                     map["versionName"] = it.versionName
                     map["versionCode"] = it.versionCode.toString()
                 }

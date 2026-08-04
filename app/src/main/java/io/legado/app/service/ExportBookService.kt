@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
@@ -133,7 +133,7 @@ class ExportBookService : BaseService() {
 
     @SuppressLint("MissingPermission")
     override fun startForegroundNotification() {
-        val notification = NotificationCompat.Builder(this, AppConst.channelIdDownload)
+        val notification = NotificationCompat.Builder(this, AndroidAppConst.channelIdDownload)
             .setSmallIcon(R.drawable.ic_export)
             .setSubText(getString(R.string.export_book))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -143,7 +143,7 @@ class ExportBookService : BaseService() {
     }
 
     private fun upExportNotification(finish: Boolean = false) {
-        val notification = NotificationCompat.Builder(this, AppConst.channelIdDownload)
+        val notification = NotificationCompat.Builder(this, AndroidAppConst.channelIdDownload)
             .setSmallIcon(R.drawable.ic_export)
             .setSubText(getString(R.string.export_book))
             .setContentIntent(activityPendingIntent<CacheActivity>("cacheActivity"))
@@ -285,7 +285,7 @@ class ExportBookService : BaseService() {
         }"
         append(qy, null)
         val threads = if (AppConfig.parallelExportBook) {
-            AppConst.MAX_THREAD
+            AndroidAppConst.MAX_THREAD
         } else {
             1
         }
@@ -526,7 +526,7 @@ class ExportBookService : BaseService() {
         val contentProcessor = ContentProcessor.get(book.name, book.origin)
         val replaceBook = book.toReplaceBook()
         val threads = if (AppConfig.parallelExportBook) {
-            AppConst.MAX_THREAD
+            AndroidAppConst.MAX_THREAD
         } else {
             1
         }

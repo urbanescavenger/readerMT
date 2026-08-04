@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
@@ -124,7 +124,7 @@ class ImportReplaceRuleViewModel(app: Application) : BaseViewModel(app) {
         okHttpClient.newCallResponseBody {
             if (url.endsWith("#requestWithoutUA")) {
                 url(url.substringBeforeLast("#requestWithoutUA"))
-                header(AppConst.UA_NAME, "null")
+                header(AndroidAppConst.UA_NAME, "null")
             } else {
                 url(url)
             }

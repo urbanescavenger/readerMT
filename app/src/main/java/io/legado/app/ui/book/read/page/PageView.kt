@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import io.legado.app.R
-import io.legado.app.constant.AppConst.timeFormat
+import io.legado.app.constant.AndroidAppConst.timeFormat
 import io.legado.app.data.entities.Bookmark
 import io.legado.app.databinding.ViewBookPageBinding
 import io.legado.app.help.config.AppConfig

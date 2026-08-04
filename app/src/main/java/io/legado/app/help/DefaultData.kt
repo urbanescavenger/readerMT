@@ -1,6 +1,6 @@
 package io.legado.app.help
 
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.DictRule
 import io.legado.app.data.entities.HttpTTS
@@ -22,7 +22,7 @@ import java.io.File
 object DefaultData {
 
     fun upVersion() {
-        if (LocalConfig.versionCode < AppConst.appInfo.versionCode) {
+        if (LocalConfig.versionCode < AndroidAppConst.appInfo.versionCode) {
             Coroutine.async {
                 if (LocalConfig.needUpHttpTTS) {
                     importDefaultHttpTTS()

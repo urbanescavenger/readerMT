@@ -17,7 +17,7 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.activityViewModels
 import io.legado.app.R
 import io.legado.app.base.BaseFragment
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.databinding.FragmentWebViewLoginBinding
 import io.legado.app.help.http.CookieStore
@@ -80,7 +80,7 @@ class WebViewLoginFragment : BaseFragment(R.layout.fragment_web_view_login) {
         webView.settings.apply {
             useWideViewPort = true
             loadWithOverviewMode = true
-            viewModel.headerMap[AppConst.UA_NAME]?.let {
+            viewModel.headerMap[AndroidAppConst.UA_NAME]?.let {
                 userAgentString = it
             }
         }

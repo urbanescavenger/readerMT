@@ -1,7 +1,7 @@
 package io.legado.app.help.update
 
 import androidx.annotation.Keep
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.coroutine.Coroutine
@@ -23,7 +23,7 @@ object AppUpdateGitee : AppUpdate.AppUpdateInterface {
             "beta_release_version" -> AppVariant.BETA_RELEASE
             "beta_releaseA_version" -> AppVariant.BETA_RELEASEA
             "beta_releaseS_version" -> AppVariant.BETA_RELEASES
-            else -> AppConst.appInfo.appVariant
+            else -> AndroidAppConst.appInfo.appVariant
         }
 
     private suspend fun getLatestRelease(): List<AppReleaseInfo> {
@@ -65,13 +65,13 @@ object AppUpdateGitee : AppUpdate.AppUpdateInterface {
         return Coroutine.async(scope) {
             getLatestRelease()
                 .filter {
-                    if (AppConst.appInfo.appVariant == AppVariant.BETA_RELEASE) { //不切版本
-                        it.appVariant == AppConst.appInfo.appVariant
+                    if (AndroidAppConst.appInfo.appVariant == AppVariant.BETA_RELEASE) { //不切版本
+                        it.appVariant == AndroidAppConst.appInfo.appVariant
                     } else {
                         it.appVariant == checkVariant
                     }
                 }
-                .firstOrNull { it.versionName > AppConst.appInfo.versionName }
+                .firstOrNull { it.versionName > AndroidAppConst.appInfo.versionName }
                 ?.let {
                     return@async AppUpdate.UpdateInfo(
                         it.versionName,

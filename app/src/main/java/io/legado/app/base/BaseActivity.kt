@@ -16,7 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.Theme
 import io.legado.app.help.config.AppConfig
@@ -69,7 +69,7 @@ abstract class BaseActivity<VB : ViewBinding>(
         context: Context,
         attrs: AttributeSet
     ): View? {
-        if (AppConst.menuViewNames.contains(name) && parent?.parent is FrameLayout) {
+        if (AndroidAppConst.menuViewNames.contains(name) && parent?.parent is FrameLayout) {
             (parent.parent as View).setBackgroundColor(backgroundColor)
         }
         return super.onCreateView(parent, name, context, attrs)

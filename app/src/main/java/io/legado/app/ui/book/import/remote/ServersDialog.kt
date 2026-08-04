@@ -14,7 +14,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.AppConst.DEFAULT_WEBDAV_ID
+import io.legado.app.constant.AndroidAppConst.DEFAULT_WEBDAV_ID
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Server

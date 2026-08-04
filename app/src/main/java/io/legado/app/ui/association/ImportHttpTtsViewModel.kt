@@ -5,7 +5,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.HttpTTS
@@ -104,7 +104,7 @@ class ImportHttpTtsViewModel(app: Application) : BaseViewModel(app) {
         okHttpClient.newCallResponseBody {
             if (url.endsWith("#requestWithoutUA")) {
                 url(url.substringBeforeLast("#requestWithoutUA"))
-                header(AppConst.UA_NAME, "null")
+                header(AndroidAppConst.UA_NAME, "null")
             } else {
                 url(url)
             }

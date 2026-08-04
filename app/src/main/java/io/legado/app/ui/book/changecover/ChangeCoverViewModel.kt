@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
@@ -98,7 +98,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
 
     private fun initSearchPool() {
         searchPool = Executors
-            .newFixedThreadPool(min(threadCount, AppConst.MAX_THREAD)).asCoroutineDispatcher()
+            .newFixedThreadPool(min(threadCount, AndroidAppConst.MAX_THREAD)).asCoroutineDispatcher()
     }
 
     private fun startSearch() {

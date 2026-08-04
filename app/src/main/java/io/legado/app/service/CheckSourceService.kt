@@ -6,7 +6,7 @@ import androidx.lifecycle.lifecycleScope
 import com.script.ScriptException
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.BookSourceType
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
@@ -56,14 +56,14 @@ import kotlin.math.min
 class CheckSourceService : BaseService() {
     private var threadCount = AppConfig.threadCount
     private var searchCoroutine =
-        Executors.newFixedThreadPool(min(threadCount, AppConst.MAX_THREAD)).asCoroutineDispatcher()
+        Executors.newFixedThreadPool(min(threadCount, AndroidAppConst.MAX_THREAD)).asCoroutineDispatcher()
     private var notificationMsg = appCtx.getString(R.string.service_starting)
     private var checkJob: Job? = null
     private var originSize = 0
     private var finishCount = 0
 
     private val notificationBuilder by lazy {
-        NotificationCompat.Builder(this, AppConst.channelIdReadAloud)
+        NotificationCompat.Builder(this, AndroidAppConst.channelIdReadAloud)
             .setSmallIcon(R.drawable.ic_network_check)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

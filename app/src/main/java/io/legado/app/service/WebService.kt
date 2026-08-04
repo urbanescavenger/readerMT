@@ -9,7 +9,7 @@ import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
@@ -194,7 +194,7 @@ class WebService : BaseService() {
      * 更新通知
      */
     override fun startForegroundNotification() {
-        val builder = NotificationCompat.Builder(this, AppConst.channelIdWeb)
+        val builder = NotificationCompat.Builder(this, AndroidAppConst.channelIdWeb)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSmallIcon(R.drawable.ic_web_service_noti)
             .setOngoing(true)

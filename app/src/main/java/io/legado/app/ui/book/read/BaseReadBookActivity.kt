@@ -15,7 +15,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
-import io.legado.app.constant.AppConst.charsets
+import io.legado.app.constant.AndroidAppConst.charsets
 import io.legado.app.constant.PreferKey
 import io.legado.app.databinding.ActivityBookReadBinding
 import io.legado.app.databinding.DialogDownloadChoiceBinding

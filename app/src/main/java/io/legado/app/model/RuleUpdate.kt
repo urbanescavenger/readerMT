@@ -1,6 +1,6 @@
 package io.legado.app.model
 
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.ReplaceRule
@@ -37,7 +37,7 @@ object RuleUpdate {
         okHttpClient.newCallResponseBody {
             if (url.endsWith("#requestWithoutUA")) {
                 url(url.substringBeforeLast("#requestWithoutUA"))
-                header(AppConst.UA_NAME, "null")
+                header(AndroidAppConst.UA_NAME, "null")
             } else {
                 url(url)
             }

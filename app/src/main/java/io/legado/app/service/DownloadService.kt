@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import io.legado.app.R
 import io.legado.app.base.BaseService
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
@@ -224,7 +224,7 @@ class DownloadService : BaseService() {
     }
 
     override fun startForegroundNotification() {
-        val notification = NotificationCompat.Builder(this, AppConst.channelIdDownload)
+        val notification = NotificationCompat.Builder(this, AndroidAppConst.channelIdDownload)
             .setSmallIcon(R.drawable.ic_download)
             .setSubText(getString(R.string.action_download))
             .setGroup(groupKey)
@@ -245,7 +245,7 @@ class DownloadService : BaseService() {
         progress: Int,
         startTime: Long
     ) {
-        val notificationBuilder = NotificationCompat.Builder(this, AppConst.channelIdDownload)
+        val notificationBuilder = NotificationCompat.Builder(this, AndroidAppConst.channelIdDownload)
             .setSmallIcon(R.drawable.ic_download)
             .setSubText(getString(R.string.action_download))
             .setContentTitle(content)

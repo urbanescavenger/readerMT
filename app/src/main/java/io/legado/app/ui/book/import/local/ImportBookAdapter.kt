@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.databinding.ItemImportBookBinding
 import io.legado.app.utils.ConvertUtils
 import io.legado.app.utils.FileDoc
@@ -54,7 +54,7 @@ class ImportBookAdapter(context: Context, val callBack: CallBack) :
                     llBrief.visible()
                     tvTag.text = item.name.substringAfterLast(".")
                     tvSize.text = ConvertUtils.formatFileSize(item.size)
-                    tvDate.text = AppConst.dateFormat.format(item.lastModified)
+                    tvDate.text = AndroidAppConst.dateFormat.format(item.lastModified)
                     cbSelect.isChecked = selected.contains(item)
                 }
                 tvName.text = item.name

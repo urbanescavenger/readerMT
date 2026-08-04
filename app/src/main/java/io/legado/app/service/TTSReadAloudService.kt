@@ -4,7 +4,7 @@ import android.app.PendingIntent
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.exception.NoStackTraceException
@@ -111,7 +111,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                 }
                 if (!isAddedText) {
                     val result = tts.runCatching {
-                        speak(text, TextToSpeech.QUEUE_FLUSH, null, AppConst.APP_TAG + i)
+                        speak(text, TextToSpeech.QUEUE_FLUSH, null, AndroidAppConst.APP_TAG + i)
                     }.getOrElse {
                         AppLog.put("tts出错\n${it.localizedMessage}", it, true)
                         TextToSpeech.ERROR
@@ -124,7 +124,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                     }
                 } else {
                     val result = tts.runCatching {
-                        speak(text, TextToSpeech.QUEUE_ADD, null, AppConst.APP_TAG + i)
+                        speak(text, TextToSpeech.QUEUE_ADD, null, AndroidAppConst.APP_TAG + i)
                     }.getOrElse {
                         AppLog.put("tts出错\n${it.localizedMessage}", it, true)
                         TextToSpeech.ERROR

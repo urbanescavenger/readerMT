@@ -37,7 +37,7 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.data.entities.Book
 import io.legado.app.help.IntentHelp
 import io.legado.app.help.book.isAudio
@@ -265,7 +265,7 @@ fun Context.share(text: String, title: String = getString(R.string.share)) {
 }
 
 fun Context.share(file: File, type: String = "text/*") {
-    val fileUri = FileProvider.getUriForFile(this, AppConst.authority, file)
+    val fileUri = FileProvider.getUriForFile(this, AndroidAppConst.authority, file)
     val intent = Intent(Intent.ACTION_SEND)
     intent.type = type
     intent.putExtra(Intent.EXTRA_STREAM, fileUri)
@@ -296,7 +296,7 @@ fun Context.shareWithQr(
             fOut.flush()
             fOut.close()
             file.setReadable(true, false)
-            val contentUri = FileProvider.getUriForFile(this, AppConst.authority, file)
+            val contentUri = FileProvider.getUriForFile(this, AndroidAppConst.authority, file)
             val intent = Intent(Intent.ACTION_SEND)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.putExtra(Intent.EXTRA_STREAM, contentUri)
@@ -378,7 +378,7 @@ fun Context.openFileUri(uri: Uri, type: String? = null) {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     val uri = if (uri.isContentScheme()) uri
-    else FileProvider.getUriForFile(this, AppConst.authority, File(uri.path!!))
+    else FileProvider.getUriForFile(this, AndroidAppConst.authority, File(uri.path!!))
     intent.setDataAndType(uri, type ?: IntentType.from(uri))
     try {
         startActivity(intent)

@@ -6,8 +6,8 @@ import android.util.Base64
 import android.webkit.URLUtil
 import android.webkit.WebView
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppConst
-import io.legado.app.constant.AppConst.imagePathKey
+import io.legado.app.constant.AndroidAppConst
+import io.legado.app.constant.AndroidAppConst.imagePathKey
 import io.legado.app.constant.SourceType
 import io.legado.app.data.appDb
 import io.legado.app.exception.NoStackTraceException
@@ -86,7 +86,7 @@ class WebViewModel(application: Application) : BaseViewModel(application) {
     fun saveImage(webPic: String?, path: String) {
         webPic ?: return
         execute {
-            val fileName = "${AppConst.fileNameFormat.format(Date(System.currentTimeMillis()))}.jpg"
+            val fileName = "${AndroidAppConst.fileNameFormat.format(Date(System.currentTimeMillis()))}.jpg"
             webData2bitmap(webPic)?.let { byteArray ->
                 val fileDoc = FileDoc.fromDir(path)
                 val picFile = fileDoc.createFileIfNotExist(fileName)

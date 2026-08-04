@@ -14,7 +14,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.exception.NoStackTraceException
@@ -156,7 +156,7 @@ class BackstageWebView(
         webView.onResume() //缓存库拿的需要激活
         val settings = webView.settings
         settings.blockNetworkImage = true
-        settings.userAgentString = headerMap?.get(AppConst.UA_NAME, true) ?: AppConfig.userAgent
+        settings.userAgentString = headerMap?.get(AndroidAppConst.UA_NAME, true) ?: AppConfig.userAgent
         settings.cacheMode = if(cacheFirst) WebSettings.LOAD_CACHE_ELSE_NETWORK else WebSettings.LOAD_DEFAULT
         if (sourceRegex.isNullOrBlank() && overrideUrlRegex.isNullOrBlank()) {
             webView.webViewClient = HtmlWebViewClient()

@@ -33,8 +33,8 @@ import androidx.core.view.size
 import com.script.rhino.runScriptWithContext
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
-import io.legado.app.constant.AppConst
-import io.legado.app.constant.AppConst.imagePathKey
+import io.legado.app.constant.AndroidAppConst
+import io.legado.app.constant.AndroidAppConst.imagePathKey
 import io.legado.app.constant.AppLog
 import io.legado.app.databinding.ActivityRssReadBinding
 import io.legado.app.help.WebCacheManager
@@ -416,7 +416,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
     private fun upWebviewSettings(userAgent: String? = null) {
         viewModel.rssSource?.let { s ->
             currentWebView.settings.run {
-                userAgentString = userAgent ?: viewModel.headerMap[AppConst.UA_NAME] ?: AppConfig.userAgent
+                userAgentString = userAgent ?: viewModel.headerMap[AndroidAppConst.UA_NAME] ?: AppConfig.userAgent
                 javaScriptEnabled = s.enableJs
                 cacheMode = if (s.cacheFirst) WebSettings.LOAD_CACHE_ELSE_NETWORK else WebSettings.LOAD_DEFAULT
             }

@@ -22,7 +22,7 @@ import androidx.lifecycle.lifecycleScope
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import io.legado.app.BuildConfig
 import io.legado.app.R
-import io.legado.app.constant.AppConst
+import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
@@ -216,7 +216,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         }
     private val selectImageDir = registerForActivityResult(HandleFileContract()) {
         it.uri?.let { uri ->
-            ACache.get().put(AppConst.imagePathKey, uri.toString())
+            ACache.get().put(AndroidAppConst.imagePathKey, uri.toString())
             viewModel.saveImage(it.value, uri)
         }
     }
@@ -1489,7 +1489,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 "show" -> showDialogFragment(PhotoDialog(src, isBook = true))
                 "refresh" -> viewModel.refreshImage(src)
                 "save" -> {
-                    val path = ACache.get().getAsString(AppConst.imagePathKey)
+                    val path = ACache.get().getAsString(AndroidAppConst.imagePathKey)
                     if (path.isNullOrEmpty()) {
                         selectImageDir.launch {
                             value = src
