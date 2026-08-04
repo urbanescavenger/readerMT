@@ -51,7 +51,6 @@ include ':app'
 include ':modules:book'
 include ':modules:rhino'
 include ':modules:legado-engine'
-// :modules:server is NOT a root-Gradle subproject: it keeps its own toolchain
-// (gradle 7 + JDK 8 + cli.gradle, Kotlin 1.5.21) and is built ONLY inside Docker
-// (see modules/server/Dockerfile.source). Including it here would force the
-// monorepo's Kotlin 2.3.21/Java 17 onto reader-mt's Kotlin 1.5/Java 8 code.
+// :modules:server 已纳入 root Gradle(M0 工具链升级:Kotlin 2.3.21/Java 17/Spring 2.7.18/Vert.x 4)。
+// 原排除理由(旧工具链 Kotlin 1.5/Java 8 会被 monorepo 的 Kotlin 2.3/Java 17 压坏)随升级已失效。
+// M0 阶段 server 尚不依赖 :legado-engine(旧快照自洽编译),M1 再加 project 依赖切引擎。

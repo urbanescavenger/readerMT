@@ -42,7 +42,8 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./modules/server
+          # M0 起 server 纳入 root Gradle,构建需仓库根的 settings.gradle/catalog
+          context: .
           file: ./modules/server/Dockerfile.source
           push: true
           tags: ${{ steps.meta.outputs.tags }}

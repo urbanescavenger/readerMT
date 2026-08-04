@@ -1,9 +1,10 @@
 name: Build Docker Image
 
-# 构建服务器(modules/server/Dockerfile.source,独立工具链)并推 GHCR 供下载验证。
-# monorepo/unify 分支推 :unify;tag v* 推 :latest+:<tag>(注意 v* 也会触发 android-build 发布)。
+# 构建服务器(modules/server/Dockerfile.source,纳入 root Gradle)并推 GHCR 供下载验证。
+# monorepo/unify 分支推 :unify(每次 push 验证构建+smoke);tag v* 推 :latest+:<tag>(注意 v* 也会触发 android-build 发布)。
 on:
   push:
+    branches: [monorepo/unify]
     tags: ['v*']
   workflow_dispatch: {}
 
@@ -41,7 +42,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./modules/server
+          # M0 起 server 纳入 root Gradle,构建需仓库根的 settings.gradle/catalog
+          context: .
           file: ./modules/server/Dockerfile.source
           push: true
           tags: ${{ steps.meta.outputs.tags }}

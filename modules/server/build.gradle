@@ -1,0 +1,79 @@
+// :modules:server —— reader-mt 服务端(root-Gradle 子项目,M0 工具链升级)。
+// 原独立工具链(gradle 7 + JDK 8 + cli.gradle / Kotlin 1.5.21)已废弃,纳入 monorepo
+// root Gradle(Kotlin 2.3.21 / Java 17 / Spring Boot 2.7.18 / Vert.x 4)。
+//
+// M0 阶段:服务器仍用自带旧引擎快照(src/main/java/io/legado/app,自洽编译),
+// **不**依赖 :modules:legado-engine(同名同包类冲突,须原子切换,M1 才加 project 依赖)。
+// 依赖版本保留旧快照兼容版(jsoup 1.14.1/okhttp 4.9.1/gson 2.8.5),统一到引擎版本留 M1。
+plugins {
+    alias libs.plugins.kotlin.jvm
+    alias libs.plugins.kotlin.spring
+    alias libs.plugins.spring.boot
+    id 'java'
+}
+
+group = 'com.htmake'
+version = '2.5.4'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+dependencies {
+    // Spring Boot 2.7.18(保留 javax,不迁 jakarta;2.7 官方支持 Java 17)
+    implementation libs.spring.boot.starter
+    testImplementation libs.spring.boot.starter.test
+
+    // Vert.x 4.5.x(3.8.1 官方仅到 Java 11;升级到 4 需 API 迁移)
+    implementation libs.vertx.core
+    implementation libs.vertx.lang.kotlin
+    implementation libs.vertx.lang.kotlin.coroutines
+    implementation libs.vertx.web
+    implementation libs.vertx.web.client
+    // 旧快照(help/BookHelp、help/coroutine)用 kotlinx-coroutines;vertx-lang-kotlin-coroutines 传递带,显式声明
+    implementation libs.kotlinx.coroutines.core
+
+    // json(保留旧快照兼容版;M1 统一到引擎 2.13.2)
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation libs.jackson.module.kotlin
+
+    // log
+    implementation libs.kotlin.logging
+    implementation libs.sysout.over.slf4j
+    implementation libs.guava
+
+    // 网络(M0 保留服务器自身 okhttp 4.9.1;M1 换引擎 HTTP 后可删)
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.1.0'
+    // retrofit 仅被 3 个死代码 help/http 文件用(retrofit2.*);M0 保留,M1 删
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+
+    // JS rhino(M0 保留服务器 src/lib com.script jar;M1 换引擎 DirectRhinoEngine)
+    implementation fileTree(dir: 'src/lib', include: ['rhino-*.jar'])
+
+    // 规则相关(保留旧快照兼容版 jsoup 1.14.1,避开 1.16 #3811 breaking;M1 统一到引擎)
+    implementation 'org.jsoup:jsoup:1.14.1'
+    implementation 'cn.wanghaomiao:JsoupXpath:2.5.0'
+    implementation 'com.jayway.jsonpath:json-path:2.6.0'
+
+    // xml(M0 保留服务器 src/lib xmlpull;M1 依引擎)
+    implementation fileTree(dir: 'src/lib', include: ['xmlpull-*.jar'])
+
+    // 加解密(旧快照兼容版;M1 统一到引擎 5.8.22)
+    implementation 'cn.hutool:hutool-crypto:5.8.0.M1'
+}
+
+// 服务端打包:bootJar(替代旧 cli.gradle 的 assemble;Docker 用 ./gradlew :modules:server:bootJar)
+bootJar {
+    archiveFileName = 'reader.jar'
+    mainClass = 'com.htmake.reader.ReaderApplicationKt'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

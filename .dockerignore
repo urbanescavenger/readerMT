@@ -1,0 +1,16 @@
+# Docker build context 过滤(仓库根 context,构建 :modules:server)
+# 排除构建产物/缓存/版本控制,避免 context 过大
+.git
+.gitignore
+.github
+.gradle
+build/
+**/build/
+local.properties
+node_modules/
+**/node_modules/
+*.iml
+.idea
+.kotlin
+**/.kotlin
+vendor/

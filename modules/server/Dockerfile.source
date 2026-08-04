@@ -1,20 +1,34 @@
+# :modules:server Docker 构建(M0 起纳入 root Gradle,context = 仓库根)
+#
+# M0 工具链升级:构建段 gradle:9-jdk17(root Gradle 9.4.1 需 Java 17)跑
+# `./gradlew :modules:server:bootJar`;运行时 amazoncorretto:17-jre(加载引擎 Java 17 字节码)。
+# 替代旧独立工具链(gradle:7-jdk8 + cli.gradle + Kotlin 1.5.21),cli.gradle 已废弃。
+#
+# 注意:纳入 root Gradle 后构建 server 需要仓库根的 settings.gradle/catalog,
+# 故 docker.yml 的 build context 必须是仓库根(原为 ./modules/server)。
+
+# Stage 1:构建 Vue 前端 web → web/dist
 FROM node:16-alpine AS build-web
-ADD . /app
-WORKDIR /app/web
+WORKDIR /repo
+COPY . .
+WORKDIR /repo/modules/server/web
 RUN yarn install --ignore-engines && yarn build
 
-# Build jar
-FROM gradle:7-jdk8 AS build-env
+# Stage 2:构建服务端 bootJar(root Gradle,Java 17)
+FROM gradle:9-jdk17 AS build-env
 ENV JAVA_TOOL_OPTIONS="-Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3"
-ADD --chown=gradle:gradle . /app
-WORKDIR /app
-COPY --from=build-web /app/web/dist /app/src/main/resources/web
-RUN \
-    rm src/main/java/com/htmake/reader/ReaderUIApplication.kt; \
-    gradle -b cli.gradle assemble --info; \
-    mv ./build/libs/*.jar ./build/libs/reader.jar
+WORKDIR /repo
+COPY . .
+# 同步 web/dist 到 server 资源(替代旧 build.sh sync)
+COPY --from=build-web /repo/modules/server/web/dist /repo/modules/server/src/main/resources/web
+# ReaderUIApplication.kt(桌面 UI 入口)已在 M0 从源码删除,无需 rm
+RUN chmod +x ./gradlew \
+    && ./gradlew :modules:server:bootJar --no-daemon --stacktrace \
+    && mkdir -p /app \
+    && mv modules/server/build/libs/*.jar /app/reader.jar
 
-FROM amazoncorretto:8u442-alpine3.21-jre
+# Stage 3:运行时(Java 17 JRE)
+FROM amazoncorretto:17-alpine
 RUN \
     apk add --no-cache ca-certificates tini tzdata; \
     update-ca-certificates; \
@@ -24,5 +38,5 @@ ENV TZ=Asia/Shanghai
 
 EXPOSE 8080
 ENTRYPOINT ["/sbin/tini", "--"]
-COPY --from=build-env /app/build/libs/reader.jar /app/bin/reader.jar
+COPY --from=build-env /app/reader.jar /app/bin/reader.jar
 CMD ["java", "-jar", "/app/bin/reader.jar"]

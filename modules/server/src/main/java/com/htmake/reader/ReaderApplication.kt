@@ -2,10 +2,9 @@ package com.htmake.reader
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.vertx.core.Future
 import io.vertx.core.Vertx
 import io.vertx.core.http.*
-import io.vertx.core.json.Json
+import io.vertx.core.json.jackson.DatabindCodec
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
 import mu.KotlinLogging
@@ -35,15 +34,16 @@ class ReaderApplication {
 
     @PostConstruct
     fun deployVerticle() {
-        Json.mapper.apply {
+        // Vert.x 4:Json.mapper/prettyMapper 字段移除,改 DatabindCodec.mapper()/prettyMapper()
+        DatabindCodec.mapper().apply {
             registerKotlinModule()
         }
 
-        Json.prettyMapper.apply {
+        DatabindCodec.prettyMapper().apply {
             registerKotlinModule()
         }
 
-        Json.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        DatabindCodec.mapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         vertx().deployVerticle(yueduApi)
     }

@@ -41,10 +41,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Build legado-engine (JVM)
-        # :modules:server is NOT a root-Gradle subproject (it builds only inside
-        # Docker with its own gradle7/JDK8 toolchain) — so only :legado-engine here.
-        run: ./gradlew :modules:legado-engine:build --no-daemon --stacktrace
+      - name: Build legado-engine + server (JVM)
+        # M0 起 :modules:server 已纳入 root Gradle(Kotlin 2.3/Java 17/Spring 2.7.18/
+        # Vert.x 4),纯 JVM 无需 Android SDK,在此提供 JVM 编译反馈(比 docker 快)。
+        # M0 阶段 server 仍用自带旧引擎快照(不依赖 :legado-engine);M1 加 project 依赖后
+        # server 构建会一起校验引擎。若 server 配置/Vert.x 迁移有问题,此步即红。
+        # server 的 `build` 会触发 JUnit4 空 SpringBootTest(需 vintage + 完整 context,非 M0 目标);
+        # 用 -x test 专注编译(测试在 Docker smoke 端到端验)。
+        run: ./gradlew :modules:legado-engine:build :modules:server:build -x :modules:server:test --no-daemon --stacktrace
 
       - name: Enforce engine import boundary
         # 引擎禁止 import android.*/androidx.*/com.script.*/com.htmake.*
