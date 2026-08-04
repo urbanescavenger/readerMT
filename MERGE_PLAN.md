@@ -337,4 +337,45 @@ monorepo 是 **Kotlin 2.3.21 / Java 17 / Gradle 9.4.1**;reader-mt 服务器是 *
 
 **CI 踩坑(3 次红→绿)**:① `Context.enter(ContextFactory)` 此 rhino 版本不存在 → 改 `initGlobal`+`Context.enter()`;② `DirectScriptBindings` 缺 `get(String)`(ScriptableObject 无单参 get)→ 显式实现;③ `prototypeScope` init 前向引用("Variable cannot be initialized before declaration")→ 声明前置 + `standardGlobal` 移到外层 object;④ `putAll` accidental override / abstract 未实现 → SPI 移除 putAll。教训:NativeObject 作为 Scriptable 基类与引擎 SPI 接口有 JVM 签名/属性冲突,需逐个用 CI 闭环暴露(本地无 Gradle)。
 
+### 9.8 Phase 1b 引擎 BookSource DTO 完整化(CI 双绿 commit `cd35b9ae8`)
+
+§9.6/§9.7 的合成 fixture 用测试侧 `BookSourceFixture` 手动持字段,无法反序列化真实书源 JSON。本批把引擎 `BookSource` 从空 interface 升级为完整 DTO data class,使真实书源 JSON(如「未来天王」,含 `@js:` bookUrl/coverUrl)可被引擎 GSON 反序列化并驱动 AnalyzeRule 跑 parity。**app 完全未动、engine-cross-check + Android 双绿、增量安全**,为 Phase 1c switchover 铺路。
+
+**落地**:
+- `data/entities/BookSource.kt`(引擎 main):空 `interface : BaseSource` → 完整 `data class`,含 BaseSource 6 抽象 var(concurrentRate/loginUrl/loginUi/header/enabledCookieJar/jsLib)+ `getTag()=bookSourceName`/`getKey()=bookSourceUrl` + 真实书源 JSON 全部字段(bookSourceGroup/bookSourceType/bookUrlPattern/searchUrl/ruleSearch/ruleBookInfo/ruleToc/ruleContent/ruleExplore/ruleReview/exploreUrl 等)+ 5 个懒加载方法(`getSearchRule/getExploreRule/getBookInfoRule/getTocRule/getContentRule`,镜像 app)。
+- 测试:`BookSourceFixture.kt` **删**;`ParityDriver.parseSearch(source: BookSource, …)` + `source.getSearchRule()`;`BookSourceParityTest.loadSource` 改 `GSON.fromJson(..., BookSource::class.java)`。
+- **契约 hash 不变**:`JSOUP_HASH`/`JSONPATH_HASH`/`JS_HASH` 保持绿(parity 传 `source=null` 不触 BaseSource 成员,换承载体不改变反序列化内容)。
+- **关键语义变更(写进 KDoc)**:Kotlin `data class` 是 `final` **不能做 supertype**。§2/§3.1 原「app `BookSource` extend 引擎接口」**不成立**,Phase 1c 须改 **composition/DTO 转换**:引擎反序列化真实 JSON → 引擎 DTO;`:app` 保留 Room `@Entity BookSource` 存储,在 WebBook/repository 边界做字段拷贝或 GSON round-trip 映射。
+- `source as? BookSource` 守卫语义收紧(interface→data class,仅类型判断),引擎内无创建调用、parity source=null,行为不变。
+
+**不在本批**:① BaseBook/BookChapter 扩展为完整接口(defer 到 1c 明确方案);② 真实「未来天王」fixture(需用户提供 source.json,当前只验证 DTO 反序列化能力);③ 三端 hash parity。
+
+### 9.9 服务器工具链升级计划(用户选「整站升级后切换」,本轮 M0)
+
+**背景(死冲突已核实)**:服务器 `modules/server` 是 **Kotlin 1.5.21 / Java 8 / Spring Boot 2.1.6 / Vert.x 3.8.1 / com.script rhino** 独立工具链(Docker 内 `gradle:7-jdk8` 构建、`amazoncorretto:8-jre` 运行),自带 100 个 `io.legado.app` 旧引擎快照。新引擎 `:legado-engine` 是 **Kotlin 2.3.21 / Java 17** 字节码。**Java 8 运行时加载不了 Java 17 字节码、Kotlin 1.5 读不了 2.3 元数据**——服务器消费引擎 jar 必须**先升级工具链**(§9.3 结论,被现实提前成"服务器端 parity"门槛)。
+
+**已核实现状**(三份 Explore 报告):
+- 旧快照 100 文件 = 与引擎同名同路径 50(删旧换新)+ 服务器独有 50(保留/适配:model/webBook 五件套 WebBook/BookList/BookInfo/BookChapterList/BookContent、model/rss、model/localBook、富实体 Book/SearchBook/BookGroup/ReplaceRule/RssSource/SearchResult/TxtTocRule、help/BookHelp/DefaultData/WebViewRenderHelp、help/coroutine、model/Debug、utils/ACache/SourceAnalyzer 等)。
+- 引擎 90 文件,Platform SPI 已定义;`DirectRhinoEngine`/`NoOpWebBookProvider` 引擎已实现。
+- 服务器无测试(仅 1 空 SpringBootTest);唯一 CI 验证 = docker.yml 构建 + `curl /`(continue-on-error);docker.yml 仅 tag v*/workflow_dispatch 触发(非分支 push)。
+- 注入点:`com/htmake/reader/ReaderApplication.kt` `@PostConstruct fun deployVerticle()`。
+- retrofit(-vertx)仅被 4 个服务器独有 help/http 文件用,换引擎 HTTP 后可整块删(连带解决 jcenter 死源)。
+- 服务器独有 WebBook(搜索/阅读编排)引擎**没有**对应实现,需保留并适配(引擎只提供 NoOpWebBookProvider SPI)。
+
+**用户决策**:① Spring Boot 升 **2.7.18**(保留 javax,不迁 jakarta,工作量最小);② 本轮先做 **M0 工具链升级**(隔离 Vert.x 3→4 最高风险)。
+
+**里程碑阶梯(每步独立可验证,不一次大爆炸)**:
+- **M0 工具链升级 + 纳入 root Gradle**(本轮,风险最高):`settings.gradle` `include ':modules:server'`(升级后排除理由消失;M0 服务器 build.gradle **不声明** project(:legado-engine) → 无同名冲突);新建 `modules/server/build.gradle`(Groovy,catalog:Kotlin 2.3.21/jvmTarget 17/Spring Boot 2.7.18/Vert.x 4.5.x/bootJar,删 JavaFX/cli.gradle/旧 build.gradle.kts);**Vert.x 3→4 API 迁移**(RestVerticle/YueduApi/BookController~1800行/ReaderApplication 的 Future/Promise/WebClientOptions/coroutineHandler);Docker 构建段 `gradle:9-jdk17` 跑 `./gradlew :modules:server:bootJar` + 运行时 `amazoncorretto:17-jre`(build context 需为仓库根);docker.yml 加 `push: branches: [monorepo/unify]`。**验证**:docker 绿 + `curl /` 返回 Vue(旧快照新工具链)。若 Vert.x 迁移卡住先只落 M0 绿 commit。
+- **M1 引擎切换(原子)**:删 50 同名快照(清单见 §9.9 附)+ `implementation project(':legado-engine')` + 新建 5 平台实现 com/htmake/reader/platform/{ServerPlatformContext,SpringAppConfigProvider,BrowserlessWebViewRenderer,ServerScriptAssetProvider,VertxRepositories} 注入 Platform(DirectRhinoEngine/NoOpWebBookProvider 引擎已给)+ 适配 6 差异类(BaseSource/BaseBook/BookSource/AnalyzeRule/AnalyzeUrl/CookieManager)+ BookController:17 com.script→DirectRhinoEngine + 删 retrofit。**验证**:docker 绿 + 自举无 NPE + curl 关键路由。
+- **M2 引擎冒烟(闭环终点)**:docker.yml 冒烟升级为 `POST /reader3/searchBook`(未来天王纯 HTTP 书源)断言 `data` 非空,去掉 continue-on-error。**产出**:服务器端新引擎可用铁证。
+- M3 Repositories 持久化(可选)、M4 收尾 + parity 跨端复验。
+
+**M1 删除的 50 个同名快照**:constant/{AppConst,AppPattern,BookType};data/entities/{BaseBook,BaseSource,BookChapter,BookSource,Cache,Cookie,RssArticle};data/entities/rule/{BookInfoRule,BookListRule,ContentRule,ExploreRule,SearchRule,TocRule};exception/{ConcurrentException,ContentEmptyException,NoStackTraceException,RegexTimeoutException,TocEmptyException};help/{CacheManager,JsExtensions};help/http/{CookieStore,HttpHelper,OkHttpUtils,RequestMethod,SSLHelper,StrResponse};model/analyzeRule/{AnalyzeByJSonPath,AnalyzeByJSoup,AnalyzeByRegex,AnalyzeByXPath,AnalyzeRule,AnalyzeUrl,RuleAnalyzer,RuleData,RuleDataInterface};utils/{EncoderUtils,EncodingDetect,FileExtensions,GsonExtensions,HtmlFormatter,LogUtils,MD5Utils,NetworkUtils,StringExtensions,StringUtils,ThrowableExtensions,Utf8BomUtils}。
+
+**平台 SPI 映射**(M1):`SpringAppConfigProvider` 映射 AppConfig(remoteWebviewApi/remoteWebviewToken/cachePath=storagePath+cache/userAgent=AppConst/threadCount 需新增);`ServerPlatformContext`→appCtx.cacheDir;`BrowserlessWebViewRenderer` 仿 WebViewRenderHelp 扩 evalJS/html+js;`VertxRepositories` Cookie/Cache in-memory stub(M3 接真实存储)。
+
+**版本矩阵**:Kotlin 1.5→2.3.21、JVM 8→17、运行时 corretto 8→17、构建 gradle 7-jdk8→9-jdk17、Spring 2.1.6→2.7.18、Vert.x 3.8.1→4.5.x、gson/okhttp/jsoup 跟随引擎(2.13.2/5.3.2/1.16.2)、rhino com.script→libs.mozilla.rhino、retrofit 删。
+
+**风险**:Vert.x 3→4 迁移量最大(高);同名类冲突→引擎切换必须原子(高);BaseSource/BookSource 接口漂移(中);com.script→org.mozilla rhino 行为差异(中);本地 Java 1.8 无法加载引擎 → 编译/验证全走 CI docker.yml,每次推送后挂 Monitor。
+
 **不在本批(deferred)**:① JSON-map jsLib 下载(OkHttp+`Platform.context.cacheDir` 磁盘缓存,替 app ACache);② ClassShutter/WrapFactory 加固(服务器对不可信源前补回);③ mid-eval 指令级 cancellation;④ 真实「未来天王」fixture(用户抓 HTML);⑤ TOC/content driver;⑥ app `RhinoAndroidEngine` fallback(过渡期)+ Phase 1c switchover 切默认。
