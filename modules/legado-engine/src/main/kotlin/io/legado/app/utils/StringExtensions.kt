@@ -3,7 +3,11 @@
 package io.legado.app.utils
 
 import io.legado.app.constant.AppPattern.dataUriRegex
+import io.legado.app.constant.AppPattern.fileNameRegex2
+import io.legado.app.constant.AppPattern.regexCharRegex
 import java.net.InetAddress
+import java.text.Collator
+import java.util.Locale
 
 /**
  * 从 readerMT `utils/StringExtensions.kt` 抽出的纯 JVM 扩展(原文件含 android.icu/Uri 等
@@ -92,3 +96,44 @@ fun String?.htmlFormat(): String = if (this.isNullOrBlank()) "" else
         .replace("\\s*\\n+\\s*".toRegex(), "\n　　")
         .replace("^[\\n\\s]+".toRegex(), "　　")
         .replace("[\\n\\s]+$".toRegex(), "")
+
+/** 中文拼音/笔画排序(app 原版用 android.os.Build 判断,引擎纯 JDK Collator). */
+fun String.cnCompare(other: String): Int {
+    return Collator.getInstance(Locale.SIMPLIFIED_CHINESE).compare(this, other)
+}
+
+fun String.normalizeFileName(): String {
+    return replace(fileNameRegex2, "_")
+}
+
+fun String.escapeRegex(): String {
+    return replace(regexCharRegex, "\\\\$0")
+}
+
+fun String.quoteReplacementJs(): String {
+    if (!this.contains('\\')) {
+        return this
+    }
+    val sb = StringBuilder()
+    for (c in this) {
+        if (c == '\\') {
+            sb.append("\\\\")
+        } else {
+            sb.append(c)
+        }
+    }
+    return sb.toString()
+}
+
+fun CharSequence.toStringArray(): Array<String> {
+    var codePointIndex = 0
+    return try {
+        Array(Character.codePointCount(this, 0, length)) {
+            val start = codePointIndex
+            codePointIndex = Character.offsetByCodePoints(this, start, 1)
+            substring(start, codePointIndex)
+        }
+    } catch (e: Exception) {
+        split("").toTypedArray()
+    }
+}

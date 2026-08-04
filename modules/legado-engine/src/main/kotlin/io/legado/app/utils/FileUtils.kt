@@ -2,15 +2,131 @@ package io.legado.app.utils
 
 import io.legado.app.platform.Platform
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 
 /**
  * 引擎版 FileUtils(从 readerMT `utils/FileUtils.kt` 抽取引擎所需子集,纯 JVM)。
  *
  * `appCtx.externalCache` → `Platform.context.externalCache`(回退 `cacheDir`)。
  * `JsExtensions.getFile`/`deleteFile` 与 `downloadFile`(闭包)用。其余 Android 专属
- * 方法(`getSdCardPath`/`Environment` 等)不进引擎。
+ * 方法(`getSdCardPath`/`Environment`/`getMimeType`(MimeTypeMap) 等)不进引擎,app 侧 shim。
  */
 object FileUtils {
+
+    fun createFileIfNotExist(root: File, vararg subDirFiles: String): File {
+        val filePath = getPath(root, *subDirFiles)
+        return createFileIfNotExist(filePath)
+    }
+
+    @Synchronized
+    fun createFileIfNotExist(filePath: String): File {
+        val file = File(filePath)
+        try {
+            if (!file.exists()) {
+                //创建父类文件夹
+                file.parent?.let {
+                    createFolderIfNotExist(it)
+                }
+                //创建文件
+                file.createNewFile()
+            }
+        } catch (e: Exception) {
+            throw RuntimeException("无法创建文件: $filePath", e)
+        }
+        return file
+    }
+
+    fun createFileWithReplace(filePath: String): File {
+        val file = File(filePath)
+        if (!file.exists()) {
+            //创建父类文件夹
+            file.parent?.let {
+                createFolderIfNotExist(it)
+            }
+            //创建文件
+            file.createNewFile()
+        } else {
+            file.delete()
+            file.createNewFile()
+        }
+        return file
+    }
+
+    fun exist(path: String): Boolean {
+        val file = File(path)
+        return file.exists()
+    }
+
+    /** 获取文件后缀,不包括 ".". */
+    fun getExtension(pathOrUrl: String): String {
+        val dotPos = pathOrUrl.lastIndexOf('.')
+        return if (0 <= dotPos) {
+            pathOrUrl.substring(dotPos + 1)
+        } else {
+            "ext"
+        }
+    }
+
+    fun getName(path: String?): String {
+        if (path == null) {
+            return ""
+        }
+        val pos = path.lastIndexOf(File.separator)
+        return if (0 <= pos) {
+            path.substring(pos + 1)
+        } else {
+            path
+        }
+    }
+
+    /** 获取文件名(不包括扩展名). */
+    fun getNameExcludeExtension(path: String): String {
+        return try {
+            var fileName = File(path).name
+            val lastIndexOf = fileName.lastIndexOf(".")
+            if (lastIndexOf != -1) {
+                fileName = fileName.substring(0, lastIndexOf)
+            }
+            fileName
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    fun separator(path: String): String {
+        var path1 = path
+        val separator = File.separator
+        path1 = path1.replace("\\", separator)
+        if (!path1.endsWith(separator)) {
+            path1 += separator
+        }
+        return path1
+    }
+
+    fun move(src: String, tar: String): Boolean {
+        return move(File(src), File(tar))
+    }
+
+    fun move(src: File, tar: File): Boolean {
+        return rename(src, tar)
+    }
+
+    fun rename(oldPath: String, newPath: String): Boolean {
+        return rename(File(oldPath), File(newPath))
+    }
+
+    fun rename(src: File, tar: File): Boolean {
+        return src.renameTo(tar)
+    }
+
+    /** 获取格式化后的文件/目录创建或最后修改时间. */
+    @JvmOverloads
+    fun getDateTime(path: String, format: String = "yyyy年MM月dd日HH:mm"): String {
+        val file = File(path)
+        val time = if (file.exists()) file.lastModified() else 0L
+        return if (time == 0L) "" else SimpleDateFormat(format).format(Date(time))
+    }
 
     fun createFolderIfNotExist(root: File, vararg subDirs: String): File {
         val filePath = getPath(root, *subDirs)
