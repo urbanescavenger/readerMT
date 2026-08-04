@@ -3,6 +3,7 @@ package io.legado.app.model.localBook
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.help.BookHelp
+import io.legado.app.utils.ServerFileUtils
 import io.legado.app.utils.*
 import me.ag2s.epublib.domain.EpubBook
 import me.ag2s.epublib.domain.Resource
@@ -255,7 +256,7 @@ class EpubFile(var book: Book) {
         book.coverUrl = "/" + relativeCoverUrl
         val coverUrl = Paths.get(book.workRoot(), "storage", relativeCoverUrl).toString()
         if (!File(coverUrl).exists()) {
-            FileUtils.writeBytes(coverUrl, epubBook!!.coverImage.data)
+            ServerFileUtils.writeBytes(coverUrl, epubBook!!.coverImage.data)
         }
         // 保存 cover
         // val cover = epubBook!!.coverImage?.href

@@ -2,6 +2,7 @@ package io.legado.app.model.localBook
 
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
+import io.legado.app.utils.ServerFileUtils
 import io.legado.app.utils.*
 import java.io.File
 import java.io.InputStream
@@ -105,7 +106,7 @@ class CbzFile(var book: Book) {
             val result = parseBookInfo()
             if (result.second != null) {
                 val coverStream = result.second as InputStream
-                FileUtils.writeInputStream(coverUrl, coverStream)
+                ServerFileUtils.writeInputStream(coverUrl, coverStream)
             }
         }
     }

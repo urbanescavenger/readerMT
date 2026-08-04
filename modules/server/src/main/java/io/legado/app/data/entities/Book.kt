@@ -6,7 +6,7 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.MD5Utils
-import io.legado.app.utils.FileUtils
+import io.legado.app.utils.ServerFileUtils
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.localBook.EpubFile
 import io.legado.app.model.localBook.UmdFile
@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 data class Book(
         override var bookUrl: String = "",                   // 详情页Url(本地书源存储完整文件路径)
         var tocUrl: String = "",                    // 目录页Url (toc=table of Contents)
-        var origin: String = BookType.local,        // 书源URL(默认BookType.local)
+        var origin: String = BookType.localTag,        // 书源URL(默认本地书标志,reader-mt 用 String "loc_book")
         var originName: String = "",                //书源名称
         override var name: String = "",                   // 书籍名称(书源获取)
         override var author: String = "",                 // 作者名称(书源获取)
@@ -54,7 +54,7 @@ data class Book(
     ) : BaseBook {
 
     fun isLocalBook(): Boolean {
-        return origin == BookType.local
+        return origin == BookType.localTag
     }
 
     fun isLocalTxt(): Boolean {
@@ -97,13 +97,15 @@ data class Book(
         GSON.fromJsonObject<HashMap<String, String>>(variable).getOrNull() ?: hashMapOf()
     }
 
-    override fun putVariable(key: String, value: String?) {
+    override fun putVariable(key: String, value: String?): Boolean {
+        val keyExist = variableMap.contains(key)
         if (value != null) {
             variableMap[key] = value
         } else {
             variableMap.remove(key)
         }
         variable = GSON.toJson(variableMap)
+        return keyExist
     }
 
     override var infoHtml: String? = null
@@ -159,11 +161,11 @@ data class Book(
     fun getLocalFile(): File {
         if (isEpub() && originName.indexOf("localStore") < 0 && originName.indexOf("webdav") < 0) {
             // 非本地/webdav书仓的 epub文件
-            return FileUtils.getFile(File(rootDir + originName), "index.epub")
+            return ServerFileUtils.getFile(File(rootDir + originName), "index.epub")
         }
         if (isCbz() && originName.indexOf("localStore") < 0 && originName.indexOf("webdav") < 0) {
             // 非本地/webdav书仓的 cbz文件
-            return FileUtils.getFile(File(rootDir + originName), "index.cbz")
+            return ServerFileUtils.getFile(File(rootDir + originName), "index.cbz")
         }
         return File(rootDir + originName)
     }
@@ -180,7 +182,7 @@ data class Book(
     }
 
     fun getBookDir(): String {
-        return FileUtils.getPath(File(rootDir), "storage", "data", _userNameSpace, name + "_" + author)
+        return ServerFileUtils.getPath(File(rootDir), "storage", "data", _userNameSpace, name + "_" + author)
     }
 
     fun getSplitLongChapter(): Boolean {
@@ -269,7 +271,7 @@ data class Book(
         fun initLocalBook(bookUrl: String, localPath: String, rootDir: String = ""): Book {
             val fileName = File(localPath).name
             val nameAuthor = LocalBook.analyzeNameAuthor(fileName)
-            val book = Book(bookUrl, "", BookType.local, localPath, nameAuthor.first, nameAuthor.second).also {
+            val book = Book(bookUrl, "", BookType.localTag, localPath, nameAuthor.first, nameAuthor.second).also {
                 it.canUpdate = false
             }
             book.setRootDir(rootDir)

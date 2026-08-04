@@ -4,7 +4,7 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
-import io.legado.app.utils.FileUtils
+import io.legado.app.utils.ServerFileUtils
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.getFile
@@ -91,7 +91,7 @@ object BookHelp {
      * 删除章节内容
      */
     fun delContent(book: Book, bookChapter: BookChapter) {
-        FileUtils.createFileIfNotExist(
+        ServerFileUtils.createFileIfNotExist(
             getBookCacheDir(book),
             String.format("%d.txt", bookChapter.index)
         ).delete()
@@ -115,7 +115,7 @@ object BookHelp {
     ) {
         // if (content.isEmpty()) return
         //保存文本
-        FileUtils.createFileIfNotExist(
+        ServerFileUtils.createFileIfNotExist(
             getBookCacheDir(book),
             String.format("%d.txt", bookChapter.index)
         ).writeText(content)
@@ -158,7 +158,7 @@ object BookHelp {
         val analyzeUrl = AnalyzeUrl(src, source = bookSource)
         try {
             analyzeUrl.getByteArrayAwait().let {
-                FileUtils.createFileIfNotExist(
+                ServerFileUtils.createFileIfNotExist(
                     getBookCacheDir(book),
                     cacheImageFolderName,
                     "${MD5Utils.md5Encode16(src)}.${getImageSuffix(src)}"

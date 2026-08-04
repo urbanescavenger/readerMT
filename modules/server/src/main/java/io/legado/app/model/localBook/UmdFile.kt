@@ -2,6 +2,7 @@ package io.legado.app.model.localBook
 
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
+import io.legado.app.utils.ServerFileUtils
 import io.legado.app.utils.*
 import me.ag2s.umdlib.domain.UmdBook
 import me.ag2s.umdlib.umd.UmdReader
@@ -113,7 +114,7 @@ class UmdFile(var book: Book) {
         book.coverUrl = "/" + relativeCoverUrl
         val coverUrl = Paths.get(book.workRoot(), "storage", relativeCoverUrl).toString()
         if (!File(coverUrl).exists()) {
-            FileUtils.writeBytes(coverUrl, umdBook!!.cover.coverData)
+            ServerFileUtils.writeBytes(coverUrl, umdBook!!.cover.coverData)
         }
     }
 

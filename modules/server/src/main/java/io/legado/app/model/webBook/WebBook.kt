@@ -4,6 +4,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.SearchBook
+import io.legado.app.help.SourceAnalyzer
 import io.legado.app.help.http.StrResponse
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.webBook.BookChapterList
@@ -22,7 +23,7 @@ private val logger = KotlinLogging.logger {}
 
 class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debugLogger: DebugLog? = null) {
 
-    constructor(bookSourceString: String, debugLog: Boolean = true) : this(BookSource.fromJson(bookSourceString).getOrNull() ?: BookSource(), debugLog)
+    constructor(bookSourceString: String, debugLog: Boolean = true) : this(SourceAnalyzer.jsonToBookSource(bookSourceString).getOrNull() ?: BookSource(), debugLog)
 
     val sourceUrl: String
         get() = bookSource.bookSourceUrl
@@ -56,7 +57,7 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
                 ruleData = variableBook,
                 headerMapF = bookSource.getHeaderMap(true),
             )
-            var res = analyzeUrl.getStrResponseAwait(debugLog = debugger)
+            var res = analyzeUrl.getStrResponseAwait()
             //检测书源是否已登录
             bookSource.loginCheckJs?.let { checkJs ->
                 if (checkJs.isNotBlank()) {
@@ -96,7 +97,7 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
             ruleData = variableBook,
             headerMapF = bookSource.getHeaderMap(true)
         )
-        var res = analyzeUrl.getStrResponseAwait(debugLog = debugger)
+        var res = analyzeUrl.getStrResponseAwait()
         //检测书源是否已登录
         bookSource.loginCheckJs?.let { checkJs ->
             if (checkJs.isNotBlank()) {
@@ -118,7 +119,7 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
      * 书籍信息
      */
     suspend fun getBookInfo(book: Book, canReName: Boolean = true): Book {
-        book.type = bookSource.bookSourceType
+        book.type = bookSource.bookSourceType ?: 0
         if (!book.infoHtml.isNullOrEmpty()) {
             BookInfo.analyzeBookInfo(
                 book,
@@ -142,8 +143,8 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
         book.bookUrl = bookUrl
         book.origin = bookSource.bookSourceUrl
         book.originName = bookSource.bookSourceName
-        book.originOrder = bookSource.customOrder
-        book.type = bookSource.bookSourceType
+        book.originOrder = bookSource.customOrder ?: 0
+        book.type = bookSource.bookSourceType ?: 0
         val analyzeUrl = AnalyzeUrl(
             mUrl = book.bookUrl,
             baseUrl = bookSource.bookSourceUrl,
@@ -151,7 +152,7 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
             ruleData = book,
             headerMapF = bookSource.getHeaderMap(true)
         )
-        var res = analyzeUrl.getStrResponseAwait(debugLog = debugger)
+        var res = analyzeUrl.getStrResponseAwait()
         //检测书源是否已登录
         bookSource.loginCheckJs?.let { checkJs ->
             if (checkJs.isNotBlank()) {
@@ -170,7 +171,7 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
     suspend fun getChapterList(
         book: Book
     ): List<BookChapter> {
-        book.type = bookSource.bookSourceType
+        book.type = bookSource.bookSourceType ?: 0
         return if (book.bookUrl == book.tocUrl && !book.tocHtml.isNullOrEmpty()) {
             BookChapterList.analyzeChapterList(
                 book,
@@ -187,7 +188,7 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
                 ruleData = book,
                 headerMapF = bookSource.getHeaderMap(true)
             )
-            var res = analyzeUrl.getStrResponseAwait(debugLog = debugger)
+            var res = analyzeUrl.getStrResponseAwait()
             //检测书源是否已登录
             bookSource.loginCheckJs?.let { checkJs ->
                 if (checkJs.isNotBlank()) {
@@ -230,7 +231,6 @@ class WebBook(val bookSource: BookSource, val debugLog: Boolean = true, var debu
         var res = analyzeUrl.getStrResponseAwait(
             jsStr = bookSource.getContentRule().webJs,
             sourceRegex = bookSource.getContentRule().sourceRegex,
-            debugLog = debugger
         )
         return BookContent.analyzeContent(
             res.body,

@@ -16,6 +16,7 @@ import mu.KotlinLogging
 import com.htmake.reader.config.AppConfig
 import com.htmake.reader.config.BookConfig
 import io.legado.app.constant.DeepinkBookSource
+import io.legado.app.help.SourceAnalyzer
 import com.htmake.reader.utils.error
 import com.htmake.reader.utils.success
 import com.htmake.reader.utils.getStorage
@@ -95,7 +96,7 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
         if (!checkAuth(context)) {
             return returnData.setData("NEED_LOGIN").setErrorMsg("请登录后使用")
         }
-        val bookSource = BookSource.fromJson(context.bodyAsString).getOrNull()
+        val bookSource = SourceAnalyzer.jsonToBookSource(context.bodyAsString).getOrNull()
         if (bookSource == null) {
             return returnData.setErrorMsg("参数错误")
         }
@@ -143,7 +144,7 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
             bookSourceList = JsonArray()
         }
         for (k in 0 until bookSourceJsonArray.size()) {
-            val bookSource = BookSource.fromJson(bookSourceJsonArray.getJsonObject(k).toString()).getOrNull()
+            val bookSource = SourceAnalyzer.jsonToBookSource(bookSourceJsonArray.getJsonObject(k).toString()).getOrNull()
             if (bookSource == null) {
                 continue
             }

@@ -7,7 +7,7 @@ import java.util.*
 import java.util.regex.Pattern
 import java.text.DecimalFormat
 
-object FileUtils {
+object ServerFileUtils {
     const val GB: Long = 1073741824
     const val MB: Long = 1048576
     const val KB: Long = 1024

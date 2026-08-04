@@ -7,6 +7,7 @@ import io.legado.app.data.entities.rule.BookListRule
 import io.legado.app.help.BookHelp
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
+import io.legado.app.model.analyzeRule.AnalyzeRule.setRuleData
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.StringUtils.wordCountFormat
@@ -114,9 +115,9 @@ object BookList {
         book.bookUrl = analyzeUrl.ruleUrl
         book.origin = bookSource.bookSourceUrl
         book.originName = bookSource.bookSourceName
-        book.originOrder = bookSource.customOrder
-        book.type = bookSource.bookSourceType
-        analyzeRule.ruleData = book
+        book.originOrder = bookSource.customOrder ?: 0
+        book.type = bookSource.bookSourceType ?: 0
+        analyzeRule.setRuleData(book)
         BookInfo.analyzeBookInfo(
             book,
             body,
@@ -153,9 +154,9 @@ object BookList {
         val searchBook = SearchBook(variable = variable)
         searchBook.origin = bookSource.bookSourceUrl
         searchBook.originName = bookSource.bookSourceName
-        searchBook.type = bookSource.bookSourceType
-        searchBook.originOrder = bookSource.customOrder
-        analyzeRule.ruleData = searchBook
+        searchBook.type = bookSource.bookSourceType ?: 0
+        searchBook.originOrder = bookSource.customOrder ?: 0
+        analyzeRule.setRuleData(searchBook)
         analyzeRule.setContent(item)
         if (log) debugLog?.log(bookSource.bookSourceUrl, "┌获取书名")
         searchBook.name = BookHelp.formatBookName(analyzeRule.getString(ruleName))

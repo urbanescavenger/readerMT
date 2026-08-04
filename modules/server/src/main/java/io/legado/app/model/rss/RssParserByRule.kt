@@ -5,6 +5,7 @@ import io.legado.app.data.entities.RssSource
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
+import io.legado.app.model.analyzeRule.AnalyzeRule.setRuleData
 import io.legado.app.model.analyzeRule.RuleData
 import io.legado.app.utils.NetworkUtils
 import java.util.*
@@ -95,7 +96,7 @@ object RssParserByRule {
         debugLog: DebugLog?
     ): RssArticle? {
         val rssArticle = RssArticle(variable = variable)
-        analyzeRule.ruleData = rssArticle
+        analyzeRule.setRuleData(rssArticle)
         analyzeRule.setContent(item)
         debugLog?.log(sourceUrl, "┌获取标题", log)
         rssArticle.title = analyzeRule.getString(ruleTitle)

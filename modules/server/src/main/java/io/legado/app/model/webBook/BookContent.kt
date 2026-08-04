@@ -7,6 +7,8 @@ import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.rule.ContentRule
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
+import io.legado.app.model.analyzeRule.AnalyzeRule.setChapter
+import io.legado.app.model.analyzeRule.AnalyzeRule.setNextChapterUrl
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.HtmlFormatter
@@ -43,7 +45,7 @@ object BookContent {
         val contentRule = bookSource.getContentRule()
         val analyzeRule = AnalyzeRule(book, bookSource).setContent(body, baseUrl)
         analyzeRule.setRedirectUrl(redirectUrl)
-        analyzeRule.nextChapterUrl = mNextChapterUrl
+        analyzeRule.setNextChapterUrl(mNextChapterUrl)
         var contentData = analyzeContent(
             book, baseUrl, redirectUrl, body, contentRule, bookChapter, bookSource, mNextChapterUrl
         )
@@ -61,7 +63,7 @@ object BookContent {
                     source = bookSource,
                     ruleData = book,
                     headerMapF = bookSource.getHeaderMap()
-                ).getStrResponseAwait(debugLog = debugLog)
+                ).getStrResponseAwait()
                 res.body?.let { nextBody ->
                     contentData = analyzeContent(
                         book, nextUrl, res.url, nextBody, contentRule,
@@ -85,7 +87,7 @@ object BookContent {
                             ruleData = book,
                             headerMapF = bookSource.getHeaderMap()
                         )
-                        val res = analyzeUrl.getStrResponseAwait(debugLog = debugLog)
+                        val res = analyzeUrl.getStrResponseAwait()
                         analyzeContent(
                             book, urlStr, res.url, res.body!!, contentRule,
                             bookChapter, bookSource, mNextChapterUrl, false
@@ -129,9 +131,9 @@ object BookContent {
         val analyzeRule = AnalyzeRule(book, bookSource)
         analyzeRule.setContent(body, baseUrl)
         val rUrl = analyzeRule.setRedirectUrl(redirectUrl)
-        analyzeRule.nextChapterUrl = nextChapterUrl
+        analyzeRule.setNextChapterUrl(nextChapterUrl)
         val nextUrlList = arrayListOf<String>()
-        analyzeRule.chapter = chapter
+        analyzeRule.setChapter(chapter)
         //获取正文
         var content = analyzeRule.getString(contentRule.content)
         content = HtmlFormatter.formatKeepImg(content, rUrl)

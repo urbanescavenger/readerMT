@@ -7,6 +7,7 @@ import io.legado.app.data.entities.rule.TocRule
 import io.legado.app.exception.TocEmptyException
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
+import io.legado.app.model.analyzeRule.AnalyzeRule.setChapter
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.isTrue
 import io.legado.app.utils.TextUtils
@@ -62,7 +63,7 @@ object BookChapterList {
                         source = bookSource,
                         ruleData = book,
                         headerMapF = bookSource.getHeaderMap()
-                    ).getStrResponseAwait(debugLog = debugLog).body?.let { nextBody ->
+                    ).getStrResponseAwait().body?.let { nextBody ->
                         chapterData = analyzeChapterList(
                             book, nextUrl, nextUrl,
                             nextBody, tocRule, listRule, bookSource, true, false, debugLog
@@ -85,7 +86,7 @@ object BookChapterList {
                                 ruleData = book,
                                 headerMapF = bookSource.getHeaderMap()
                             )
-                            val res = analyzeUrl.getStrResponseAwait(debugLog = debugLog)
+                            val res = analyzeUrl.getStrResponseAwait()
                             analyzeChapterList(
                                 book, urlStr, res.url,
                                 res.body!!, tocRule, listRule, bookSource, false, false, debugLog
@@ -172,7 +173,7 @@ object BookChapterList {
             elements.forEachIndexed { index, item ->
                 analyzeRule.setContent(item)
                 val bookChapter = BookChapter(bookUrl = book.bookUrl, baseUrl = redirectUrl)
-                analyzeRule.chapter = bookChapter
+                analyzeRule.setChapter(bookChapter)
                 bookChapter.title = analyzeRule.getString(nameRule)
                 bookChapter.url = analyzeRule.getString(urlRule)
                 bookChapter.tag = analyzeRule.getString(upTimeRule)

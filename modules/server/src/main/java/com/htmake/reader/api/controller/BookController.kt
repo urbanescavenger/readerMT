@@ -1,6 +1,5 @@
 package com.htmake.reader.api.controller
 
-import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
@@ -14,7 +13,7 @@ import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.exception.TocEmptyException
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.help.DefaultData
-import com.script.SimpleBindings
+import io.legado.app.platform.Platform
 import io.vertx.ext.web.Route
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
@@ -50,7 +49,7 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.http.HttpMethod
 import com.htmake.reader.api.ReturnData
 import io.legado.app.utils.MD5Utils
-import io.legado.app.utils.FileUtils
+import io.legado.app.utils.ServerFileUtils
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.net.URL;
@@ -75,6 +74,7 @@ import io.legado.app.utils.NetworkUtils
 import io.legado.app.model.rss.Rss
 import io.legado.app.model.Debugger
 import io.legado.app.help.BookHelp
+import io.legado.app.help.SourceAnalyzer
 import org.springframework.scheduling.annotation.Scheduled
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.model.analyzeRule.AnalyzeUrl
@@ -233,7 +233,7 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
                     return returnData.setErrorMsg("不支持导入" + ext + "格式的书籍文件")
                 }
                 // 文件名格式化
-                fileName = FileUtils.getNameExcludeExtension(fileName)
+                fileName = ServerFileUtils.getNameExcludeExtension(fileName)
                 fileName = fileName.replace(AppPattern.fileNameRegex, "")
                 fileName = fileName.substring(0, Math.min(50, fileName.length)) + "." + ext
 
@@ -452,10 +452,10 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
         return if (m.find()) {
             val js = m.group(1) ?: m.group(2) ?: ""
             runCatching {
-                val bindings = SimpleBindings()
+                val bindings = Platform.rhino.newBindings()
                 bindings["result"] = title
                 bindings["book"] = book
-                AppConst.SCRIPT_ENGINE.eval(js, bindings)?.toString() ?: title
+                Platform.rhino.eval(js, bindings)?.toString() ?: title
             }.getOrElse { title } // 脚本异常 → 保留原标题
         } else if (rule.isRegex) {
             runCatching { title.replace(rule.pattern.toRegex(), rule.replacement) }.getOrDefault(title)
@@ -673,7 +673,7 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
                     // 保存图片
                     BookHelp.saveImages(
                         this,
-                        BookSource.fromJson(bookSource ?: "").getOrNull() ?: BookSource(),
+                        SourceAnalyzer.jsonToBookSource(bookSource ?: "").getOrNull() ?: BookSource(),
                         bookInfo,
                         chapterInfo,
                         content
@@ -2741,7 +2741,7 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
                     // 保存图片
                     BookHelp.saveImages(
                         this,
-                        BookSource.fromJson(bookSource).getOrNull() ?: BookSource(),
+                        SourceAnalyzer.jsonToBookSource(bookSource).getOrNull() ?: BookSource(),
                         bookInfo,
                         chapterInfo,
                         content
@@ -2907,8 +2907,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
 
     suspend fun exportToTxt(exportDir: File, bookInfo: Book, bookSource: String, userNameSpace: String): File {
         val filename = "《${bookInfo.name}》作者：${bookInfo.getRealAuthor()}.txt"
-        val bookPath = FileUtils.getPath(exportDir, filename)
-        val bookFile = FileUtils.createFileWithReplace(bookPath)
+        val bookPath = ServerFileUtils.getPath(exportDir, filename)
+        val bookFile = ServerFileUtils.createFileWithReplace(bookPath)
         // val stringBuilder = StringBuilder()
         getAllContents(bookInfo, bookSource, userNameSpace) { text, srcList ->
             bookFile.appendText(text, Charset.forName(appConfig.exportCharset))
@@ -2994,8 +2994,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
 
     private suspend fun exportToEpub(exportDir: File, book: Book, bookSource: String, userNameSpace: String): File {
         val filename = "《${book.name}》作者：${book.getRealAuthor()}.epub"
-        val bookPath = FileUtils.getPath(exportDir, filename)
-        val bookFile = FileUtils.createFileWithReplace(bookPath)
+        val bookPath = ServerFileUtils.getPath(exportDir, filename)
+        val bookFile = ServerFileUtils.createFileWithReplace(bookPath)
 
         val epubBook = EpubBook()
         epubBook.version = "2.0"
@@ -3080,7 +3080,7 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
                 epubBook.coverImage = Resource(byteArray, "Images/cover.jpg")
                 return;
             }
-            val analyzeUrl = AnalyzeUrl(coverUrl, source = BookSource.fromJson(bookSourceString).getOrNull())
+            val analyzeUrl = AnalyzeUrl(coverUrl, source = SourceAnalyzer.jsonToBookSource(bookSourceString).getOrNull())
             try {
                 analyzeUrl.getByteArrayAwait().let {
                     epubBook.coverImage = Resource(it, "Images/cover.jpg")

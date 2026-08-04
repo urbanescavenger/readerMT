@@ -67,13 +67,15 @@ data class SearchBook(
         GSON.fromJsonObject<HashMap<String, String>>(variable).getOrNull() ?: hashMapOf()
     }
 
-    override fun putVariable(key: String, value: String?) {
+    override fun putVariable(key: String, value: String?): Boolean {
+        val keyExist = variableMap.contains(key)
         if (value != null) {
             variableMap[key] = value
         } else {
             variableMap.remove(key)
         }
         variable = GSON.toJson(variableMap)
+        return keyExist
     }
 
 //    @Ignore
