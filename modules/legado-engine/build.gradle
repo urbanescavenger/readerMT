@@ -26,6 +26,9 @@ dependencies {
     implementation libs.kotlinx.coroutines.core
     implementation libs.quick.chinese.transfer.core
     implementation libs.mozilla.rhino
+    // jackson-annotations:仅注解(BookSource 等实体 JSON 序列化时忽略 getSource 自引用)。
+    // 引擎本身不做 Jackson 编解码(那是各平台的事),只依赖注解标注序列化行为,轻量纯注解。
+    implementation libs.jackson.annotations
     // implementation libs.mozilla.rhino
     // implementation libs.kotlin.stdlib
 

@@ -2,6 +2,7 @@
 
 package io.legado.app.data.entities
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.help.CacheManager
@@ -76,6 +77,12 @@ interface BaseSource : JsExtensions {
 
     fun getKey(): String
 
+    /**
+     * 返回自身(书源 JS 的 `java.source` 语义)。[JsonIgnore]:`BookSource` 等实现本接口,
+     * 各平台用 Jackson(如 `:server` 的 `JsonObject.mapFrom`)序列化书源时,若不忽略,
+     * `getSource()` 会被当 bean 属性 `source` 递归引用自身 → 自引用循环异常。
+     */
+    @JsonIgnore
     override fun getSource(): BaseSource? {
         return this
     }

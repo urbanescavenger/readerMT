@@ -128,6 +128,7 @@ vertx-lang-kotlin-coroutines = { module = "io.vertx:vertx-lang-kotlin-coroutines
 vertx-web = { module = "io.vertx:vertx-web", version.ref = "vertx" }
 vertx-web-client = { module = "io.vertx:vertx-web-client", version.ref = "vertx" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.17.3" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version = "2.17.3" }
 kotlin-logging = { module = "io.github.microutils:kotlin-logging", version = "3.0.5" }
 sysout-over-slf4j = { module = "uk.org.lidalia:sysout-over-slf4j", version = "1.0.2" }
 guava = { module = "com.google.guava:guava", version = "31.1-jre" }
