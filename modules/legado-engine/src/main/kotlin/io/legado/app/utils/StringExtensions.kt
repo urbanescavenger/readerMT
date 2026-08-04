@@ -79,7 +79,7 @@ fun String?.isTrue(nullIsTrue: Boolean = false): Boolean {
     if (this.isNullOrBlank() || this == "null") {
         return nullIsTrue
     }
-    return !this.matches("\s*(?i)(false|no|not|0)\s*".toRegex())
+    return !this.matches("\\s*(?i)(false|no|not|0)\\s*".toRegex())
 }
 
 /**
@@ -87,8 +87,8 @@ fun String?.isTrue(nullIsTrue: Boolean = false): Boolean {
  * `:server` 的 `BookList`/`BookInfo` 用。
  */
 fun String?.htmlFormat(): String = if (this.isNullOrBlank()) "" else
-    this.replace("(?i)<(br[\s/]*|/*p\b.*?|/*div\b.*?)>".toRegex(), "\n")
+    this.replace("(?i)<(br[\\s/]*|/*p\\b.*?|/*div\\b.*?)>".toRegex(), "\n")
         .replace("<[script>]*.*?>|&nbsp;".toRegex(), "")
-        .replace("\s*\n+\s*".toRegex(), "\n　　")
-        .replace("^[\n\s]+".toRegex(), "　　")
-        .replace("[\n\s]+$".toRegex(), "")
+        .replace("\\s*\\n+\\s*".toRegex(), "\n　　")
+        .replace("^[\\n\\s]+".toRegex(), "　　")
+        .replace("[\\n\\s]+$".toRegex(), "")
