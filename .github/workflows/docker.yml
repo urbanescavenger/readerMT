@@ -53,13 +53,15 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run server + curl smoke (§5b)
-        continue-on-error: true
+        # 服务器必须真正起来才算绿(去掉 continue-on-error,启动失败即红)。
+        # M1 前曾因 continue-on-error+curl||true 掩盖了启动失败(假绿)。
         run: |
           set -x
           IMG=$(echo "${{ steps.meta.outputs.tags }}" | head -1)
           docker run -d --name reader -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod "$IMG"
+          UP=""
           for i in $(seq 1 60); do
-            if curl -sf http://localhost:8080/ >/dev/null 2>&1; then echo "server up after ${i}x2s"; break; fi
+            if curl -sf http://localhost:8080/ >/dev/null 2>&1; then UP="yes"; echo "server up after ${i}x2s"; break; fi
             sleep 2
           done
           echo "--- GET / ---"
@@ -67,3 +69,7 @@ jobs:
           echo
           echo "--- docker logs (tail) ---"
           docker logs reader 2>&1 | tail -40 || true
+          if [ -z "$UP" ]; then
+            echo "ERROR: server did not come up within 120s"
+            exit 1
+          fi
