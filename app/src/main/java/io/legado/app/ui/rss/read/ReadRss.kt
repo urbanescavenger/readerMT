@@ -3,7 +3,7 @@ package io.legado.app.ui.rss.read
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.SourceType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssArticleEntity
@@ -91,7 +91,7 @@ object ReadRss {
                             1 -> fragment.showDialogFragment(PhotoDialog(url))
                         }
                     }.onError {
-                        AppLog.put("加载为链接的正文失败", it, true)
+                        AndroidAppLog.put("加载为链接的正文失败", it, true)
                     }
             }
         }
@@ -113,7 +113,7 @@ object ReadRss {
                             1 -> activity.showDialogFragment(PhotoDialog(url))
                         }
                     }.onError {
-                        AppLog.put("加载为链接的正文失败", it, true)
+                        AndroidAppLog.put("加载为链接的正文失败", it, true)
                     }
             }
         }

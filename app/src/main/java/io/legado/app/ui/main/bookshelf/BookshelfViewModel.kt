@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.stream.JsonWriter
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSourceEntity
@@ -115,7 +115,7 @@ class BookshelfViewModel(application: Application) : BaseViewModel(application) 
                 context.toastOnUi("添加网址失败")
             }
         }.onError {
-            AppLog.put("添加网址出错\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("添加网址出错\n${it.localizedMessage}", it, true)
         }.onFinally {
             addBookProgressLiveData.postValue(-1)
         }

@@ -14,7 +14,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.HttpTTS
 import io.legado.app.databinding.DialogEditTextBinding
@@ -173,7 +173,7 @@ class SpeakEngineDialog() : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initData() {
         lifecycleScope.launch {
             appDb.httpTTSDao.flowAll().catch {
-                AppLog.put("朗读引擎界面获取数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("朗读引擎界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 adapter.setItems(it)
             }

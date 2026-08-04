@@ -23,7 +23,7 @@ import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import io.legado.app.BuildConfig
 import io.legado.app.R
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
@@ -1335,7 +1335,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                         }
                     }
                 }.onError {
-                    AppLog.put("执行购买操作出错\n${it.localizedMessage}", it, true)
+                    AndroidAppLog.put("执行购买操作出错\n${it.localizedMessage}", it, true)
                 }
             }
             noButton()
@@ -1366,7 +1366,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                         }
                     }
                 }.onError {
-                    AppLog.put("执行图片链接click键值出错\n${it.localizedMessage}", it, true)
+                    AndroidAppLog.put("执行图片链接click键值出错\n${it.localizedMessage}", it, true)
                 }
                 return true
             }
@@ -1383,7 +1383,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                     evalJS(jsStr, urlNoOption)
                 }
             }.onError {
-                AppLog.put("执行图片链接js键值出错\n${it.localizedMessage}", it, true)
+                AndroidAppLog.put("执行图片链接js键值出错\n${it.localizedMessage}", it, true)
             }
             return true
         }
@@ -1405,7 +1405,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 }
             }
         }.onError {
-            AppLog.put("执行图片链接click键值出错\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("执行图片链接click键值出错\n${it.localizedMessage}", it, true)
         }
     }
 

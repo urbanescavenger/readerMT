@@ -1,6 +1,6 @@
 package io.legado.app.model.webBook
 
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookSourceEntity
@@ -277,7 +277,7 @@ object WebBook {
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("执行preUpdateJs规则失败 书源:${bookSource.bookSourceName}", it)
+            AndroidAppLog.put("执行preUpdateJs规则失败 书源:${bookSource.bookSourceName}", it)
         }
     }
 

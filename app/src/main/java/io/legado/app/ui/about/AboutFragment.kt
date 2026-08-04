@@ -10,7 +10,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import io.legado.app.R
 import io.legado.app.constant.AndroidAppConst.appInfo
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.help.CrashHandler
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.coroutine.Coroutine
@@ -136,7 +136,7 @@ class AboutFragment : PreferenceFragmentCompat() {
             copyHeapDump(doc)
             appCtx.toastOnUi("已保存至备份目录")
         }.onError {
-            AppLog.put("保存日志出错\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("保存日志出错\n${it.localizedMessage}", it, true)
         }
     }
 
@@ -160,7 +160,7 @@ class AboutFragment : PreferenceFragmentCompat() {
                 appCtx.toastOnUi("已保存至备份目录")
             }
         }.onError {
-            AppLog.put("保存堆转储失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("保存堆转储失败\n${it.localizedMessage}", it)
         }
     }
 
@@ -207,7 +207,7 @@ class AboutFragment : PreferenceFragmentCompat() {
                 process.inputStream.copyTo(it)
             }
         } catch (e: Exception) {
-            AppLog.put("保存Logcat失败\n$e", e)
+            AndroidAppLog.put("保存Logcat失败\n$e", e)
         }
     }
 

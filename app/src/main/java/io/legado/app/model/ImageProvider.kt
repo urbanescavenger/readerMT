@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.util.Size
 import androidx.collection.LruCache
 import io.legado.app.R
-import io.legado.app.constant.AppLog.putDebug
+import io.legado.app.constant.AndroidAppLog.putDebug
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.exception.NoStackTraceException

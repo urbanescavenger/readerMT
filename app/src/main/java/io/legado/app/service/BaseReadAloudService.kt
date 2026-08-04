@@ -27,7 +27,7 @@ import androidx.media.AudioManagerCompat
 import io.legado.app.R
 import io.legado.app.base.BaseService
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
@@ -270,7 +270,7 @@ abstract class BaseReadAloudService : BaseService(),
                 if (play) play() else pageChanged = true
             }
         }.onError {
-            AppLog.put("启动朗读出错\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("启动朗读出错\n${it.localizedMessage}", it, true)
         }
     }
 
@@ -551,26 +551,26 @@ abstract class BaseReadAloudService : BaseService(),
      */
     override fun onAudioFocusChange(focusChange: Int) {
         if (AppConfig.ignoreAudioFocus) {
-            AppLog.put("忽略音频焦点处理(TTS)")
+            AndroidAppLog.put("忽略音频焦点处理(TTS)")
             return
         }
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {
                 if (needResumeOnAudioFocusGain) {
-                    AppLog.put("音频焦点获得,继续朗读")
+                    AndroidAppLog.put("音频焦点获得,继续朗读")
                     resumeReadAloud()
                 } else {
-                    AppLog.put("音频焦点获得")
+                    AndroidAppLog.put("音频焦点获得")
                 }
             }
 
             AudioManager.AUDIOFOCUS_LOSS -> {
-                AppLog.put("音频焦点丢失,暂停朗读")
+                AndroidAppLog.put("音频焦点丢失,暂停朗读")
                 pauseReadAloud()
             }
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                AppLog.put("音频焦点暂时丢失并会很快再次获得,暂停朗读")
+                AndroidAppLog.put("音频焦点暂时丢失并会很快再次获得,暂停朗读")
                 if (!pause) {
                     needResumeOnAudioFocusGain = true
                     pauseReadAloud(false)
@@ -579,7 +579,7 @@ abstract class BaseReadAloudService : BaseService(),
 
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                 // 短暂丢失焦点，这种情况是被其他应用申请了短暂的焦点希望其他声音能压低音量（或者关闭声音）凸显这个声音（比如短信提示音），
-                AppLog.put("音频焦点短暂丢失,不做处理")
+                AndroidAppLog.put("音频焦点短暂丢失,不做处理")
             }
         }
     }
@@ -591,7 +591,7 @@ abstract class BaseReadAloudService : BaseService(),
                 val notification = createNotification()
                 notificationManager.notify(NotificationId.ReadAloudService, notification.build())
             } catch (e: Exception) {
-                AppLog.put("创建朗读通知出错,${e.localizedMessage}", e, true)
+                AndroidAppLog.put("创建朗读通知出错,${e.localizedMessage}", e, true)
             }
         }
     }
@@ -679,7 +679,7 @@ abstract class BaseReadAloudService : BaseService(),
                 val notification = createNotification()
                 startForeground(NotificationId.ReadAloudService, notification.build())
             } catch (e: Exception) {
-                AppLog.put("创建朗读通知出错,${e.localizedMessage}", e, true)
+                AndroidAppLog.put("创建朗读通知出错,${e.localizedMessage}", e, true)
                 //创建通知出错不结束服务就会崩溃,服务必须绑定通知
                 stopSelf()
             }
@@ -696,7 +696,7 @@ abstract class BaseReadAloudService : BaseService(),
 
     open fun nextChapter() {
         ReadBook.upReadTime()
-        AppLog.putDebug("${ReadBook.curTextChapter?.chapter?.title} 朗读结束跳转下一章并朗读")
+        AndroidAppLog.putDebug("${ReadBook.curTextChapter?.chapter?.title} 朗读结束跳转下一章并朗读")
         resumeReadAloudInternal()
         if (!ReadBook.moveToNextChapter(true)) {
             stopSelf()
@@ -756,25 +756,25 @@ abstract class BaseReadAloudService : BaseService(),
             when (state) {
                 TelephonyManager.CALL_STATE_IDLE -> {
                     if (needResumeOnCallStateIdle) {
-                        AppLog.put("来电结束,继续朗读")
+                        AndroidAppLog.put("来电结束,继续朗读")
                         resumeReadAloud()
                     } else {
-                        AppLog.put("来电结束")
+                        AndroidAppLog.put("来电结束")
                     }
                 }
 
                 TelephonyManager.CALL_STATE_RINGING -> {
                     if (!pause) {
-                        AppLog.put("来电响铃,暂停朗读")
+                        AndroidAppLog.put("来电响铃,暂停朗读")
                         needResumeOnCallStateIdle = true
                         pauseReadAloud()
                     } else {
-                        AppLog.put("来电响铃")
+                        AndroidAppLog.put("来电响铃")
                     }
                 }
 
                 TelephonyManager.CALL_STATE_OFFHOOK -> {
-                    AppLog.put("来电接听,不做处理")
+                    AndroidAppLog.put("来电接听,不做处理")
                 }
             }
         }

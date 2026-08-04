@@ -35,7 +35,7 @@ import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AndroidAppConst.imagePathKey
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.databinding.ActivityRssReadBinding
 import io.legado.app.help.WebCacheManager
 import io.legado.app.help.webView.WebJsExtensions
@@ -575,7 +575,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                 if (source.showWebLog) {
                     val messageLevel = consoleMessage.messageLevel().name
                     val message = consoleMessage.message()
-                    AppLog.put("${source.getTag()}${messageLevel}: $message",
+                    AndroidAppLog.put("${source.getTag()}${messageLevel}: $message",
                         NoStackTraceException("\n${message}\n- Line ${consoleMessage.lineNumber()} of ${consoleMessage.sourceId()}"))
                     return true
                 }
@@ -644,7 +644,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                             return createEmptyResource()
                         }
                     } catch (e: PatternSyntaxException) {
-                        AppLog.put("黑名单规则正则语法错误 源名称:${source.sourceName} 正则:$it", e)
+                        AndroidAppLog.put("黑名单规则正则语法错误 源名称:${source.sourceName} 正则:$it", e)
                     }
                 }
             } else {
@@ -657,7 +657,7 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                             }
                         } catch (e: PatternSyntaxException) {
                             val msg = "白名单规则正则语法错误 源名称:${source.sourceName} 正则:$it"
-                            AppLog.put(msg, e)
+                            AndroidAppLog.put(msg, e)
                         }
                     }
                     return createEmptyResource()
@@ -749,10 +749,10 @@ class ReadRssActivity : VMBaseActivity<ActivityRssReadBinding, ReadRssViewModel>
                             }.toString()
                         }
                     }.onFailure {
-                        AppLog.put("${source.getTag()}: url跳转拦截js出错", it)
+                        AndroidAppLog.put("${source.getTag()}: url跳转拦截js出错", it)
                     }.getOrNull()
                     if (SystemClock.uptimeMillis() - startTime > 99) {
-                        AppLog.put("${source.getTag()}: url跳转拦截js执行耗时过长")
+                        AndroidAppLog.put("${source.getTag()}: url跳转拦截js执行耗时过长")
                     }
                     if (result.isTrue()) return true
                 }

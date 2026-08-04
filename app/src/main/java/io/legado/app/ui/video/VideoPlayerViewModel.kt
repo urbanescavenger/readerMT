@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import com.script.rhino.runScriptWithContext
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssSource
@@ -88,7 +88,7 @@ class VideoPlayerViewModel(application: Application) : BaseViewModel(application
                 }
             }
         }.onError {
-            AppLog.put("${source.getTag()}: ${it.localizedMessage}", it)
+            AndroidAppLog.put("${source.getTag()}: ${it.localizedMessage}", it)
             context.toastOnUi("$name click error\n${it.localizedMessage}")
         }
     }

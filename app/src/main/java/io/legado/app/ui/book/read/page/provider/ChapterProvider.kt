@@ -7,7 +7,7 @@ import android.os.Build
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.os.postDelayed
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapterEntity
@@ -344,7 +344,7 @@ object ChapterProvider {
         visibleBottom = paddingTop + visibleHeight
 
         if (paddingLeft >= visibleRight || paddingTop >= visibleBottom) {
-            AppLog.put("边距设置过大，请重新设置", toast = true)
+            AndroidAppLog.put("边距设置过大，请重新设置", toast = true)
             setFallbackLayout()
         }
 

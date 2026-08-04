@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import com.script.rhino.runScriptWithContext
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
@@ -77,7 +77,7 @@ class SourceLoginViewModel(application: Application) : BaseViewModel(application
             }
         }.onError {
             error.invoke()
-            AppLog.put("登录 UI 初始化失败\n$it", it, true)
+            AndroidAppLog.put("登录 UI 初始化失败\n$it", it, true)
         }
     }
 

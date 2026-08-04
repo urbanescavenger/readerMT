@@ -18,7 +18,7 @@ import androidx.core.view.isGone
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.databinding.DialogReadBgTextBinding
@@ -356,7 +356,7 @@ class BgTextConfigDialog : BaseDialogFragment(R.layout.dialog_read_bg_text) {
             toastOnUi("导出成功, 文件名为 $exportFileName")
         }.onError {
             it.printOnDebug()
-            AppLog.put("导出失败:${it.localizedMessage}", it)
+            AndroidAppLog.put("导出失败:${it.localizedMessage}", it)
             longToast("导出失败:${it.localizedMessage}")
         }
     }

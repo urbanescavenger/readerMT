@@ -8,7 +8,7 @@ import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.graphics.toColorInt
 import io.legado.app.R
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.constant.Theme
@@ -295,7 +295,7 @@ object ThemeConfig {
             AppConfig.isNightTheme = isNightTheme
             applyDayNight(context)
         } catch (e: Exception) {
-            AppLog.put("设置主题出错\n$e", e, true)
+            AndroidAppLog.put("设置主题出错\n$e", e, true)
         }
     }
 

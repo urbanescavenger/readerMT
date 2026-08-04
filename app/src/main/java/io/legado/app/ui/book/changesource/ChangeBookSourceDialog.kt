@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
@@ -393,7 +393,7 @@ class ChangeBookSourceDialog() : BaseDialogFragment(R.layout.dialog_book_change_
         if (book.isWebFile) { //文件类书源不解析目录
             val source = appDb.bookSourceDao.getBookSource(book.origin)
             if (source == null) {
-                AppLog.put("书源不存在", null, true)
+                AndroidAppLog.put("书源不存在", null, true)
                 return
             }
             waitDialog.dismiss()
@@ -407,7 +407,7 @@ class ChangeBookSourceDialog() : BaseDialogFragment(R.layout.dialog_book_change_
             onSuccess?.invoke()
         }, {
             waitDialog.dismiss()
-            AppLog.put("换源获取目录出错\n$it", it, true)
+            AndroidAppLog.put("换源获取目录出错\n$it", it, true)
         })
         waitDialog.setOnCancelListener {
             coroutine.cancel()

@@ -3,7 +3,7 @@ package io.legado.app.model.localBook
 import androidx.annotation.Keep
 import com.script.ScriptBindings
 import com.script.rhino.RhinoScriptEngine
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapterEntity
@@ -502,7 +502,7 @@ class TextFile(private var book: Book) {
             val pattern = try {
                 tocRule.rule.toPattern(Pattern.MULTILINE)
             } catch (e: PatternSyntaxException) {
-                AppLog.put("TXT目录规则正则语法错误:${tocRule.name}\n$e", e)
+                AndroidAppLog.put("TXT目录规则正则语法错误:${tocRule.name}\n$e", e)
                 continue
             }
             val matcher = pattern.matcher(content)

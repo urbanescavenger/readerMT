@@ -5,7 +5,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import io.legado.app.R
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.MediaHelp
@@ -38,7 +38,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
         kotlin.runCatching {
             initTts()
         }.onFailure {
-            AppLog.put("${getString(R.string.tts_init_failed)}\n$it", it, true)
+            AndroidAppLog.put("${getString(R.string.tts_init_failed)}\n$it", it, true)
         }
     }
 
@@ -87,7 +87,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
         if (!ttsInitFinish) return
         if (!requestFocus()) return
         if (contentList.isEmpty()) {
-            AppLog.putDebug("朗读列表为空")
+            AndroidAppLog.putDebug("朗读列表为空")
             ReadBook.readAloud()
             return
         }
@@ -113,11 +113,11 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                     val result = tts.runCatching {
                         speak(text, TextToSpeech.QUEUE_FLUSH, null, AndroidAppConst.APP_TAG + i)
                     }.getOrElse {
-                        AppLog.put("tts出错\n${it.localizedMessage}", it, true)
+                        AndroidAppLog.put("tts出错\n${it.localizedMessage}", it, true)
                         TextToSpeech.ERROR
                     }
                     if (result == TextToSpeech.ERROR) {
-                        AppLog.put("tts出错 尝试重新初始化")
+                        AndroidAppLog.put("tts出错 尝试重新初始化")
                         clearTTS()
                         initTts()
                         return@execute
@@ -126,11 +126,11 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                     val result = tts.runCatching {
                         speak(text, TextToSpeech.QUEUE_ADD, null, AndroidAppConst.APP_TAG + i)
                     }.getOrElse {
-                        AppLog.put("tts出错\n${it.localizedMessage}", it, true)
+                        AndroidAppLog.put("tts出错\n${it.localizedMessage}", it, true)
                         TextToSpeech.ERROR
                     }
                     if (result == TextToSpeech.ERROR) {
-                        AppLog.put("tts朗读出错:$text")
+                        AndroidAppLog.put("tts朗读出错:$text")
                     }
                 }
                 isAddedText = true
@@ -142,7 +142,7 @@ class TTSReadAloudService : BaseReadAloudService(), TextToSpeech.OnInitListener 
                 nextChapter()
             }
         }.onError {
-            AppLog.put("tts朗读出错\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("tts朗读出错\n${it.localizedMessage}", it, true)
         }
     }
 

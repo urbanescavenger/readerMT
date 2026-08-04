@@ -15,7 +15,7 @@ import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import io.legado.app.R
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.PreferKey
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
@@ -293,7 +293,7 @@ class BackupConfigFragment : PreferenceFragment(),
                 appCtx.toastOnUi(R.string.backup_success)
             } catch (e: Throwable) {
                 ensureActive()
-                AppLog.put("备份出错\n${e.localizedMessage}", e)
+                AndroidAppLog.put("备份出错\n${e.localizedMessage}", e)
                 appCtx.toastOnUi(
                     appCtx.getString(
                         R.string.backup_fail,
@@ -327,7 +327,7 @@ class BackupConfigFragment : PreferenceFragment(),
             restoreJob = coroutineContext[Job]
             showRestoreDialog(requireContext())
         }.onError {
-            AppLog.put("恢复备份出错WebDavError\n${it.localizedMessage}", it)
+            AndroidAppLog.put("恢复备份出错WebDavError\n${it.localizedMessage}", it)
             if (context == null) {
                 return@onError
             }
@@ -374,7 +374,7 @@ class BackupConfigFragment : PreferenceFragment(),
         val task = Coroutine.async {
             AppWebDav.restoreWebDav(name)
         }.onError {
-            AppLog.put("WebDav恢复出错\n${it.localizedMessage}", it)
+            AndroidAppLog.put("WebDav恢复出错\n${it.localizedMessage}", it)
             appCtx.toastOnUi("WebDav恢复出错\n${it.localizedMessage}")
         }.onFinally {
             waitDialog.dismiss()

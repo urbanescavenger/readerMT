@@ -11,7 +11,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.databinding.ActivityTranslucenceBinding
 import io.legado.app.databinding.DialogEditTextBinding
 import io.legado.app.help.IntentData
@@ -106,7 +106,7 @@ class HandleFileActivity :
                     HandleFileContract.DIR -> kotlin.runCatching {
                         selectDocTree.launch()
                     }.onFailure {
-                        AppLog.put(getString(R.string.open_sys_dir_picker_error), it, true)
+                        AndroidAppLog.put(getString(R.string.open_sys_dir_picker_error), it, true)
                         checkPermissions {
                             FilePickerDialog.show(
                                 supportFragmentManager,
@@ -118,7 +118,7 @@ class HandleFileActivity :
                     HandleFileContract.FILE -> kotlin.runCatching {
                         selectDoc.launch(typesOfExtensions(allowExtensions))
                     }.onFailure {
-                        AppLog.put(getString(R.string.open_sys_dir_picker_error), it, true)
+                        AndroidAppLog.put(getString(R.string.open_sys_dir_picker_error), it, true)
                         checkPermissions {
                             FilePickerDialog.show(
                                 supportFragmentManager,

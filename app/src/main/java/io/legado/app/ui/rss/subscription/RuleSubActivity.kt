@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import io.legado.app.R
 import io.legado.app.base.BaseActivity
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RuleSub
 import io.legado.app.databinding.ActivityRuleSubBinding
@@ -72,7 +72,7 @@ class RuleSubActivity : BaseActivity<ActivityRuleSubBinding>(),
     private fun initData() {
         lifecycleScope.launch {
             appDb.ruleSubDao.flowAll().catch {
-                AppLog.put("规则订阅界面获取数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("规则订阅界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 binding.tvEmptyMsg.isGone = it.isNotEmpty()
                 adapter.setItems(it)

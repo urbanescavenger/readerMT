@@ -1,7 +1,7 @@
 package io.legado.app.model.webBook
 
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourcePart
@@ -108,7 +108,7 @@ class SearchModel(private val scope: CoroutineScope, private val callBack: CallB
             }.onCompletion {
                 if (it == null) callBack.onSearchFinish(searchBooks.isEmpty(), hasMore)
             }.catch {
-                AppLog.put("书源搜索出错\n${it.localizedMessage}", it)
+                AndroidAppLog.put("书源搜索出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }

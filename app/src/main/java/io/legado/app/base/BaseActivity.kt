@@ -17,7 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.viewbinding.ViewBinding
 import io.legado.app.R
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.Theme
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ThemeConfig
@@ -167,7 +167,7 @@ abstract class BaseActivity<VB : ViewBinding>(
             } catch (_: OutOfMemoryError) {
                 toastOnUi("背景图片太大,内存溢出")
             } catch (e: Exception) {
-                AppLog.put("加载背景出错\n${e.localizedMessage}", e)
+                AndroidAppLog.put("加载背景出错\n${e.localizedMessage}", e)
             }
         }
     }

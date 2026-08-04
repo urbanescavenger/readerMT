@@ -23,7 +23,7 @@ import com.script.rhino.runScriptWithContext
 import io.legado.app.R
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.BookSourceEntity
@@ -508,7 +508,7 @@ class ExploreAdapter(context: Context, val callBack: CallBack) :
                 }.toString()
             }
         } catch (e: Exception) {
-            AppLog.put(source.getTag() + " exploreUi err:" + (e.localizedMessage ?: e.toString()), e)
+            AndroidAppLog.put(source.getTag() + " exploreUi err:" + (e.localizedMessage ?: e.toString()), e)
             null
         }
     }
@@ -523,7 +523,7 @@ class ExploreAdapter(context: Context, val callBack: CallBack) :
                 }
             }
         } catch (e: Exception) {
-            AppLog.put("ExploreUI Button $name JavaScript error", e)
+            AndroidAppLog.put("ExploreUI Button $name JavaScript error", e)
         }
     }
 

@@ -3,7 +3,7 @@ package io.legado.app.ui.book.import.remote
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.exception.NoStackTraceException
@@ -122,7 +122,7 @@ class RemoteBookViewModel(application: Application) : BaseViewModel(application)
             val bookList = bookWebDav.getRemoteBookList(url)
             dataCallback?.setItems(bookList)
         }.onError {
-            AppLog.put("获取webDav书籍出错\n${it.localizedMessage}", it)
+            AndroidAppLog.put("获取webDav书籍出错\n${it.localizedMessage}", it)
             context.toastOnUi("获取webDav书籍出错\n${it.localizedMessage}")
         }.onStart {
             loadCallback.invoke(true)
@@ -146,7 +146,7 @@ class RemoteBookViewModel(application: Application) : BaseViewModel(application)
                 remoteBook.isOnBookShelf = true
             }
         }.onError {
-            AppLog.put("导入出错\n${it.localizedMessage}", it)
+            AndroidAppLog.put("导入出错\n${it.localizedMessage}", it)
             context.toastOnUi("导入出错\n${it.localizedMessage}")
             if (it is SecurityException) {
                 permissionDenialLiveData.postValue(1)

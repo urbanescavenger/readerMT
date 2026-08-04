@@ -6,7 +6,7 @@ import android.net.Uri
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.exception.NoStackTraceException
@@ -92,7 +92,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 )
             )
         }.onError {
-            AppLog.put("导出失败\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("导出失败\n${it.localizedMessage}", it, true)
         }.onSuccess {
             context.toastOnUi("导出成功")
         }
@@ -116,7 +116,7 @@ class TocViewModel(application: Application) : BaseViewModel(application) {
                 }
             }
         }.onError {
-            AppLog.put("导出失败\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("导出失败\n${it.localizedMessage}", it, true)
         }.onSuccess {
             context.toastOnUi("导出成功")
         }

@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable
 import androidx.annotation.Keep
 import androidx.core.graphics.toColorInt
 import io.legado.app.R
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.PageAnim
 import io.legado.app.constant.PreferKey
 import io.legado.app.help.DefaultData
@@ -83,7 +83,7 @@ object ReadBookConfig {
                 val json = configFile.readText()
                 configs = GSON.fromJsonArray<Config>(json).getOrThrow()
             } catch (e: Exception) {
-                AppLog.put("读取排版配置文件出错", e)
+                AndroidAppLog.put("读取排版配置文件出错", e)
             }
         }
         (configs ?: DefaultData.readConfigs).let {

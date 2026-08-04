@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.AppDatabase
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourcePart
@@ -140,7 +140,7 @@ class SearchScopeDialog : BaseDialogFragment(R.layout.dialog_search_scope) {
                 lifecycle,
                 table = AppDatabase.BOOK_SOURCE_TABLE_NAME
             ).catch {
-                AppLog.put("多分组/书源界面更新书源出错", it)
+                AndroidAppLog.put("多分组/书源界面更新书源出错", it)
             }.flowOn(IO).conflate().collect { data ->
                 screenSources.clear()
                 screenSources.addAll(data)

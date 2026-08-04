@@ -14,7 +14,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.BookSourcePart
@@ -91,7 +91,7 @@ class SourcePickerDialog : BaseDialogFragment(R.layout.dialog_source_picker),
                 searchKey.isNullOrEmpty() -> appDb.bookSourceDao.flowEnabled()
                 else -> appDb.bookSourceDao.flowSearchEnabled(searchKey)
             }.catch {
-                AppLog.put("书源选择界面获取书源数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("书源选择界面获取书源数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

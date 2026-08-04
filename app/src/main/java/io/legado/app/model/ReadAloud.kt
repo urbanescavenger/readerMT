@@ -3,7 +3,7 @@ package io.legado.app.model
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
 import io.legado.app.data.appDb
@@ -59,7 +59,7 @@ object ReadAloud {
             context.startForegroundServiceCompat(intent)
         } catch (e: Exception) {
             val msg = "启动朗读服务出错\n${e.localizedMessage}"
-            AppLog.put(msg, e)
+            AndroidAppLog.put(msg, e)
             context.toastOnUi(msg)
         }
     }

@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssArticleEntity
 import io.legado.app.data.entities.RssSource
@@ -52,7 +52,7 @@ class RssArticlesViewModel(application: Application) : BaseViewModel(application
             isLoading = false
         }.onError {
             loadFinallyLiveData.postValue(false)
-            AppLog.put("rss获取内容失败", it)
+            AndroidAppLog.put("rss获取内容失败", it)
             loadErrorLiveData.postValue(it.stackTraceStr)
         }
     }
@@ -71,7 +71,7 @@ class RssArticlesViewModel(application: Application) : BaseViewModel(application
             isLoading = false
         }.onError {
             loadFinallyLiveData.postValue(false)
-            AppLog.put("rss获取内容失败", it)
+            AndroidAppLog.put("rss获取内容失败", it)
             loadErrorLiveData.postValue(it.stackTraceStr)
         }
     }

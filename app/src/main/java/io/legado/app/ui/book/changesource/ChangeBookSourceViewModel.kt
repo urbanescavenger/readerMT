@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
@@ -140,7 +140,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
             }
             searchBooks.sortedWith(comparator)
         }.onFailure {
-            AppLog.put("换源排序出错\n${it.localizedMessage}", it)
+            AndroidAppLog.put("换源排序出错\n${it.localizedMessage}", it)
         }.getOrDefault(searchBooks)
     }.flowOn(IO)
 
@@ -252,7 +252,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
                 searchStateData.postValue(false)
                 searchFinishCallback?.invoke(searchBooks.isEmpty())
             }.catch {
-                AppLog.put("换源搜索出错\n${it.localizedMessage}", it)
+                AndroidAppLog.put("换源搜索出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }
@@ -391,7 +391,7 @@ open class ChangeBookSourceViewModel(application: Application) : BaseViewModel(a
             }.onCompletion {
                 searchStateData.postValue(false)
             }.catch {
-                AppLog.put("换源刷新列表出错\n${it.localizedMessage}", it)
+                AndroidAppLog.put("换源刷新列表出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }

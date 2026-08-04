@@ -4,7 +4,7 @@ import android.graphics.BitmapFactory
 import android.os.ParcelFileDescriptor
 import androidx.documentfile.provider.DocumentFile
 import com.script.rhino.runScriptWithContext
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
@@ -169,7 +169,7 @@ object BookHelp {
             postEvent(EventBus.SAVE_CONTENT, Pair(book, bookChapter))
         } catch (e: Exception) {
             e.printStackTrace()
-            AppLog.put("保存正文失败 ${book.name} ${bookChapter.title}", e)
+            AndroidAppLog.put("保存正文失败 ${book.name} ${bookChapter.title}", e)
         }
     }
 
@@ -247,14 +247,14 @@ object BookHelp {
                     // 如果部分图片失效，每次进入正文都会花很长时间再次获取图片数据
                     // 所以无论如何都要将数据写入到文件里
                     // throw NoStackTraceException("数据异常")
-                    AppLog.put("${book.name} ${chapter?.title} 图片 $src 下载错误 数据异常")
+                    AndroidAppLog.put("${book.name} ${chapter?.title} 图片 $src 下载错误 数据异常")
                 }
                 writeImage(book, src, it)
             }
         } catch (e: Exception) {
             currentCoroutineContext().ensureActive()
             val msg = "${book.name} ${chapter?.title} 图片 $src 下载失败\n${e.localizedMessage}"
-            AppLog.put(msg, e)
+            AndroidAppLog.put(msg, e)
         } finally {
             downloadImages.remove(src)
             mutex.unlock()

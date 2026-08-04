@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
@@ -139,7 +139,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
                     search()
                 }
             } catch (e: Exception) {
-                AppLog.put("封面规则搜索出错\n${e.localizedMessage}", e)
+                AndroidAppLog.put("封面规则搜索出错\n${e.localizedMessage}", e)
                 search()
             }
         }
@@ -162,7 +162,7 @@ class ChangeCoverViewModel(application: Application) : BaseViewModel(application
             }.onCompletion {
                 searchStateData.postValue(0)
             }.catch {
-                AppLog.put("封面换源搜索出错\n${it.localizedMessage}", it)
+                AndroidAppLog.put("封面换源搜索出错\n${it.localizedMessage}", it)
             }.collect()
         }
     }

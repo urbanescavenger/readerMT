@@ -14,7 +14,7 @@ import com.google.android.material.textfield.TextInputLayout
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AndroidAppConst.charsets
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
 import io.legado.app.data.AppDatabase
@@ -259,7 +259,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
             }.flowWithLifecycleAndDatabaseChange(
                 lifecycle, table = AppDatabase.BOOK_TABLE_NAME
             ).catch {
-                AppLog.put("缓存管理界面获取书籍列表失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("缓存管理界面获取书籍列表失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect { books ->
                 adapter.setItems(books)
                 viewModel.loadCacheFiles(books)
@@ -271,7 +271,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
     private fun initGroupData() {
         lifecycleScope.launch {
             appDb.bookGroupDao.flowAll().catch {
-                AppLog.put("缓存管理界面获取分组数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("缓存管理界面获取分组数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).conflate().collect {
                 groupList.clear()
                 groupList.addAll(it)
@@ -380,7 +380,7 @@ class CacheActivity : VMBaseActivity<ActivityCacheBookBinding, CacheViewModel>()
                                 else "Error"
                         } ?: run {
                             lyEtEpubFilename.helperText = "Error"
-                            AppLog.put("未找到书籍，position is $position")
+                            AndroidAppLog.put("未找到书籍，position is $position")
                         }
                     }
                 }

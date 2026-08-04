@@ -13,7 +13,7 @@ import com.shuyu.gsyvideoplayer.listener.GSYMediaPlayerListener
 import com.shuyu.gsyvideoplayer.utils.CommonUtil
 import com.shuyu.gsyvideoplayer.video.StandardGSYVideoPlayer
 import io.legado.app.R
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.SourceType
 import io.legado.app.data.appDb
@@ -153,7 +153,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                     }
                 }
             }.onError {
-                AppLog.put("加载视频链接失败", it, true)
+                AndroidAppLog.put("加载视频链接失败", it, true)
             }
             return
         }
@@ -187,7 +187,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                         }
                     }
                 }.onError {
-                    AppLog.put("加载订阅源视频链接失败", it, true)
+                    AndroidAppLog.put("加载订阅源视频链接失败", it, true)
                 }
             } else {
                 Rss.getContent(loadScope, rssArticle, ruleContent, s)
@@ -218,7 +218,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                             }
                         }
                     }.onError {
-                        AppLog.put("加载订阅源为链接的正文失败", it, true)
+                        AndroidAppLog.put("加载订阅源为链接的正文失败", it, true)
                     }
             }
             return
@@ -281,7 +281,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                     }
                 }
             }.onError {
-                AppLog.put("获取资源链接出错\n$it", it, true)
+                AndroidAppLog.put("获取资源链接出错\n$it", it, true)
             }
         isLoading = false
     }

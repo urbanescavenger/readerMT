@@ -15,7 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import com.script.rhino.runScriptWithContext
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.rule.RowUi
 import io.legado.app.databinding.DialogLoginBinding
@@ -91,7 +91,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                 handleUpUiData(data)
             }
         } catch (e: Exception) {
-            AppLog.put("upLoginData Error: " + e.localizedMessage, e)
+            AndroidAppLog.put("upLoginData Error: " + e.localizedMessage, e)
         }
     }
 
@@ -236,14 +236,14 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                 }.toString()
             }
         } catch (e: Exception) {
-            AppLog.put(source.getTag() + " loginUi err:" + (e.localizedMessage ?: e.toString()), e)
+            AndroidAppLog.put(source.getTag() + " loginUi err:" + (e.localizedMessage ?: e.toString()), e)
             null
         }
     }
 
     fun loginUi(json: String?): List<RowUi>? {
         return GSON.fromJsonArray<RowUi>(json).onFailure {
-            AppLog.put("loginUi json parse err:" + it.localizedMessage, it)
+            AndroidAppLog.put("loginUi json parse err:" + it.localizedMessage, it)
         }.getOrNull()
     }
 
@@ -714,7 +714,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                     }
                 }.onFailure { e ->
                     ensureActive()
-                    AppLog.put("LoginUI Button $name JavaScript error", e)
+                    AndroidAppLog.put("LoginUI Button $name JavaScript error", e)
                 }
             }
         }
@@ -761,7 +761,7 @@ class SourceLoginDialog : BaseDialogFragment(R.layout.dialog_login, true),
                         dismiss()
                     }
                 } catch (e: Exception) {
-                    AppLog.put("登录出错\n${e.localizedMessage}", e)
+                    AndroidAppLog.put("登录出错\n${e.localizedMessage}", e)
                     context?.toastOnUi("登录出错\n${e.localizedMessage}")
                     e.printOnDebug()
                 }

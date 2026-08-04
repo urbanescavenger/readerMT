@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import io.legado.app.R
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.Status
@@ -195,7 +195,7 @@ object AudioPlay : CoroutineScope by MainScope() {
                             contentLoadFinish(chapter, content)
                         }
                     }.onError {
-                        AppLog.put("获取资源链接出错\n$it", it, true)
+                        AndroidAppLog.put("获取资源链接出错\n$it", it, true)
                         upLoading(false)
                     }.onCancel {
                         removeLoading(index)

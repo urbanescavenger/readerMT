@@ -10,7 +10,7 @@ import android.text.style.ImageSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.ReplacementSpan
 import android.text.style.URLSpan
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.PageAnim
 import io.legado.app.data.entities.Book
@@ -174,7 +174,7 @@ class TextChapterLayout(
             listener?.onLayoutPageCompleted(textPages.lastIndex, textPage)
         } catch (e: Exception) {
             e.printStackTrace()
-            AppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
+            AndroidAppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
         }
     }
 
@@ -184,7 +184,7 @@ class TextChapterLayout(
             listener?.onLayoutCompleted()
         } catch (e: Exception) {
             e.printStackTrace()
-            AppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
+            AndroidAppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
         } finally {
             listener = null
         }
@@ -200,7 +200,7 @@ class TextChapterLayout(
             listener?.onLayoutException(e)
         } catch (e: Exception) {
             e.printStackTrace()
-            AppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
+            AndroidAppLog.put("调用布局进度监听回调出错\n${e.localizedMessage}", e)
         } finally {
             listener = null
         }

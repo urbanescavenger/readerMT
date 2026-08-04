@@ -3,7 +3,7 @@ package io.legado.app.model
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.script.rhino.runScriptWithContext
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookSourceEntity
@@ -78,7 +78,7 @@ object SourceCallBack {
                     }
                 }
             }.onFailure {
-                AppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
+                AndroidAppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
             }
         }
     }
@@ -105,7 +105,7 @@ object SourceCallBack {
                 }
             }
         }.onError {
-            AppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
+            AndroidAppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
         }
     }
 
@@ -125,7 +125,7 @@ object SourceCallBack {
                     }
                 }
             }.onFailure {
-                AppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
+                AndroidAppLog.put("${source.bookSourceName}\n书源执行回调事件${event}出错\n${it.localizedMessage}", it, true)
             }
         }
     }

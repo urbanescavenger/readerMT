@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.help.DirectLinkUpload
 import io.legado.app.utils.*
 
@@ -26,7 +26,7 @@ class HandleFileViewModel(application: Application) : BaseViewModel(application)
         }.onSuccess {
             success.invoke(it)
         }.onError {
-            AppLog.put("上传文件失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("上传文件失败\n${it.localizedMessage}", it)
             it.printOnDebug()
             errorLiveData.postValue(it.localizedMessage)
         }

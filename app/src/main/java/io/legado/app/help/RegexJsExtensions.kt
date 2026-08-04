@@ -1,7 +1,7 @@
 package io.legado.app.help
 
 import androidx.annotation.Keep
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.model.analyzeRule.RuleData
 import io.legado.app.utils.ChineseUtils
 
@@ -14,7 +14,7 @@ class RegexJsExtensions(private val name: String): JsEncodeUtils {
      * 输出调试日志
      */
     fun log(msg: Any?): Any? {
-        AppLog.putDebug("替换净化规则 $name 输出: $msg")
+        AndroidAppLog.putDebug("替换净化规则 $name 输出: $msg")
         return msg
     }
 

@@ -37,7 +37,7 @@ import com.shuyu.gsyvideoplayer.listener.GSYSampleCallBack
 import io.legado.app.R
 import io.legado.app.base.BaseService
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
 import io.legado.app.help.MediaHelp
@@ -271,7 +271,7 @@ class VideoPlayService : BaseService() {
                 val notification = createNotification()
                 notificationManager.notify(NotificationId.VideoPlayService, notification.build())
             } catch (e: Exception) {
-                AppLog.put("创建视频播放通知出错,${e.localizedMessage}", e, true)
+                AndroidAppLog.put("创建视频播放通知出错,${e.localizedMessage}", e, true)
             }
         }
     }
@@ -281,7 +281,7 @@ class VideoPlayService : BaseService() {
             val notification = createNotification()
             startForeground(NotificationId.VideoPlayService, notification.build())
         } catch (e: Exception) {
-            AppLog.put("创建视频播放通知出错,${e.localizedMessage}", e, true)
+            AndroidAppLog.put("创建视频播放通知出错,${e.localizedMessage}", e, true)
             //创建通知出错不结束服务就会崩溃,服务必须绑定通知
             stopSelf()
         }

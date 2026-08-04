@@ -11,7 +11,7 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.databinding.DialogRecyclerViewBinding
 import io.legado.app.databinding.ItemAppLogBinding
 import io.legado.app.lib.theme.primaryColor
@@ -45,13 +45,13 @@ class AppLogDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
             recyclerView.layoutManager = LinearLayoutManager(requireContext())
             recyclerView.adapter = adapter
         }
-        adapter.setItems(AppLog.logs)
+        adapter.setItems(AndroidAppLog.logs)
     }
 
     override fun onMenuItemClick(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.menu_clear -> {
-                AppLog.clear()
+                AndroidAppLog.clear()
                 adapter.clearItems()
             }
         }

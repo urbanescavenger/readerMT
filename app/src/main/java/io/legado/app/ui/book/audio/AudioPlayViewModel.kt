@@ -5,7 +5,7 @@ import android.content.Intent
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
@@ -65,7 +65,7 @@ class AudioPlayViewModel(application: Application) : BaseViewModel(application) 
             WebBook.getBookInfoAwait(bookSource, book)
             return true
         } catch (e: Exception) {
-            AppLog.put("详情页出错: ${e.localizedMessage}", e, true)
+            AndroidAppLog.put("详情页出错: ${e.localizedMessage}", e, true)
             return false
         }
     }

@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.BookType
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
@@ -93,19 +93,19 @@ class BookshelfManageViewModel(application: Application) : BaseViewModel(applica
                 if (book.origin == source.bookSourceUrl) return@forEachIndexed
                 val newBook = WebBook.preciseSearchAwait(source, book.name, book.author)
                     .onFailure {
-                        AppLog.put("搜索书籍出错\n${it.localizedMessage}", it, true)
+                        AndroidAppLog.put("搜索书籍出错\n${it.localizedMessage}", it, true)
                     }.getOrNull() ?: return@forEachIndexed
                 kotlin.runCatching {
                     if (newBook.tocUrl.isEmpty()) {
                         WebBook.getBookInfoAwait(source, newBook)
                     }
                 }.onFailure {
-                    AppLog.put("获取书籍详情出错\n${it.localizedMessage}", it, true)
+                    AndroidAppLog.put("获取书籍详情出错\n${it.localizedMessage}", it, true)
                     return@forEachIndexed
                 }
                 WebBook.getChapterListAwait(source, newBook)
                     .onFailure {
-                        AppLog.put("获取目录出错\n${it.localizedMessage}", it, true)
+                        AndroidAppLog.put("获取目录出错\n${it.localizedMessage}", it, true)
                     }.getOrNull()?.let { toc ->
                         book.migrateTo(newBook, toc)
                         book.removeType(BookType.updateError)

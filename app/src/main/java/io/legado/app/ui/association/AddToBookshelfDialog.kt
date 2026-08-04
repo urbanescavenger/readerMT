@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSourceEntity
@@ -69,7 +69,7 @@ class AddToBookshelfDialog() : BaseDialogFragment(R.layout.dialog_add_to_bookshe
             return
         }
         appDb.bookDao.getBook(bookUrl)?.let { //已在书架时直接跳转到书籍详情页
-            AppLog.put("${it.name} 已在书架", null, true)
+            AndroidAppLog.put("${it.name} 已在书架", null, true)
             startActivity<BookInfoActivity> {
                 putExtra("name", it.name)
                 putExtra("author", it.author)
@@ -149,7 +149,7 @@ class AddToBookshelfDialog() : BaseDialogFragment(R.layout.dialog_add_to_bookshe
                 }
                 throw NoStackTraceException("未找到匹配书源")
             }.onError {
-                AppLog.put("添加书籍 $bookUrl 出错", it)
+                AndroidAppLog.put("添加书籍 $bookUrl 出错", it)
                 loadErrorLiveData.postValue(it.localizedMessage)
             }.onSuccess {
                 book = it

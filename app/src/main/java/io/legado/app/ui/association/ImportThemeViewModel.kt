@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.config.ThemeConfig
 import io.legado.app.help.http.decompressed
@@ -70,7 +70,7 @@ class ImportThemeViewModel(app: Application) : BaseViewModel(app) {
             importSourceAwait(text.trim())
         }.onError {
             errorLiveData.postValue("ImportError:${it.localizedMessage}")
-            AppLog.put("ImportError:${it.localizedMessage}", it)
+            AndroidAppLog.put("ImportError:${it.localizedMessage}", it)
         }.onSuccess {
             comparisonSource()
         }

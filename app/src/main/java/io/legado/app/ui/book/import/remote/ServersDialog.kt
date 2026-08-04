@@ -15,7 +15,7 @@ import io.legado.app.base.BaseDialogFragment
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.constant.AndroidAppConst.DEFAULT_WEBDAV_ID
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Server
 import io.legado.app.databinding.DialogRecyclerViewBinding
@@ -87,7 +87,7 @@ class ServersDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     private fun initData() {
         lifecycleScope.launch {
             appDb.serverDao.observeAll().catch {
-                AppLog.put("服务器配置界面获取数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("服务器配置界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

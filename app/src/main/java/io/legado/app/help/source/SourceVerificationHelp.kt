@@ -1,6 +1,6 @@
 package io.legado.app.help.source
 
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.CacheManager
@@ -60,7 +60,7 @@ object SourceVerificationHelp {
         var waitUserInput = false
         while (getResult(source.getKey()) == null) {
             if (!waitUserInput && html == null) {
-                AppLog.putDebug("等待返回验证结果...")
+                AndroidAppLog.putDebug("等待返回验证结果...")
                 waitUserInput = true
             }
             LockSupport.parkNanos(this, waitTime)

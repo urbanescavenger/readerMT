@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import io.legado.app.R
 import io.legado.app.base.BaseActivity
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.databinding.ActivityRssFavoritesBinding
 import io.legado.app.lib.dialogs.alert
@@ -113,7 +113,7 @@ class RssFavoritesActivity : BaseActivity<ActivityRssFavoritesBinding>() {
     private fun upFragments() {
         lifecycleScope.launch {
             appDb.rssStarDao.flowGroups().catch {
-                AppLog.put("订阅分组数据获取失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("订阅分组数据获取失败\n${it.localizedMessage}", it)
             }.distinctUntilChanged().flowOn(IO).collect {
                 groupList.clear()
                 groupList.addAll(it)

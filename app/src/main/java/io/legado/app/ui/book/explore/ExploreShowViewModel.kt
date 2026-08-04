@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import io.legado.app.BuildConfig
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.SearchBook
@@ -47,14 +47,14 @@ class ExploreShowViewModel(application: Application) : BaseViewModel(application
                     }
                 keys
             }.catch {
-                AppLog.put("发现列表界面获取书籍数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("发现列表界面获取书籍数据失败\n${it.localizedMessage}", it)
             }.collect {
                 bookshelf.clear()
                 bookshelf.addAll(it)
                 upAdapterLiveData.postValue("isInBookshelf")
             }
         }.onError {
-            AppLog.put("加载书架数据失败", it)
+            AndroidAppLog.put("加载书架数据失败", it)
         }
     }
 

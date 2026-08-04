@@ -3,7 +3,7 @@ package io.legado.app.lib.webdav
 import android.annotation.SuppressLint
 import android.net.Uri
 import cn.hutool.core.net.URLDecoder
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.http.newCallResponse
 import io.legado.app.help.http.okHttpClient
@@ -289,7 +289,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav创建目录失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("WebDav创建目录失败\n${it.localizedMessage}", it)
         }.isSuccess
     }
 
@@ -346,7 +346,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
             throw WebDavException("WebDav上传失败\n${it.localizedMessage}")
         }
     }
@@ -367,7 +367,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
             throw WebDavException("WebDav上传失败\n${it.localizedMessage}")
         }
     }
@@ -388,7 +388,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("WebDav上传失败\n${it.localizedMessage}", it)
             throw WebDavException("WebDav上传失败\n${it.localizedMessage}")
         }
     }
@@ -419,7 +419,7 @@ open class WebDav(
             }
         }.onFailure {
             currentCoroutineContext().ensureActive()
-            AppLog.put("WebDav删除失败\n${it.localizedMessage}", it)
+            AndroidAppLog.put("WebDav删除失败\n${it.localizedMessage}", it)
         }.isSuccess
     }
 
@@ -435,7 +435,7 @@ open class WebDav(
                     it.startsWith("Basic", ignoreCase = true)
                 }
                 if (headers.isNotEmpty() && !supportBasicAuth) {
-                    AppLog.put("服务器不支持BasicAuth认证")
+                    AndroidAppLog.put("服务器不支持BasicAuth认证")
                 }
             }
 

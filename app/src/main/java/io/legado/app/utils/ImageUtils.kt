@@ -1,6 +1,6 @@
 package io.legado.app.utils
 
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSourceEntity
@@ -31,7 +31,7 @@ object ImageUtils {
                 put("src", src)
             } as ByteArray
         }.onFailure {
-            AppLog.putDebug("${src}解密错误", it)
+            AndroidAppLog.putDebug("${src}解密错误", it)
         }.getOrNull()
     }
 
@@ -50,7 +50,7 @@ object ImageUtils {
             } as ByteArray
             ByteArrayInputStream(bytes)
         }.onFailure {
-            AppLog.putDebug("${src}解密错误", it)
+            AndroidAppLog.putDebug("${src}解密错误", it)
         }.getOrNull()
     }
 

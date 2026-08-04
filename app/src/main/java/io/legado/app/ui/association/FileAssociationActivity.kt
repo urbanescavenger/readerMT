@@ -8,7 +8,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import io.legado.app.R
 import io.legado.app.base.VMBaseActivity
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.databinding.ActivityTranslucenceBinding
 import io.legado.app.exception.InvalidBooksDirException
 import io.legado.app.help.config.AppConfig
@@ -205,7 +205,7 @@ class FileAssociationActivity :
 
                     else -> {
                         val msg = "导入书籍失败\n${it.localizedMessage}"
-                        AppLog.put(msg, it)
+                        AndroidAppLog.put(msg, it)
                         toastOnUi(msg)
                         handler.postDelayed(2000) {
                             finish()

@@ -4,7 +4,7 @@
 package io.legado.app.lib.cronet
 
 import androidx.annotation.Keep
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.http.CookieManager.cookieJarHeader
@@ -46,7 +46,7 @@ val cronetEngine: ExperimentalCronetEngine? by lazy {
         DebugLog.d("Cronet Version:", engine.versionString)
         return@lazy engine
     } catch (e: Throwable) {
-        AppLog.put("初始化cronetEngine出错", e)
+        AndroidAppLog.put("初始化cronetEngine出错", e)
         return@lazy null
     }
 }

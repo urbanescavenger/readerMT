@@ -35,7 +35,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.legado.app.R
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.databinding.DialogWebViewBinding
@@ -163,7 +163,7 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
             manager.beginTransaction().remove(this).commit()
             super.show(manager, tag)
         }.onFailure {
-            AppLog.put("显示对话框失败 tag:$tag", it)
+            AndroidAppLog.put("显示对话框失败 tag:$tag", it)
         }
     }
 
@@ -419,7 +419,7 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
                         }
                         true
                     } catch (e: Exception) {
-                        AppLog.put("config err", e)
+                        AndroidAppLog.put("config err", e)
                         null
                     }
                 } ?: run {
@@ -620,7 +620,7 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
                 }
             }
         } catch (e: Exception) {
-            AppLog.put("config err", e)
+            AndroidAppLog.put("config err", e)
         }
     }
 
@@ -748,7 +748,7 @@ class BottomWebViewDialog() : BottomSheetDialogFragment(R.layout.dialog_web_view
             val source = source ?: return false
             val messageLevel = consoleMessage.messageLevel().name
             val message = consoleMessage.message()
-            AppLog.put(
+            AndroidAppLog.put(
                 "${source.getTag()}${messageLevel}: $message",
                 NoStackTraceException("\n${message}\n- Line ${consoleMessage.lineNumber()} of ${consoleMessage.sourceId()}")
             )

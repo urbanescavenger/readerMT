@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.legado.app.R
 import io.legado.app.base.VMBaseFragment
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.RssStar
 import io.legado.app.databinding.FragmentRssArticlesBinding
@@ -59,7 +59,7 @@ class RssFavoritesFragment() : VMBaseFragment<RssFavoritesViewModel>(R.layout.fr
         lifecycleScope.launch {
             val group = arguments?.getString("group") ?: "默认分组"
             appDb.rssStarDao.flowByGroup(group).catch {
-                AppLog.put("订阅文章界面获取数据失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("订阅文章界面获取数据失败\n${it.localizedMessage}", it)
             }.flowOn(IO).collect {
                 adapter.setItems(it)
             }

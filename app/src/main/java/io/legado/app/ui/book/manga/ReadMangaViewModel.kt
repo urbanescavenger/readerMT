@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import io.legado.app.R
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.BookType
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
@@ -58,14 +58,14 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
                 book != null -> initManga(book)
                 else -> {
                     ReadManga.loadFail(context.getString(R.string.no_book), false)
-                    AppLog.put("未找到漫画书籍\nbookUrl:$bookUrl")
+                    AndroidAppLog.put("未找到漫画书籍\nbookUrl:$bookUrl")
                 }
             }
         }.onSuccess {
             success?.invoke()
         }.onError {
             val msg = "初始化数据失败\n${it.localizedMessage}"
-            AppLog.put(msg, it)
+            AndroidAppLog.put(msg, it)
         }.onFinally {
             ReadManga.saveRead()
         }
@@ -196,7 +196,7 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
             }.onCompletion {
                 // 换源完成
             }.catch {
-                AppLog.put("自动换源失败\n${it.localizedMessage}", it)
+                AndroidAppLog.put("自动换源失败\n${it.localizedMessage}", it)
                 context.toastOnUi("自动换源失败\n${it.localizedMessage}")
             }.collect()
         }
@@ -213,7 +213,7 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
         execute {
             AppWebDav.getBookProgress(book)
         }.onError {
-            AppLog.put("拉取阅读进度失败《${book.name}》\n${it.localizedMessage}", it)
+            AndroidAppLog.put("拉取阅读进度失败《${book.name}》\n${it.localizedMessage}", it)
         }.onSuccess { progress ->
             progress ?: return@onSuccess
             if (progress.durChapterIndex == book.durChapterIndex && progress.durChapterPos == book.durChapterPos) {
@@ -226,7 +226,7 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
                 alertSync?.invoke(progress)
             } else if (progress.durChapterIndex < book.simulatedTotalChapterNum()) {
                 ReadManga.setProgress(progress)
-                AppLog.put("自动同步阅读进度成功《${book.name}》 ${progress.durChapterTitle}")
+                AndroidAppLog.put("自动同步阅读进度成功《${book.name}》 ${progress.durChapterTitle}")
                 context.toastOnUi("已同步最新漫画阅读进度")
             }
         }
@@ -247,7 +247,7 @@ class ReadMangaViewModel(application: Application) : BaseViewModel(application) 
             ReadManga.resetData(book)
             ReadManga.loadContent()
         }.onError {
-            AppLog.put("换源失败\n$it", it, true)
+            AndroidAppLog.put("换源失败\n$it", it, true)
         }.onFinally {
             postEvent(EventBus.SOURCE_CHANGED, book.bookUrl)
         }

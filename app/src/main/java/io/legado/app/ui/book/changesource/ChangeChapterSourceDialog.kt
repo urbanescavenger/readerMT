@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.EventBus
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
@@ -318,7 +318,7 @@ class ChangeChapterSourceDialog() : BaseDialogFragment(R.layout.dialog_chapter_c
             binding.recyclerViewToc.scrollToPosition(tocAdapter.durChapterIndex - 5)
         }, {
             binding.clToc.gone()
-            AppLog.put("单章换源获取目录出错\n$it", it, true)
+            AndroidAppLog.put("单章换源获取目录出错\n$it", it, true)
         })
     }
 

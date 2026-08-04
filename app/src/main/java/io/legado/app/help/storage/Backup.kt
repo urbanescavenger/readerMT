@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.appDb
 import io.legado.app.exception.NoStackTraceException
@@ -119,7 +119,7 @@ object Backup {
                     }
                 }
             }.onError {
-                AppLog.put("自动备份失败\n${it.localizedMessage}")
+                AndroidAppLog.put("自动备份失败\n${it.localizedMessage}")
             }
         }
     }
@@ -248,7 +248,7 @@ object Backup {
             try {
                 AppWebDav.backUpWebDav(zipFileName)
             } catch (e: Exception) {
-                AppLog.put("上传备份至webdav失败\n$e", e)
+                AndroidAppLog.put("上传备份至webdav失败\n$e", e)
             }
         }
         FileUtils.delete(backupPath)

@@ -10,7 +10,7 @@ import io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel
 import io.github.rosemoe.sora.langs.textmate.registry.provider.AssetsFileResolver
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.legado.app.base.BaseViewModel
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.help.CacheManager
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.http.BackstageWebView
@@ -158,7 +158,7 @@ class CodeEditViewModel(application: Application) : BaseViewModel(application) {
         }.onSuccess {
             editor.setText(it)
         }.onError {
-            AppLog.put("格式化失败",it, true)
+            AndroidAppLog.put("格式化失败",it, true)
         }
     }
 

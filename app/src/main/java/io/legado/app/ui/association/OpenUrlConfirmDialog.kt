@@ -10,7 +10,7 @@ import androidx.core.net.toUri
 import androidx.fragment.app.viewModels
 import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.databinding.DialogOpenUrlConfirmBinding
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.lib.theme.primaryColor
@@ -97,7 +97,7 @@ class OpenUrlConfirmDialog() : BaseDialogFragment(R.layout.dialog_open_url_confi
                 toastOnUi(R.string.can_not_open)
             }
         } catch (e: Exception) {
-            AppLog.put("打开链接失败", e, true)
+            AndroidAppLog.put("打开链接失败", e, true)
         }
     }
 

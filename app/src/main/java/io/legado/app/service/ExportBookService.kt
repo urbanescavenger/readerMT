@@ -8,7 +8,7 @@ import com.bumptech.glide.Glide
 import io.legado.app.R
 import io.legado.app.base.BaseService
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.constant.EventBus
 import io.legado.app.constant.IntentAction
@@ -203,7 +203,7 @@ class ExportBookService : BaseService() {
                 } catch (e: Throwable) {
                     ensureActive()
                     exportMsg[bookUrl] = e.localizedMessage ?: "ERROR"
-                    AppLog.put("导出书籍<${book?.name ?: bookUrl}>出错", e)
+                    AndroidAppLog.put("导出书籍<${book?.name ?: bookUrl}>出错", e)
                 } finally {
                     exportProgress.remove(bookUrl)
                     postEvent(EventBus.EXPORT_BOOK, bookUrl)
@@ -512,7 +512,7 @@ class ExportBookService : BaseService() {
             }
             epubBook.coverImage = LazyResource(provider, "Images/cover.jpg")
         }.onFailure {
-            AppLog.put("获取书籍封面出错\n${it.localizedMessage}", it)
+            AndroidAppLog.put("获取书籍封面出错\n${it.localizedMessage}", it)
         }
     }
 
@@ -690,7 +690,7 @@ class ExportBookService : BaseService() {
             }
 
             val elapsed = System.currentTimeMillis() - currentTimeMillis
-            AppLog.put("分割导出书籍 ${book.name} 一共耗时 $elapsed")
+            AndroidAppLog.put("分割导出书籍 ${book.name} 一共耗时 $elapsed")
         }
 
 
@@ -870,7 +870,7 @@ class ExportBookService : BaseService() {
                 val left = v[0].toInt()
                 val right = v[1].toInt()
                 if (left > right) {
-                    AppLog.put("Error expression : $s; left > right")
+                    AndroidAppLog.put("Error expression : $s; left > right")
                     continue
                 }
                 for (i in left..right)

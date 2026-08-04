@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import io.legado.app.R
 import io.legado.app.base.BaseService
 import io.legado.app.constant.AndroidAppConst
-import io.legado.app.constant.AppLog
+import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.IntentAction
 import io.legado.app.constant.NotificationId
 import io.legado.app.utils.IntentType
@@ -120,7 +120,7 @@ class DownloadService : BaseService() {
                 else -> "下载出错,${it.localizedMessage}"
             }
             toastOnUi(msg)
-            AppLog.put(msg, it)
+            AndroidAppLog.put(msg, it)
         }
     }
 
@@ -219,7 +219,7 @@ class DownloadService : BaseService() {
                 openFileUri(uri, type)
             }
         }.onFailure {
-            AppLog.put("打开下载文件${fileName}出错", it)
+            AndroidAppLog.put("打开下载文件${fileName}出错", it)
         }
     }
 
