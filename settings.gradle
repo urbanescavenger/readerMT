@@ -51,6 +51,7 @@ include ':app'
 include ':modules:book'
 include ':modules:rhino'
 include ':modules:legado-engine'
+include ':modules:server'
 // :modules:server 已纳入 root Gradle(M0 工具链升级:Kotlin 2.3.21/Java 17/Spring 2.7.18/Vert.x 4)。
 // 原排除理由(旧工具链 Kotlin 1.5/Java 8 会被 monorepo 的 Kotlin 2.3/Java 17 压坏)随升级已失效。
 // M0 阶段 server 尚不依赖 :legado-engine(旧快照自洽编译),M1 再加 project 依赖切引擎。
