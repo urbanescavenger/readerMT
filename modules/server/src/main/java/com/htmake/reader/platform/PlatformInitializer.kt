@@ -31,7 +31,8 @@ class PlatformInitializer(
     private val appConfig: SpringAppConfigProvider,
     private val scriptAssets: ServerScriptAssetProvider,
     private val webView: BrowserlessWebViewRenderer,
-    private val repositories: VertxRepositories,
+    private val cookieRepository: VertxCookieRepository,
+    private val cacheRepository: VertxCacheRepository,
 ) {
 
     @PostConstruct
@@ -40,8 +41,8 @@ class PlatformInitializer(
         Platform.appConfig = appConfig
         Platform.scriptAssets = scriptAssets
         Platform.webView = webView
-        Repositories.cookie = repositories
-        Repositories.cache = repositories
+        Repositories.cookie = cookieRepository
+        Repositories.cache = cacheRepository
         Platform.repositories = Repositories
         Platform.rhino = DirectRhinoEngine
         Platform.webBook = NoOpWebBookProvider

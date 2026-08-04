@@ -7,7 +7,7 @@ import io.legado.app.data.entities.rule.BookListRule
 import io.legado.app.help.BookHelp
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
-import io.legado.app.model.analyzeRule.AnalyzeRule.setRuleData
+import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setRuleData
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.StringUtils.wordCountFormat

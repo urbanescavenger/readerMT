@@ -5,7 +5,7 @@ import io.legado.app.data.entities.RssSource
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
-import io.legado.app.model.analyzeRule.AnalyzeRule.setRuleData
+import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setRuleData
 import io.legado.app.model.analyzeRule.RuleData
 import io.legado.app.utils.NetworkUtils
 import java.util.*

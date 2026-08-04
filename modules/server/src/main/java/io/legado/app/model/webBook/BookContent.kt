@@ -7,8 +7,8 @@ import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.rule.ContentRule
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
-import io.legado.app.model.analyzeRule.AnalyzeRule.setChapter
-import io.legado.app.model.analyzeRule.AnalyzeRule.setNextChapterUrl
+import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setChapter
+import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setNextChapterUrl
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.HtmlFormatter

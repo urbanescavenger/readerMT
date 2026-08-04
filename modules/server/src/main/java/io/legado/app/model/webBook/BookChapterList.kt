@@ -7,7 +7,7 @@ import io.legado.app.data.entities.rule.TocRule
 import io.legado.app.exception.TocEmptyException
 import io.legado.app.model.DebugLog
 import io.legado.app.model.analyzeRule.AnalyzeRule
-import io.legado.app.model.analyzeRule.AnalyzeRule.setChapter
+import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setChapter
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.utils.isTrue
 import io.legado.app.utils.TextUtils
