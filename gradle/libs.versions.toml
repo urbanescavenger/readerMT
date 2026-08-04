@@ -32,9 +32,12 @@ quickChineseTransfer = "0.2.17"
 splitties = "3.0.0"
 desugar = "2.1.5"
 
-# :modules:server(M0 工具链升级:Spring 2.7.18 保留 javax + Vert.x 4)
-springBoot = "2.7.18"
+# :modules:server(M0 工具链升级:Spring 3.x 因 Gradle 9 兼容,Vert.x 4)
+# 注意:Spring Boot 2.7.18 的 Gradle 插件不兼容 Gradle 9(LenientConfiguration.getFiles() 被移除),
+# 故必须升 3.x(javax→jakarta,服务器仅 ReaderApplication 1 处 PostConstruct 需改)。
+springBoot = "3.3.5"
 vertx = "4.5.14"
+jakartaAnnotation = "2.1.1"
 
 #kotlinxSerialization = "1.8.0"
 swiperefreshlayout = "1.2.0"
@@ -124,11 +127,12 @@ vertx-lang-kotlin = { module = "io.vertx:vertx-lang-kotlin", version.ref = "vert
 vertx-lang-kotlin-coroutines = { module = "io.vertx:vertx-lang-kotlin-coroutines", version.ref = "vertx" }
 vertx-web = { module = "io.vertx:vertx-web", version.ref = "vertx" }
 vertx-web-client = { module = "io.vertx:vertx-web-client", version.ref = "vertx" }
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.13.5" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version = "2.17.3" }
 kotlin-logging = { module = "io.github.microutils:kotlin-logging", version = "3.0.5" }
 sysout-over-slf4j = { module = "uk.org.lidalia:sysout-over-slf4j", version = "1.0.2" }
 guava = { module = "com.google.guava:guava", version = "31.1-jre" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+jakarta-annotation-api = { module = "jakarta.annotation:jakarta.annotation-api", version.ref = "jakartaAnnotation" }
 # retrofit(M0 保留;M1 换引擎 HTTP 后删)
 retrofit = { module = "com.squareup.retrofit2:retrofit", version = "2.9.0" }
 retrofit-vertx = { module = "com.julienviet:retrofit-vertx", version = "1.1.3" }

@@ -1,6 +1,7 @@
 // :modules:server —— reader-mt 服务端(root-Gradle 子项目,M0 工具链升级)。
 // 原独立工具链(gradle 7 + JDK 8 + cli.gradle / Kotlin 1.5.21)已废弃,纳入 monorepo
-// root Gradle(Kotlin 2.3.21 / Java 17 / Spring Boot 2.7.18 / Vert.x 4)。
+// root Gradle(Kotlin 2.3.21 / Java 17 / Spring Boot 3.3.5 / Vert.x 4)。
+// Spring Boot 3.x 因 Gradle 9 兼容(2.7 用被移除的 LenientConfiguration.getFiles())。
 //
 // M0 阶段:服务器仍用自带旧引擎快照(src/main/java/io/legado/app,自洽编译),
 // **不**依赖 :modules:legado-engine(同名同包类冲突,须原子切换,M1 才加 project 依赖)。
@@ -25,8 +26,9 @@ kotlin {
 }
 
 dependencies {
-    // Spring Boot 2.7.18(保留 javax,不迁 jakarta;2.7 官方支持 Java 17)
+    // Spring Boot 3.3.5(Gradle 9 兼容;javax→jakarta,服务器仅 ReaderApplication 1 处 PostConstruct)
     implementation libs.spring.boot.starter
+    implementation libs.jakarta.annotation.api
     testImplementation libs.spring.boot.starter.test
 
     // Vert.x 4.5.x(3.8.1 官方仅到 Java 11;升级到 4 需 API 迁移)
