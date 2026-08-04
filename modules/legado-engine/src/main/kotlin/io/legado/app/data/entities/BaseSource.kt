@@ -3,6 +3,7 @@
 package io.legado.app.data.entities
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.help.CacheManager
@@ -42,6 +43,17 @@ import kotlinx.coroutines.runBlocking
  * com.script.* → `Platform.rhino.*`(`newBindings`/`getRuntimeScope`/`eval`/`getOrCreateSharedScope`/
  * `removeSharedScope`)。`getShareScope()` → `Platform.rhino.getOrCreateSharedScope(getKey(), jsLib)`。
  */
+@JsonIgnoreProperties(
+    // 引擎 BaseSource 有一批"行为 getter"(无对应 setter / 非数据字段)。各平台用 Jackson 序列化/
+    // 反序列化书源实体(如 :server 的 JsonObject.mapFrom/mapTo)时,Jackson 会把它们当 bean 属性:
+    // 序列化时 getSource() 返回 this → 自引用循环;反序列化时 setterless getter(loginInfoMap 等)
+    // → "Should never call set() on setterless property"。统一忽略,避免实体 JSON 序列化报错。
+    // getSource 单独 @JsonIgnore(它是 override JsExtensions 的方法)。
+    value = [
+        "loginInfoMap", "loginInfo", "loginHeader", "loginHeaderMap",
+        "loginJs", "variable", "key", "tag"
+    ]
+)
 interface BaseSource : JsExtensions {
 
     /** 并发率 */
