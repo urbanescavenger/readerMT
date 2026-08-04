@@ -64,12 +64,39 @@ jobs:
             if curl -sf http://localhost:8080/ >/dev/null 2>&1; then UP="yes"; echo "server up after ${i}x2s"; break; fi
             sleep 2
           done
-          echo "--- GET / ---"
-          curl -sS http://localhost:8080/ | head -c 300 || true
-          echo
-          echo "--- docker logs (tail) ---"
-          docker logs reader 2>&1 | tail -40 || true
           if [ -z "$UP" ]; then
             echo "ERROR: server did not come up within 120s"
             exit 1
           fi
+          echo "--- GET / ---"
+          curl -sS http://localhost:8080/ | head -c 300 || true
+          echo
+          echo "--- POST /reader3/searchBook (M2 引擎冒烟铁证) ---"
+          # 用「未来天王」纯 HTTP 书源跑真实搜索,断言 isSuccess 且 data 非空。
+          # 这证明服务器端消费统一 :legado-engine 真实可用(不再是假绿)。
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "ERROR: jq not available in runner"
+            exit 1
+          fi
+          RESP=$(curl -sS -X POST http://localhost:8080/reader3/searchBook \
+            -H "Content-Type: application/json" \
+            --data-binary @.github/smoke/searchBook-request.json)
+          echo "$RESP" | head -c 1000
+          echo
+          if ! echo "$RESP" | jq -e '.isSuccess == true' >/dev/null 2>&1; then
+            echo "ERROR: searchBook isSuccess != true"
+            echo "--- docker logs (tail) ---"
+            docker logs reader 2>&1 | tail -40 || true
+            exit 1
+          fi
+          COUNT=$(echo "$RESP" | jq '[.data[]?] | length')
+          echo "searchBook result count: $COUNT"
+          if [ -z "$COUNT" ] || [ "$COUNT" = "0" ]; then
+            echo "ERROR: searchBook returned 0 results (data empty)"
+            echo "--- docker logs (tail) ---"
+            docker logs reader 2>&1 | tail -40 || true
+            exit 1
+          fi
+          echo "M2 smoke OK: server consumed :legado-engine and searched real books"
+          echo "--- docker logs (tail) ---"
+          docker logs reader 2>&1 | tail -20 || true
