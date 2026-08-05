@@ -163,6 +163,22 @@ object FileUtils {
         }
     }
 
+    /** 列出目录与文件(reader-mt `listDirsAndFiles`;简化版不排序)。 */
+    fun listDirsAndFiles(
+        startDirPath: String,
+        allowExtensions: Array<String>? = null
+    ): Array<File>? {
+        val file = File(startDirPath)
+        if (!file.isDirectory) return null
+        val dirs = file.listFiles { it.isDirectory } ?: return null
+        val files = file.listFiles { f ->
+            if (f.isDirectory) false
+            else if (allowExtensions == null) true
+            else allowExtensions.any { f.name.endsWith(".$it", ignoreCase = true) }
+        } ?: return null
+        return dirs + files
+    }
+
     fun getPath(rootPath: String, vararg subDirFiles: String): String {
         val path = StringBuilder(rootPath)
         subDirFiles.forEach {
