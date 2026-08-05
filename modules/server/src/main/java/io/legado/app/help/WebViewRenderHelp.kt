@@ -30,10 +30,11 @@ object WebViewRenderHelp {
 
     // 在 browserless 的浏览器 JS 运行时里执行:等 CF "Just a moment" 类挑战消失后回传 html/cookies/url。
     // 注意:不要用带 ${} 的 JS 模板字符串(Kotlin raw string 会插值)。
-    // 格式:自托管 browserless(/function 用 @browserless/function 包)在 VM 沙箱里把 code 当纯函数表达式
-    // 求值,不提供 module 全局 → 必须写 `async ({ page, context }) => {...}`,不能写 `module.exports = ...`
-    // (后者抛 "module is not defined")。
-    private const val RENDER_CODE = """async ({ page, context }) => {
+    // 格式:官方 browserless(/function)用 `import('./browserless-function-<id>.js')` 把 code 当 ES module
+    // 加载,取 default 导出作为函数 → 必须写 `export default async ({ page, context }) => {...}`。
+    // 不能写 `module.exports = ...`(ES module 里 module 未定义 → "module is not defined"),也不能写裸函数
+    // 表达式(无 default 导出 → code 为 undefined → "code is not a function")。
+    private const val RENDER_CODE = """export default async ({ page, context }) => {
   try { if (context.ua) { await page.setUserAgent(context.ua); } } catch (e) {}
   try {
     await page.goto(context.url, { waitUntil: 'networkidle0', timeout: 60000 });
@@ -59,8 +60,8 @@ object WebViewRenderHelp {
     // (等价 onLoadResource/shouldOverrideUrlLoading 拦截);result 参数注入 window.result(等价
     // "window.result = WebCacheManager.getFromMemory('webview_result')")。JS 空则取 outerHTML。
     // 注意:不要用带 ${} 的 JS 模板字符串(Kotlin raw string 会插值)。
-    // 格式:纯函数表达式(自托管 browserless 不提供 module 全局,见 RENDER_CODE 注释)。
-    private const val RENDER_HTML_WITH_JS_CODE = """async ({ page, context }) => {
+    // 格式:ES module default 导出(官方 browserless 用 import() 加载 code 取 default,见 RENDER_CODE 注释)。
+    private const val RENDER_HTML_WITH_JS_CODE = """export default async ({ page, context }) => {
   const { url, html, javaScript, ua, sourceRegex, overrideUrlRegex, delayTime, result, headers } = context;
   const requestedUrls = [];
   page.on('request', req => { try { requestedUrls.push(req.url()); } catch (e) {} });
@@ -99,8 +100,8 @@ object WebViewRenderHelp {
 }"""
 
     // evalJS 的 Puppeteer code:在空白页上执行 JS 并回传结果(服务端无持久 page,每次新建)。
-    // 格式:纯函数表达式(自托管 browserless 不提供 module 全局,见 RENDER_CODE 注释)。
-    private const val EVAL_JS_CODE = """async ({ page, context }) => {
+    // 格式:ES module default 导出(官方 browserless 用 import() 加载 code 取 default,见 RENDER_CODE 注释)。
+    private const val EVAL_JS_CODE = """export default async ({ page, context }) => {
   let out = '';
   try { out = await page.evaluate(context.js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
   return { result: String(out == null ? '' : out) };
