@@ -702,7 +702,7 @@ class AnalyzeUrl(
      * 设置cookie 优先级
      * urlOption临时cookie > 数据库cookie
      */
-    private fun setCookie() {
+    fun setCookie() {
         val cookie = run {
             CookieStore.getCookie(domain)
         }
