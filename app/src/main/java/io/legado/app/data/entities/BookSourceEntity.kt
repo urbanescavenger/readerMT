@@ -1,5 +1,6 @@
 package io.legado.app.data.entities
 
+import androidx.annotation.RawValue
 import android.os.Parcelable
 import android.text.TextUtils
 import androidx.room.ColumnInfo
@@ -83,19 +84,19 @@ data class BookSourceEntity(
     // 发现筛选规则
     var exploreScreen: String? = null,
     // 发现规则
-    var ruleExplore: ExploreRule? = null,
+    @RawValue var ruleExplore: ExploreRule? = null,
     // 搜索url
     var searchUrl: String? = null,
     // 搜索规则
-    var ruleSearch: SearchRule? = null,
+    @RawValue var ruleSearch: SearchRule? = null,
     // 书籍信息页规则
-    var ruleBookInfo: BookInfoRule? = null,
+    @RawValue var ruleBookInfo: BookInfoRule? = null,
     // 目录页规则
-    var ruleToc: TocRule? = null,
+    @RawValue var ruleToc: TocRule? = null,
     // 正文页规则
-    var ruleContent: ContentRule? = null,
+    @RawValue var ruleContent: ContentRule? = null,
     // 段评规则
-    var ruleReview: ReviewRule? = null,
+    @RawValue var ruleReview: ReviewRule? = null,
     @ColumnInfo(defaultValue = "0")
     var eventListener: Boolean = false, // 是否监听事件来执行回调规则
     @ColumnInfo(defaultValue = "0")

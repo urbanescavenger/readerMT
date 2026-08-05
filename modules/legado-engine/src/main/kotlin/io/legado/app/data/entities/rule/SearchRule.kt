@@ -19,7 +19,7 @@ data class SearchRule(
     override var bookUrl: String? = null,
     override var coverUrl: String? = null,
     override var wordCount: String? = null
-) : BookListRule {
+) : BookListRule , java.io.Serializable {
 
     companion object {
 

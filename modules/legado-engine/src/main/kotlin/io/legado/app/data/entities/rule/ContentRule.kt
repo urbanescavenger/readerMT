@@ -19,9 +19,7 @@ data class ContentRule(
     var payAction: String? = null,    //购买操作,js或者包含{{js}}的url
     /**  监听到事件后执行的回调js代码  **/
     var callBackJs: String? = null
-) {
-
-
+) : java.io.Serializable {
     companion object {
 
         val jsonDeserializer = JsonDeserializer<ContentRule?> { json, _, _ ->

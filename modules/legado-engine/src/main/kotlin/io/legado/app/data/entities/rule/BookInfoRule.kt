@@ -19,8 +19,7 @@ data class BookInfoRule(
     var wordCount: String? = null,
     var canReName: String? = null,
     var downloadUrls: String? = null
-) {
-
+) : java.io.Serializable {
     companion object {
 
         val jsonDeserializer = JsonDeserializer<BookInfoRule?> { json, _, _ ->

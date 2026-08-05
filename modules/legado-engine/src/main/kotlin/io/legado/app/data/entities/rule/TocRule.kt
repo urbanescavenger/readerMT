@@ -14,8 +14,7 @@ data class TocRule(
     var isPay: String? = null,
     var updateTime: String? = null,
     var nextTocUrl: String? = null
-) {
-
+) : java.io.Serializable {
     companion object {
 
         val jsonDeserializer = JsonDeserializer<TocRule?> { json, _, _ ->

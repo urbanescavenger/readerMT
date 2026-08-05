@@ -16,8 +16,7 @@ data class ReviewRule(
     var postReviewUrl: String? = null,      // 发送回复URL
     var postQuoteUrl: String? = null,       // 发送回复段评URL
     var deleteUrl: String? = null,          // 删除段评URL
-) {
-
+) : java.io.Serializable {
     companion object {
 
         val jsonDeserializer = JsonDeserializer<ReviewRule?> { json, _, _ ->
