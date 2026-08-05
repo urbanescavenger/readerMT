@@ -132,6 +132,20 @@ object StringUtils {
         return isNum.matches()
     }
 
+    /** 字数格式化(reader-mt `wordCountFormat(Int)`;TextFile 传 Int 用)。 */
+    fun wordCountFormat(words: Int): String {
+        var wordsS = ""
+        if (words > 0) {
+            if (words > 10000) {
+                val df = DecimalFormat("#.#")
+                wordsS = df.format(words * 1.0f / 10000f.toDouble()) + "万字"
+            } else {
+                wordsS = words.toString() + "字"
+            }
+        }
+        return wordsS
+    }
+
     /** 字数格式化:纯数字转 "N字"/"N万字",否则原样(reader-mt `StringUtils.wordCountFormat`)。 */
     fun wordCountFormat(wc: String?): String {
         if (wc == null) return ""
