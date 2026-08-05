@@ -248,7 +248,7 @@ class AudioPlayService : BaseService(),
                     url,
                     source = AudioPlay.bookSource,
                     ruleData = book,
-                    chapter = AudioPlay.durChapter,
+                    chapter = AudioPlay.durChapter?.toBookChapter(),
                     coroutineContext = coroutineContext
                 )
                 exoPlayer.setMediaItem(analyzeUrl.getMediaItem())

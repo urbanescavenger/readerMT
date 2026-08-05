@@ -266,7 +266,7 @@ object VideoPlay : CoroutineScope by MainScope(){
                     mUrl,
                     source = source,
                     ruleData = book,
-                    chapter = chapter
+                    chapter = chapter.toBookChapter()
                 )
                 when (val danmaku = chapter.getDanmaku()) {
                     is String -> danmakuStr = danmaku

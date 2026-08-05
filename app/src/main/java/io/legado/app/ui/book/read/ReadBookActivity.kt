@@ -1380,7 +1380,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                 AnalyzeRule(book, source).apply {
                     setCoroutineContext(coroutineContext)
                     setBaseUrl(chapter.url)
-                    setChapter(chapter)
+                    setChapter(chapter.toBookChapter())
                     evalJS(jsStr, urlNoOption)
                 }
             }.onError {

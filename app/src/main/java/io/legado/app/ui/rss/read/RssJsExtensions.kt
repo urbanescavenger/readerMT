@@ -282,7 +282,7 @@ open class RssJsExtensions(
     private val chapter: BookChapterEntity? get() = bookAndChapter.second
 
     val analyzeRule by lazy {
-        AnalyzeRule(book, source = getSource()).setChapter(chapter)
+        AnalyzeRule(book, source = getSource()).setChapter(chapter.toBookChapter())
     }
 
     @JavascriptInterface

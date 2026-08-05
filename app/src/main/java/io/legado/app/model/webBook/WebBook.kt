@@ -409,7 +409,7 @@ object WebBook {
                 baseUrl = book.tocUrl,
                 source = bookSource,
                 ruleData = book,
-                chapter = bookChapter,
+                chapter = bookChapter.toBookChapter(),
                 coroutineContext = currentCoroutineContext()
             )
             val checkJs = bookSource.loginCheckJs

@@ -202,3 +202,22 @@ data class BookChapterEntity(
     }
 }
 
+
+/** 引擎 BookChapter 转换(Batch C:analyzeRule.setChapter 等需引擎 BookChapter,Room 实体转之)。 */
+fun BookChapterEntity.toBookChapter(): BookChapter {
+    return BookChapter().apply {
+        url = this@toBookChapter.url
+        title = this@toBookChapter.title
+        isVolume = this@toBookChapter.isVolume
+        baseUrl = this@toBookChapter.baseUrl
+        bookUrl = this@toBookChapter.bookUrl
+        index = this@toBookChapter.index
+        resourceUrl = this@toBookChapter.resourceUrl
+        tag = this@toBookChapter.tag
+        start = this@toBookChapter.start
+        end = this@toBookChapter.end
+        startFragmentId = this@toBookChapter.startFragmentId
+        endFragmentId = this@toBookChapter.endFragmentId
+        variable = this@toBookChapter.variable
+    }
+}

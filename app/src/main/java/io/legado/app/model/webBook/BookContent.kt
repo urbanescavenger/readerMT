@@ -63,7 +63,7 @@ object BookContent {
         analyzeRule.setContent(body, baseUrl)
         analyzeRule.setRedirectUrl(redirectUrl)
         analyzeRule.setCoroutineContext(currentCoroutineContext())
-        analyzeRule.setChapter(bookChapter)
+        analyzeRule.setChapter(bookChapter.toBookChapter())
         analyzeRule.setNextChapterUrl(mNextChapterUrl)
         currentCoroutineContext().ensureActive()
         var contentData = analyzeContent(
@@ -229,7 +229,7 @@ object BookContent {
         val rUrl = analyzeRule.setRedirectUrl(redirectUrl)
         analyzeRule.setNextChapterUrl(nextChapterUrl)
         val nextUrlList = arrayListOf<String>()
-        analyzeRule.setChapter(chapter)
+        analyzeRule.setChapter(chapter.toBookChapter())
         //获取正文
         var content = analyzeRule.getString(contentRule.content, unescape = false)
         if (!book.isAudio && !book.isVideo) { //音频和视频获取的是链接，不需要html格式化

@@ -234,7 +234,7 @@ object BookChapterList {
                 currentCoroutineContext().ensureActive()
                 analyzeRule.setContent(item)
                 val bookChapter = BookChapterEntity(bookUrl = book.bookUrl, baseUrl = redirectUrl)
-                analyzeRule.setChapter(bookChapter)
+                analyzeRule.setChapter(bookChapter.toBookChapter())
                 bookChapter.title = analyzeRule.getString(nameRule)
                 bookChapter.url = analyzeRule.getString(urlRule)
                 val info = analyzeRule.getString(upTimeRule)
