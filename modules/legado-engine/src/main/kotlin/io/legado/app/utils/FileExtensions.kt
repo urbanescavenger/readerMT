@@ -19,6 +19,15 @@ fun File.createFileReplace(): File {
     return this
 }
 
+/** 不存在则创建(reader-mt `FileExtensions.createFileIfNotExist`;BookHelp 写图链用)。 */
+fun File.createFileIfNotExist(): File {
+    if (!exists()) {
+        parent?.let { File(it).mkdirs() }
+        createNewFile()
+    }
+    return this
+}
+
 fun File.createFolderIfNotExist(): File {
     if (!exists()) {
         mkdirs()
