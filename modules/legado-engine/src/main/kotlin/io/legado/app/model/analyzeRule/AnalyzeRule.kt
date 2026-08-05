@@ -6,7 +6,6 @@ import io.legado.app.constant.AppPattern.WebJS_PATTERN
 import io.legado.app.data.entities.BaseBook
 import io.legado.app.data.entities.BaseSource
 import io.legado.app.data.entities.BookChapter
-import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.RssArticle
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.CacheManager
@@ -908,7 +907,7 @@ class AnalyzeRule(
         if (isFromBookInfo) {
             log("重新获取book")
         }
-        val bookSource = source as? BookSource
+        val bookSource = source
         val book = this.book
         if (bookSource == null || book == null) return
         runBlocking(coroutineContext) {
@@ -934,7 +933,7 @@ class AnalyzeRule(
             log("已跳过重复加载详情页，请优化代码")
             return
         }
-        val bookSource = source as? BookSource
+        val bookSource = source
         val book = this.book
         if (bookSource == null || book == null) return
         runBlocking(coroutineContext) {

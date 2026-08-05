@@ -10,8 +10,9 @@ import io.legado.app.data.entities.rule.TocRule
 /**
  * 引擎版 BookSource(从 readerMT `data/entities/BookSource.kt` 抽取为平台无关完整 DTO)。
  *
- * `AnalyzeRule.reGetBook`/`refreshTocUrl` 做 `source as? BookSource` 守卫后传给
- * [io.legado.app.platform.webbook.WebBookProvider](仅类型判断,不读专属字段)。
+ * `AnalyzeRule.reGetBook`/`refreshTocUrl` 守卫 `source as? BaseSource`(不再依赖本具体 DTO
+ * 类型:app 的 `BookSourceEntity`/`RssSource` 等 BaseSource 实现同样可触发 preUpdate 重抓)后
+ * 传给 [io.legado.app.platform.webbook.WebBookProvider](仅类型判断,不读专属字段)。
  * 真实书源 JSON 经引擎 [io.legado.app.utils.GSON](已注册 7 个规则 jsonDeserializer)
  * 反序列化进本 data class,驱动 `AnalyzeRule` 跑 §5c parity。
  *
