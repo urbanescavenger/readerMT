@@ -222,7 +222,7 @@ fun Book.clearType() {
     type = 0
 }
 
-fun Book.isType(@BookType.Type bookType: Int): Boolean = type and bookType > 0
+fun Book.isType(@BookType.Type bookType: Int): Boolean = (type and bookType) > 0
 
 fun Book.upType() {
     if (type < 4) {
