@@ -1,6 +1,7 @@
 package io.legado.app.data.entities
 
 import io.legado.app.model.analyzeRule.RuleDataInterface
+import io.legado.app.utils.splitNotBlank
 
 /**
  * 引擎版 BaseBook(从 readerMT `data/entities/BaseBook.kt` 抽取为平台无关 interface,最小子集)。
@@ -29,4 +30,17 @@ interface BaseBook : RuleDataInterface {
 
     /** 目录页 HTML(书源获取);`:server` 的 `Book`/`SearchBook` 已实现。 */
     var tocHtml: String?
+
+    /** 分类列表(reader-mt `BaseBook.getKindList`,纯逻辑)。 */
+    fun getKindList(): List<String> {
+        val kindList = arrayListOf<String>()
+        wordCount?.let {
+            if (it.isNotBlank()) kindList.add(it)
+        }
+        kind?.let {
+            val kinds = it.splitNotBlank(",", "\n")
+            kindList.addAll(kinds)
+        }
+        return kindList
+    }
 }
