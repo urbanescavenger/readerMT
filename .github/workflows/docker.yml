@@ -120,8 +120,9 @@ jobs:
             exit 1
           fi
           # 从 Kotlin 源码提取 RENDER_HTML_WITH_JS_CODE(避免与实现重复)。
-          # 收尾行 `};"""` 同时含函数收尾 `};` 与 raw string 结束符,须保留 `};` 剥掉 `"""`(否则代码缺闭合 → browserless "Unexpected end of input")。
-          CODE=$(awk '/RENDER_HTML_WITH_JS_CODE = """/{f=1; sub(/.*RENDER_HTML_WITH_JS_CODE = """/,""); print; next} f && /^};"""/{sub(/"""/,""); print; f=0; next} f{print}' modules/server/src/main/java/io/legado/app/help/WebViewRenderHelp.kt)
+          # 收尾行 `}"""` 同时含函数收尾 `}` 与 raw string 结束符,须保留 `}` 剥掉 `"""`。
+          # 注意 code 必须是无尾分号的函数表达式(browserless 包成 `(${code})({page,...})`,尾分号 → 语法错误)。
+          CODE=$(awk '/RENDER_HTML_WITH_JS_CODE = """/{f=1; sub(/.*RENDER_HTML_WITH_JS_CODE = """/,""); print; next} f && /^}"""/{sub(/"""/,""); print; f=0; next} f{print}' modules/server/src/main/java/io/legado/app/help/WebViewRenderHelp.kt)
           # 用例1:setContent + eval JS(纯 DOM 提取)
           R1=$(jq -n --arg code "$CODE" '{code:$code, context:{url:null, html:"<h1>书名A</h1>", javaScript:"document.querySelector(\"h1\").innerText", ua:null, sourceRegex:null, overrideUrlRegex:null, delayTime:0, result:null, headers:null}}' \
             | curl -sS -X POST http://localhost:3000/function -H "Content-Type: application/json" --data-binary @-)

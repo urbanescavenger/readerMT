@@ -51,7 +51,7 @@ object WebViewRenderHelp {
   var cookies = await page.cookies();
   var finalUrl = page.url();
   return { html: html, cookies: cookies, url: finalUrl };
-};"""
+}"""
 
     // renderHtmlWithJs 的 Puppeteer code:在预加载 html(或导航 url)上执行 JS 规则并回传结果。
     // 镜像 app BackstageWebView 语义:html 非空 → setContent(注入 <base> 使相对资源/相对URL可用,
@@ -96,7 +96,7 @@ object WebViewRenderHelp {
   let out = '';
   try { out = await page.evaluate(js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
   return { result: String(out == null ? '' : out) };
-};"""
+}"""
 
     // evalJS 的 Puppeteer code:在空白页上执行 JS 并回传结果(服务端无持久 page,每次新建)。
     // 格式:纯函数表达式(自托管 browserless 不提供 module 全局,见 RENDER_CODE 注释)。
@@ -104,7 +104,7 @@ object WebViewRenderHelp {
   let out = '';
   try { out = await page.evaluate(context.js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
   return { result: String(out == null ? '' : out) };
-};"""
+}"""
 
     fun renderUrl(url: String, sourceKey: String, ua: String): StrResponse {
         val data = browserlessCall(RENDER_CODE, mapOf("url" to url, "ua" to ua), 0L)
