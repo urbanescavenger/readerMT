@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class ConcurrentRateLimiter(
     private val key: String?,
-    private val concurrentRate: String?
+    private val concurrentRate: String? = null
 ) {
 
     companion object {
