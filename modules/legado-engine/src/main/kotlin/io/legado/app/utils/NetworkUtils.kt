@@ -5,8 +5,11 @@ package io.legado.app.utils
 import io.legado.app.constant.AppLog
 import okhttp3.internal.publicsuffix.PublicSuffixDatabase
 import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.SocketException
 import java.net.URL
 import java.util.BitSet
+import java.util.Enumeration
 
 /**
  * 从 readerMT `utils/NetworkUtils` 抽出的纯 JVM 域名工具子集。
@@ -60,6 +63,35 @@ object NetworkUtils {
         return kotlin.runCatching {
             URL(baseUrl).host
         }.getOrDefault(baseUrl)
+    }
+
+    /** IPv4 判定(原 app 用 hutool Validator.isIpv4;引擎以正则近似,parity 留 §5c)。 */
+    fun isIPv4Address(input: String?): Boolean {
+        if (input == null || input.isEmpty()) return false
+        return ipv4Regex.matches(input)
+    }
+
+    /** 本机非 loopback 的 IPv4 地址(app WebService 展示本机 IP 用)。 */
+    fun getLocalIPAddress(): List<InetAddress> {
+        val enumeration: Enumeration<NetworkInterface>
+        try {
+            enumeration = NetworkInterface.getNetworkInterfaces()
+        } catch (e: SocketException) {
+            e.printOnDebug()
+            return emptyList()
+        }
+        val addressList = mutableListOf<InetAddress>()
+        while (enumeration.hasMoreElements()) {
+            val nif = enumeration.nextElement()
+            val addresses = nif.inetAddresses ?: continue
+            while (addresses.hasMoreElements()) {
+                val address = addresses.nextElement()
+                if (!address.isLoopbackAddress && isIPv4Address(address.hostAddress)) {
+                    addressList.add(address)
+                }
+            }
+        }
+        return addressList
     }
 
     // ---- URL 编码判定(batch 2a,从 app NetworkUtils 抽纯 JVM 子集)----

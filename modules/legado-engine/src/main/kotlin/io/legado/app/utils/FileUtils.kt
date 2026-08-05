@@ -2,6 +2,8 @@ package io.legado.app.utils
 
 import io.legado.app.platform.Platform
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -140,6 +142,25 @@ object FileUtils {
             file.mkdirs()
         }
         return file
+    }
+
+    /** 写字节到文件(reader-mt `FileUtils.writeBytes`)。 */
+    fun writeBytes(filepath: String, data: ByteArray): Boolean {
+        val file = File(filepath)
+        var fos: FileOutputStream? = null
+        return try {
+            if (!file.exists()) {
+                file.parentFile?.mkdirs()
+                file.createNewFile()
+            }
+            fos = FileOutputStream(filepath)
+            fos.write(data)
+            true
+        } catch (e: IOException) {
+            false
+        } finally {
+            fos?.close()
+        }
     }
 
     fun getPath(rootPath: String, vararg subDirFiles: String): String {
