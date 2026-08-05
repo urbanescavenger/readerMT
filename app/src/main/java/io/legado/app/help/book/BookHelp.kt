@@ -348,7 +348,7 @@ object BookHelp {
                 cacheFolderName,
                 book.getFolderName(),
                 bookChapter.getFileName()
-            )
+            ).exists()
         }
     }
 
