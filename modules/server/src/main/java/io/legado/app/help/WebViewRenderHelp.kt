@@ -97,7 +97,8 @@ object WebViewRenderHelp {
   // result 可能已被 browserless JSON.parse 成 object,须先 JSON.stringify,否则 [object Object] 语法错误
   if (result != null) { const resultJs = (typeof result === 'object') ? JSON.stringify(result) : result; js = '(function(){ window.result = ' + resultJs + '; return (' + js + '); })()'; }
   let out = '';
-  try { out = await page.evaluate(js); } catch (e) { out = 'EVAL_ERROR: ' + ((e && e.message) ? e.message : e); }
+  // page.evaluate 失败时降级返回页面 HTML(graceful,镜像 app 语义);需调试可临时改回返回错误信息
+  try { out = await page.evaluate(js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
   return { result: String(out == null ? '' : out) };
 }"""
 
