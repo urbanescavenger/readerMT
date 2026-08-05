@@ -17,6 +17,7 @@ import io.legado.app.lib.permission.Permissions
 import io.legado.app.lib.permission.PermissionsCompat
 import io.legado.app.ui.file.HandleFileContract
 import io.legado.app.utils.FileUtils
+import io.legado.app.utils.getMimeType
 import io.legado.app.utils.buildMainHandler
 import io.legado.app.utils.canRead
 import io.legado.app.utils.checkWrite

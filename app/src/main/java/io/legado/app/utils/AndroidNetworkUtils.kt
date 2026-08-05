@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.webkit.MimeTypeMap
 import splitties.systemservices.connectivityManager
 
 /**
@@ -34,4 +35,10 @@ fun NetworkUtils.isAvailable(): Boolean {
         }
     }
     return false
+}
+
+/** MIME 类型(Android MimeTypeMap;原 FileUtils.getMimeType)。 */
+fun FileUtils.getMimeType(pathOrUrl: String): String {
+    val ext = FileUtils.getExtension(pathOrUrl)
+    return MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "*/*"
 }
