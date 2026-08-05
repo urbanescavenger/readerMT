@@ -7,12 +7,14 @@ import androidx.annotation.Keep
 import io.legado.app.constant.AndroidAppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.help.config.AppConfig
+import android.net.http.X509TrustManagerExtensions
 import io.legado.app.help.http.CookieManager.cookieJarHeader
-import io.legado.app.help.http.SSLHelper
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.model.analyzeRule.AnalyzeUrl.Companion.customIp
 import io.legado.app.utils.DebugLog
 import io.legado.app.utils.externalCache
+import java.security.cert.X509Certificate
+import javax.net.ssl.X509TrustManager
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
@@ -126,14 +128,28 @@ private fun customHost(url: String): String {
 }
 
 private fun disableCertificateVerify() {
+    // Cronet 的 X509Util 需要一个 host-aware 的 trust manager(含三参 checkServerTrusted)。
+    // 引擎 SSLHelper 只提供 trust-all 二参版本,故这里内联一个 cronet 专属的 host-aware 信任管理器,
+    // 避免与引擎 SSLHelper 同 FQN 重复(R8 拒绝重复类)。
+    val hostAwareTrustManager = object : X509TrustManager {
+        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
+        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
+        override fun checkServerTrusted(
+            chain: Array<X509Certificate>,
+            authType: String,
+            host: String
+        ): List<X509Certificate> = chain.toList()
+        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+    }
+    val extensions = X509TrustManagerExtensions(hostAwareTrustManager)
     runCatching {
         val sDefaultTrustManager = X509Util::class.java.getDeclaredField("sDefaultTrustManager")
         sDefaultTrustManager.isAccessible = true
-        sDefaultTrustManager.set(null, SSLHelper.unsafeTrustManagerExtensions)
+        sDefaultTrustManager.set(null, extensions)
     }
     runCatching {
         val sTestTrustManager = X509Util::class.java.getDeclaredField("sTestTrustManager")
         sTestTrustManager.isAccessible = true
-        sTestTrustManager.set(null, SSLHelper.unsafeTrustManagerExtensions)
+        sTestTrustManager.set(null, extensions)
     }
 }
