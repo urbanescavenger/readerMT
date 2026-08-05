@@ -43,4 +43,13 @@ interface BaseBook : RuleDataInterface {
         }
         return kindList
     }
+
+    /** 自定义变量(reader-mt `BaseBook.putCustomVariable`/`getCustomVariable`,key="custom")。 */
+    fun putCustomVariable(value: String?) {
+        putVariable("custom", value)
+    }
+
+    fun getCustomVariable(): String {
+        return getVariable("custom")
+    }
 }

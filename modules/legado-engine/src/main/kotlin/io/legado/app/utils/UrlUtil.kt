@@ -1,7 +1,9 @@
 package io.legado.app.utils
 
 import io.legado.app.constant.AppLog
+import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.analyzeRule.CustomUrl
+import java.net.URL
 
 /**
  * 引擎版 UrlUtil(从 readerMT `utils/UrlUtil.kt` 抽取引擎所需 `getSuffix`,纯 JVM)。
@@ -50,5 +52,15 @@ object UrlUtil {
             .replace("@", "%40")
             .replace("\\", "%5C")
             .replace("|", "%7C")
+    }
+
+    /** 从下载 URL 取文件名(reader-mt `UrlUtil.getFileName(analyzeUrl)`;简化不解析响应头 Content-Disposition)。 */
+    fun getFileName(analyzeUrl: AnalyzeUrl): String? {
+        return try {
+            URL(analyzeUrl.url).path.substringAfterLast("/")
+                .takeIf { it.isNotBlank() && it != "/" }
+        } catch (e: Exception) {
+            null
+        }
     }
 }
