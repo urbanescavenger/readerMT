@@ -41,6 +41,7 @@ import io.legado.app.help.WebCacheManager
 import io.legado.app.help.webView.WebJsExtensions
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.http.CookieManager
+import io.legado.app.help.http.applyToWebView
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.help.http.text
 import io.legado.app.lib.dialogs.SelectItem

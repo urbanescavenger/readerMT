@@ -25,6 +25,7 @@ import io.legado.app.constant.AndroidAppConst
 import io.legado.app.constant.AndroidAppConst.imagePathKey
 import io.legado.app.databinding.ActivityWebViewBinding
 import io.legado.app.help.http.CookieStore
+import io.legado.app.help.http.applyToWebView
 import io.legado.app.help.source.SourceVerificationHelp
 import io.legado.app.lib.dialogs.SelectItem
 import io.legado.app.lib.dialogs.alert
