@@ -100,3 +100,39 @@ jobs:
           echo "M2 smoke OK: server consumed :legado-engine and searched real books"
           echo "--- docker logs (tail) ---"
           docker logs reader 2>&1 | tail -20 || true
+
+      - name: browserless renderHtmlWithJs smoke (§9.9)
+        # 直接对 browserless /function 跑 RENDER_HTML_WITH_JS_CODE(从 Kotlin 源码提取,零重复),
+        # 验证 renderHtmlWithJs 的 Puppeteer 逻辑(setContent+eval / window.result 注入 / sourceRegex 命中)。
+        # 自包含、确定性、不依赖活站;browserless 镜像较大,拉取/启动不稳时再按 continue-on-error 提示。
+        run: |
+          set -x
+          docker run -d --name browserless -p 3000:3000 ghcr.io/browserless/chromium:latest
+          READY=""
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:3000/ >/dev/null 2>&1; then READY="yes"; echo "browserless up after ${i}x2s"; break; fi
+            sleep 2
+          done
+          if [ -z "$READY" ]; then
+            echo "ERROR: browserless did not come up"
+            docker logs browserless 2>&1 | tail -20 || true
+            exit 1
+          fi
+          # 从 Kotlin 源码提取 RENDER_HTML_WITH_JS_CODE(避免与实现重复)
+          CODE=$(awk '/RENDER_HTML_WITH_JS_CODE = """/{f=1; sub(/.*RENDER_HTML_WITH_JS_CODE = """/,""); print; next} f && /^};"""/{f=0; next} f{print}' modules/server/src/main/java/io/legado/app/help/WebViewRenderHelp.kt)
+          # 用例1:setContent + eval JS(纯 DOM 提取)
+          R1=$(jq -n --arg code "$CODE" '{code:$code, context:{url:null, html:"<h1>书名A</h1>", javaScript:"document.querySelector(\"h1\").innerText", ua:null, sourceRegex:null, overrideUrlRegex:null, delayTime:0, result:null, headers:null}}' \
+            | curl -sS -X POST http://localhost:3000/function -H "Content-Type: application/json" --data-binary @-)
+          echo "case1: $R1"
+          if ! echo "$R1" | jq -e '.result == "书名A"' >/dev/null 2>&1; then echo "ERROR: case1 failed"; exit 1; fi
+          # 用例2:window.result 注入(镜像 getWebJsResult 的 result 参数)
+          R2=$(jq -n --arg code "$CODE" '{code:$code, context:{url:null, html:"<h1>书名A</h1>", javaScript:"JSON.stringify(window.result) + \"|\" + document.querySelector(\"h1\").innerText", ua:null, sourceRegex:null, overrideUrlRegex:null, delayTime:0, result:"{\"book\":123}", headers:null}}' \
+            | curl -sS -X POST http://localhost:3000/function -H "Content-Type: application/json" --data-binary @-)
+          echo "case2: $R2"
+          if ! echo "$R2" | jq -e '.result == "{\"book\":123}|书名A"' >/dev/null 2>&1; then echo "ERROR: case2 failed"; exit 1; fi
+          # 用例3:sourceRegex 命中请求URL(镜像 webViewGetSource 拦截)
+          R3=$(jq -n --arg code "$CODE" '{code:$code, context:{url:null, html:"<img src=\"https://example.com/cover.jpg\">", javaScript:"\"should-not-reach\"", ua:null, sourceRegex:"example\\.com", overrideUrlRegex:null, delayTime:0, result:null, headers:null}}' \
+            | curl -sS -X POST http://localhost:3000/function -H "Content-Type: application/json" --data-binary @-)
+          echo "case3: $R3"
+          if ! echo "$R3" | jq -e '.result == "https://example.com/cover.jpg"' >/dev/null 2>&1; then echo "ERROR: case3 failed"; exit 1; fi
+          echo "browserless renderHtmlWithJs smoke OK"

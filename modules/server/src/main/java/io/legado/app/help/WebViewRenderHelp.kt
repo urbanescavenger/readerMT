@@ -50,27 +50,101 @@ object WebViewRenderHelp {
   return { html: html, cookies: cookies, url: finalUrl };
 };"""
 
+    // renderHtmlWithJs 的 Puppeteer code:在预加载 html(或导航 url)上执行 JS 规则并回传结果。
+    // 镜像 app BackstageWebView 语义:html 非空 → setContent(注入 <base> 使相对资源/相对URL可用,
+    // 等价 loadDataWithBaseURL);否则导航 url。sourceRegex/overrideUrlRegex 命中首个请求URL即返回该 URL
+    // (等价 onLoadResource/shouldOverrideUrlLoading 拦截);result 参数注入 window.result(等价
+    // "window.result = WebCacheManager.getFromMemory('webview_result')")。JS 空则取 outerHTML。
+    // 注意:不要用带 ${} 的 JS 模板字符串(Kotlin raw string 会插值)。
+    private const val RENDER_HTML_WITH_JS_CODE = """module.exports = async ({ page, context }) => {
+  const { url, html, javaScript, ua, sourceRegex, overrideUrlRegex, delayTime, result, headers } = context;
+  const requestedUrls = [];
+  page.on('request', req => { try { requestedUrls.push(req.url()); } catch (e) {} });
+  try { if (ua) { await page.setUserAgent(ua); } } catch (e) {}
+  try { if (headers && Object.keys(headers).length) { await page.setExtraHTTPHeaders(headers); } } catch (e) {}
+  try {
+    if (html && html.length > 0) {
+      let content = html;
+      if (url && url.length > 0 && !/<base[\s>]/i.test(content)) {
+        const b = '<base href="' + url + '">';
+        content = /<head[^>]*>/i.test(content) ? content.replace(/<head[^>]*>/i, m => m + b) : b + content;
+      }
+      await page.setContent(content, { waitUntil: 'networkidle0', timeout: 60000 });
+    } else if (url && url.length > 0) {
+      await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+    }
+  } catch (e) {}
+  try {
+    await page.waitForFunction(() => {
+      var t = (document.title || '');
+      if (/Just a moment|Checking your browser|cf-challenge|Attention Required|请稍候|正在检查/i.test(t)) return false;
+      if (document.querySelector('#challenge-form,#cf-turnstile-container,#cf-challenge-running,#cf-spinner-please-wait,#cf-please-wait')) return false;
+      return true;
+    }, { timeout: 30000 });
+  } catch (e) {}
+  try { if (delayTime > 0) { await new Promise(r => setTimeout(r, delayTime + 100)); } } catch (e) {}
+  try {
+    if (sourceRegex) { const re = new RegExp(sourceRegex); for (const u of requestedUrls) { if (re.test(u)) return { result: u }; } }
+    if (overrideUrlRegex) { const re = new RegExp(overrideUrlRegex); for (const u of requestedUrls) { if (re.test(u)) return { result: u }; } }
+  } catch (e) {}
+  let js = (javaScript && javaScript.length > 0) ? javaScript : 'document.documentElement.outerHTML';
+  if (result != null) { js = 'window.result = ' + result + ';\n' + js; }
+  let out = '';
+  try { out = await page.evaluate(js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
+  return { result: String(out == null ? '' : out) };
+};"""
+
+    // evalJS 的 Puppeteer code:在空白页上执行 JS 并回传结果(服务端无持久 page,每次新建)。
+    private const val EVAL_JS_CODE = """module.exports = async ({ page, context }) => {
+  let out = '';
+  try { out = await page.evaluate(context.js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
+  return { result: String(out == null ? '' : out) };
+};"""
+
     fun renderUrl(url: String, sourceKey: String, ua: String): StrResponse {
+        val data = browserlessCall(RENDER_CODE, mapOf("url" to url, "ua" to ua), 0L)
+        val html = (data["html"] as? String) ?: ""
+        val finalUrl = (data["url"] as? String)?.takeIf { it.isNotEmpty() } ?: url
+        // 把 cookies 存入 CookieStore,供 reader 后续请求复用(同 IP 同 UA,cf_clearance 有效)
+        val cookies = data["cookies"] as? List<*>
+        if (cookies != null) {
+            val sb = StringBuilder()
+            for (c in cookies) {
+                val m = c as? Map<*, *> ?: continue
+                val name = m["name"] as? String ?: continue
+                val value = m["value"] as? String ?: continue
+                if (name.isEmpty()) continue
+                if (sb.isNotEmpty()) sb.append("; ")
+                sb.append(name).append("=").append(value)
+            }
+            if (sb.isNotEmpty()) {
+                CookieStore.setCookie(sourceKey, sb.toString())
+            }
+        }
+        return StrResponse(finalUrl, html)
+    }
+
+    /**
+     * 调 browserless `/function` 端点跑一段 Puppeteer [code],返回解析后的响应 map。
+     * 连接失败/超时/非 browserless 服务等统一转成清晰中文错误,而非 Rhino 栈。
+     */
+    private fun browserlessCall(code: String, context: Map<String, Any?>, timeout: Long): Map<String, Any?> {
         val appConfig = appConfig()
         val apiBase = appConfig.remoteWebviewApi.trim().trimEnd('/')
         if (apiBase.isBlank()) {
             throw NoStackTraceException(
-                "未配置 remoteWebviewApi(无头浏览器服务),无法执行 startBrowserAwait,请在配置中设置或改用手机版阅读APP"
+                "未配置 remoteWebviewApi(无头浏览器服务),无法执行 webView 渲染,请在配置中设置或改用手机版阅读APP"
             )
         }
         val token = appConfig.remoteWebviewToken.trim()
+        val t = if (timeout > 0) timeout else 70000L
         val query = if (token.isNotEmpty()) {
-            "token=" + URLEncoder.encode(token, "UTF-8") + "&timeout=70000"
+            "token=" + URLEncoder.encode(token, "UTF-8") + "&timeout=$t"
         } else {
-            "timeout=70000"
+            "timeout=$t"
         }
         val endpoint = "$apiBase/function?$query"
-        val bodyJson = GSON.toJson(
-            mapOf(
-                "code" to RENDER_CODE,
-                "context" to mapOf("url" to url, "ua" to ua)
-            )
-        )
+        val bodyJson = GSON.toJson(mapOf("code" to code, "context" to context))
         return try {
             runBlocking {
                 val client = okHttpClient.newBuilder()
@@ -87,31 +161,11 @@ object WebViewRenderHelp {
                     }
                     val respBody = resp.body?.string()
                         ?: throw IOException("browserless 返回空响应")
-                    val data = GSON.fromJsonObject<Map<String, Any?>>(respBody).getOrNull()
+                    GSON.fromJsonObject<Map<String, Any?>>(respBody).getOrNull()
                         ?: throw IOException("browserless 响应解析失败(确认是 browserless 服务,非旧 remote-webview 8050)")
-                    val html = (data["html"] as? String) ?: ""
-                    val finalUrl = (data["url"] as? String)?.takeIf { it.isNotEmpty() } ?: url
-                    // 把 cookies 存入 CookieStore,供 reader 后续请求复用(同 IP 同 UA,cf_clearance 有效)
-                    val cookies = data["cookies"] as? List<*>
-                    if (cookies != null) {
-                        val sb = StringBuilder()
-                        for (c in cookies) {
-                            val m = c as? Map<*, *> ?: continue
-                            val name = m["name"] as? String ?: continue
-                            val value = m["value"] as? String ?: continue
-                            if (name.isEmpty()) continue
-                            if (sb.isNotEmpty()) sb.append("; ")
-                            sb.append(name).append("=").append(value)
-                        }
-                        if (sb.isNotEmpty()) {
-                            CookieStore.setCookie(sourceKey, sb.toString())
-                        }
-                    }
-                    StrResponse(finalUrl, html)
                 }
             }
         } catch (e: Exception) {
-            // 连接失败/超时/非 browserless 服务等,统一转成清晰中文错误,而非 Rhino 栈
             throw NoStackTraceException(
                 "无头浏览器服务调用失败,请确认 reader.app.remoteWebviewApi 指向运行中的 browserless 服务" +
                 "(当前配置: " + appConfig.remoteWebviewApi + ";docker 内用容器名 http://browserless:3000 或 host.docker.internal:3000,勿用 localhost/旧 remote-webview 8050)。" +
@@ -119,6 +173,53 @@ object WebViewRenderHelp {
             )
         }
     }
+
+    /**
+     * 在预加载 [html](或导航 [url])上执行 [javaScript] 规则并返回结果字符串。
+     * 对应引擎 `Platform.webView.renderHtmlWithJs`(AnalyzeRule.getWebJsResult / AnalyzeUrl.executeStrRequest /
+     * JsExtensions.webView*)。[sourceRegex]/[overrideUrlRegex] 命中首个请求 URL 即返回该 URL;
+     * [result] 注入 `window.result`;[cacheFirst] 为已知近似(不实现,browserless 每次重取)。
+     */
+    fun renderHtmlWithJs(
+        url: String?,
+        html: String,
+        javaScript: String,
+        headerMap: Map<String, String>?,
+        tag: String?,
+        sourceRegex: String?,
+        overrideUrlRegex: String?,
+        cacheFirst: Boolean,
+        timeout: Long,
+        delayTime: Long,
+        result: String?
+    ): StrResponse {
+        val data = browserlessCall(
+            RENDER_HTML_WITH_JS_CODE,
+            mapOf(
+                "url" to url,
+                "html" to html,
+                "javaScript" to javaScript,
+                "ua" to userAgent(),
+                "sourceRegex" to sourceRegex,
+                "overrideUrlRegex" to overrideUrlRegex,
+                "delayTime" to delayTime,
+                "result" to result,
+                "headers" to headerMap
+            ),
+            timeout
+        )
+        val out = (data["result"] as? String) ?: ""
+        return StrResponse(url ?: "", out)
+    }
+
+    /** 在空白页上执行 [js] 并返回结果(服务端无持久 page,每次新建)。 */
+    fun evalJS(js: String): String {
+        val data = browserlessCall(EVAL_JS_CODE, mapOf("js" to js), 0L)
+        return (data["result"] as? String) ?: ""
+    }
+
+    private fun userAgent(): String =
+        io.legado.app.platform.Platform.appConfig.userAgent
 
     private fun appConfig(): AppConfig =
         SpringContextUtils.getBean("appConfig", AppConfig::class.java)

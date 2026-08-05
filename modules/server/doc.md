@@ -138,7 +138,7 @@ reader:
     mongoDbName: "reader"  # mongodb 数据库名称
     shelfUpdateInteval: 10 # 书架自动更新间隔时间，单位分钟，必须是10的倍数
     userLimit: 15          # 用户上限，最大 15
-    remoteWebviewApi: ""   # remote-webview 地址
+    remoteWebviewApi: ""   # 无头浏览器服务地址(browserless /function,如 http://browserless:3000)。开启后除 startBrowserAwait 过 Cloudflare 外,还解锁 @JS: 规则书源与 webView 书源(renderHtmlWithJs/evalJS 经 browserless 执行)
     defaultUserEnableWebdav: true  # 新用户是否默认启用webdav
     defaultUserEnableLocalStore: true # 新用户是否默认启用localStore
     defaultUserEnableBookSource: true # 新用户是否默认可编辑书源，如果为false，则只能使用默认书源，不能新增/修改/删除

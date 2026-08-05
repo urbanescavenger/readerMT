@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component
  * 过 Cloudflare 类人机验证)。browserless 服务地址/token 来自 `AppConfig.remoteWebviewApi`/
  * `remoteWebviewToken`(引擎 `Platform.appConfig` 已映射)。
  *
- * M1 阶段仅实现 `startBrowserAwait`(过 CF 关键路径);其余 `renderHtmlWithJs` 重载与
- * `evalJS` 抛 `UnsupportedOperationException`——服务端 browserless 无持久 page,无法
- * 复现 app `BackstageWebView` 的"预加载 html 上执行 JS"语义,M2 冒烟(searchBook 纯 HTTP
- * 书源)不触达;真实书源需要时再补(§9.9 deferred)。
+ * `startBrowserAwait`(过 CF 关键路径)与 `renderHtmlWithJs`(8/11 参,解锁 `@JS:` 规则书源)
+ * 均经 browserless `/function` 跑 Puppeteer 实现;`evalJS` 在空白页上执行(服务端无持久 page,
+ * 每次新建)。已知近似:不实现 `cacheFirst`(每次重取)、不注入 app WebView 的 `source.*`/`java.*`/
+ * `cache.*` JS 绑定(纯 DOM 提取规则可跑,引用这些变量的规则 fallback 到 `page.content()`)。
  */
 @Component
 class BrowserlessWebViewRenderer : WebViewRenderer {
@@ -36,9 +36,9 @@ class BrowserlessWebViewRenderer : WebViewRenderer {
         return resp.body ?: ""
     }
 
-    /** 服务端 browserless 无持久 page,无法在已加载页面执行 JS。 */
+    /** 在空白页上执行 [js] 并返回结果(服务端无持久 page,每次新建,经 browserless)。 */
     override fun evalJS(js: String): String =
-        throw UnsupportedOperationException("evalJS not supported on :server (no persistent browser page)")
+        WebViewRenderHelp.evalJS(js)
 
     override fun renderHtmlWithJs(
         url: String?,
@@ -50,7 +50,9 @@ class BrowserlessWebViewRenderer : WebViewRenderer {
         timeout: Long,
         result: String?,
     ): String =
-        throw UnsupportedOperationException("renderHtmlWithJs(8) not supported on :server (no BackstageWebView)")
+        WebViewRenderHelp.renderHtmlWithJs(
+            url, html, javaScript, headerMap, tag, null, null, cacheFirst, timeout, 0, result
+        ).body ?: ""
 
     override fun renderHtmlWithJs(
         url: String?,
@@ -65,7 +67,9 @@ class BrowserlessWebViewRenderer : WebViewRenderer {
         delayTime: Long,
         result: String?,
     ): String =
-        throw UnsupportedOperationException("renderHtmlWithJs(11) not supported on :server (no BackstageWebView)")
+        WebViewRenderHelp.renderHtmlWithJs(
+            url, html, javaScript, headerMap, tag, sourceRegex, overrideUrlRegex, cacheFirst, timeout, delayTime, result
+        ).body ?: ""
 
     private fun userAgent(): String =
         io.legado.app.platform.Platform.appConfig.userAgent
