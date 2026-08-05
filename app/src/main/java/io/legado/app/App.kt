@@ -9,6 +9,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.res.Configuration
 import android.os.Build
+import android.os.Looper
 import com.github.liuyueyi.quick.transfer.constants.TransType
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.jeremyliao.liveeventbus.logger.DefaultLogger
@@ -20,6 +21,8 @@ import io.legado.app.constant.AndroidAppConst.channelIdDownload
 import io.legado.app.constant.AndroidAppConst.channelIdReadAloud
 import io.legado.app.constant.AndroidAppConst.channelIdWeb
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.RoomCacheRepository
+import io.legado.app.data.RoomCookieRepository
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapterEntity
@@ -50,6 +53,14 @@ import io.legado.app.help.rhino.NativeBaseSource
 import io.legado.app.help.source.SourceHelp
 import io.legado.app.help.storage.Backup
 import io.legado.app.model.BookCover
+import io.legado.app.platform.repo.Repositories
+import io.legado.app.platform.Platform
+import io.legado.app.platform.AndroidAppConfigProvider
+import io.legado.app.platform.AndroidPlatformContext
+import io.legado.app.platform.AndroidScriptAssetProvider
+import io.legado.app.platform.AndroidWebBookProvider
+import io.legado.app.platform.AndroidWebViewRenderer
+import io.legado.app.platform.js.DirectRhinoEngine
 import io.legado.app.utils.ChineseUtils
 import io.legado.app.utils.LogUtils
 import io.legado.app.utils.defaultSharedPreferences
@@ -70,6 +81,13 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         CrashHandler(this)
+        // 引擎 Repositories(cache/cookie)必须尽早注入,否则任何先于异步初始化的静态初始化器
+        // 触发 CacheManager/CookieStore 读 `Repositories.cache/cookie` 会炸
+        // `lateinit property cache/cookie has not been initialized`(如进"其他设置"崩溃)。
+        initRepositories()
+        // 引擎平台 SPI(Platform.rhino/appConfig/context/scriptAssets/webView/webBook)必须尽早注入,
+        // 否则搜书/阅读触发引擎读 Platform 时 `lateinit property xxx has not been initialized`(源判不可用)。
+        initPlatform()
         if (isDebuggable) {
             ThreadUtils.setThreadAssertsDisabledForTesting(true)
         }
@@ -218,6 +236,30 @@ class App : Application() {
                 webChannel
             )
         )
+    }
+
+    private fun initRepositories() {
+        Repositories.cookie = RoomCookieRepository(appDb.cookieDao)
+        Repositories.cache = RoomCacheRepository(appDb.cacheDao)
+    }
+
+    /**
+     * 注入引擎 Platform SPI(Phase 1c switchover)。仿服务器 PlatformInitializer。
+     *
+     * - [Platform.rhino] = 引擎自带 [DirectRhinoEngine](纯 JVM,直连 org.mozilla.javascript);
+     * - [Platform.webView] = app 真 BackstageWebView(原 master 实现,非 NoOp);
+     * - [Platform.webBook] = app 真 WebBook(原 master 实现,非 NoOp);
+     * - 其余 context/appConfig/scriptAssets/repositories/isMainThread 见各 adapter。
+     */
+    private fun initPlatform() {
+        Platform.context = AndroidPlatformContext(this)
+        Platform.appConfig = AndroidAppConfigProvider()
+        Platform.scriptAssets = AndroidScriptAssetProvider(this)
+        Platform.webView = AndroidWebViewRenderer()
+        Platform.webBook = AndroidWebBookProvider()
+        Platform.rhino = DirectRhinoEngine
+        Platform.repositories = Repositories
+        Platform.isMainThread = { Looper.myLooper() == Looper.getMainLooper() }
     }
 
     private fun initRhino() {
