@@ -22,13 +22,17 @@ data class BookChapter(
     var baseUrl: String = "",           // 用来拼接相对url
     var bookUrl: String = "",           // 书籍地址
     var index: Int = 0,                 // 章节序号
+    var isVip: Boolean = false,         // 是否VIP
+    var isPay: Boolean = false,         // 是否已购买
     var resourceUrl: String? = null,    // 音频真实URL
     var tag: String? = null,            //
+    var wordCount: String? = null,      // 本章节字数
     var start: Long? = null,            // 章节起始位置
     var end: Long? = null,               // 章节终止位置
     var startFragmentId: String? = null,  //EPUB书籍当前章节的fragmentId
     var endFragmentId: String? = null,    //EPUB书籍下一章节的fragmentId
-    var variable: String? = null        //变量
+    var variable: String? = null,        //变量
+    var imgUrl: String? = null          //标题段评图或者视频封面
 ) : RuleDataInterface {
 
     override val variableMap: HashMap<String, String> by lazy {

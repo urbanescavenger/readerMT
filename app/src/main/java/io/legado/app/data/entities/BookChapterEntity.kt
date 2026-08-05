@@ -211,13 +211,17 @@ data class BookChapterEntity(
             baseUrl = entity.baseUrl
             bookUrl = entity.bookUrl
             index = entity.index
+            isVip = entity.isVip
+            isPay = entity.isPay
             resourceUrl = entity.resourceUrl
             tag = entity.tag
+            wordCount = entity.wordCount
             start = entity.start
             end = entity.end
             startFragmentId = entity.startFragmentId
             endFragmentId = entity.endFragmentId
             variable = entity.variable
+            imgUrl = entity.imgUrl
         }
     }
 }
