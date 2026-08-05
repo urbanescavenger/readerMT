@@ -110,7 +110,8 @@ jobs:
           docker run -d --name browserless -p 3000:3000 ghcr.io/browserless/chromium:latest
           READY=""
           for i in $(seq 1 90); do
-            if curl -sf http://localhost:3000/ >/dev/null 2>&1; then READY="yes"; echo "browserless up after ${i}x2s"; break; fi
+            # browserless v2 对 / 返回 404,用其代理的 CDP 端点 /json/version 判就绪
+            if curl -sf http://localhost:3000/json/version >/dev/null 2>&1; then READY="yes"; echo "browserless up after ${i}x2s"; break; fi
             sleep 2
           done
           if [ -z "$READY" ]; then
