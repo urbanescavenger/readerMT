@@ -78,6 +78,15 @@ interface ScriptBindings {
      * 委托 `super.setPrototype(value as? Scriptable)` / `super.getPrototype()`)。
      */
     var prototypeScope: Any?
+
+    /**
+     * app 端 `source.evalJS { put("java", java) ... }` 设绑定变量用 [put],委托 [set]。
+     * 默认实现让实现端无需改动(NativeObject 继承的 3 参 `put(String, Scriptable, Object)`
+     * 与此 2 参签名不同,不冲突)。
+     */
+    fun put(key: String, value: Any?) {
+        set(key, value)
+    }
 }
 
 interface CompiledScript {
