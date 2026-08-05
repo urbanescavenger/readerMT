@@ -3,7 +3,6 @@ package io.legado.app.service
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
-import com.script.ScriptException
 import io.legado.app.R
 import io.legado.app.base.BaseService
 import io.legado.app.constant.AndroidAppConst
@@ -41,7 +40,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import org.mozilla.javascript.WrappedException
+import org.mozilla.javascript.RhinoException
 import splitties.init.appCtx
 import splitties.systemservices.notificationManager
 import java.net.InetSocketAddress
@@ -145,7 +144,7 @@ class CheckSourceService : BaseService() {
             currentCoroutineContext().ensureActive()
             when (it) {
                 is TimeoutCancellationException -> source.addGroup("校验超时")
-                is ScriptException, is WrappedException -> source.addGroup("js失效")
+                is RhinoException -> source.addGroup("js失效")
                 !is NoStackTraceException -> source.addGroup("网站失效")
             }
             if (CheckSource.wSourceComment) {
