@@ -93,7 +93,8 @@ object WebViewRenderHelp {
     if (overrideUrlRegex) { const re = new RegExp(overrideUrlRegex); for (const u of requestedUrls) { if (re.test(u)) return { result: u }; } }
   } catch (e) {}
   let js = (javaScript && javaScript.length > 0) ? javaScript : 'document.documentElement.outerHTML';
-  if (result != null) { js = 'window.result = ' + result + ';\n' + js; }
+  // page.evaluate 把字符串包成 `return (${js})`,要求单表达式;result 注入用 IIFE 保持单表达式(否则多语句 → 语法错误)
+  if (result != null) { js = '(function(){ window.result = ' + result + '; return (' + js + '); })()'; }
   let out = '';
   try { out = await page.evaluate(js); } catch (e) { try { out = await page.content(); } catch (e2) {} }
   return { result: String(out == null ? '' : out) };
