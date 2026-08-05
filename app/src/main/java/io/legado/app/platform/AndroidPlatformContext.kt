@@ -13,6 +13,6 @@ import java.io.File
 class AndroidPlatformContext(private val ctx: Context) : PlatformContext {
     override val cacheDir: File get() = ctx.cacheDir
     override val filesDir: File get() = ctx.filesDir
-    override val externalFilesDir: File? get() = ctx.externalFilesDir
+    override val externalFilesDir: File? get() = ctx.getExternalFilesDir(null)
     override val externalCache: File? get() = ctx.externalCacheDir
 }

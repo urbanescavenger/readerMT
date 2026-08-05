@@ -47,13 +47,13 @@ class AndroidWebViewRenderer : WebViewRenderer {
             html = html,
             encode = null,
             tag = tag,
-            headerMap = headerMap,
+            headerMap = headerMap?.let { HashMap(it) },
             javaScript = javaScript,
             cacheFirst = cacheFirst,
             timeout = timeout,
             result = result,
             isRule = true
-        ).getStrResponse().body
+        ).getStrResponse().body ?: ""
     }
 
     override fun renderHtmlWithJs(
@@ -74,7 +74,7 @@ class AndroidWebViewRenderer : WebViewRenderer {
             html = html,
             encode = null,
             tag = tag,
-            headerMap = headerMap,
+            headerMap = headerMap?.let { HashMap(it) },
             sourceRegex = sourceRegex,
             overrideUrlRegex = overrideUrlRegex,
             javaScript = javaScript,
@@ -83,6 +83,6 @@ class AndroidWebViewRenderer : WebViewRenderer {
             timeout = timeout,
             result = result,
             isRule = true
-        ).getStrResponse().body
+        ).getStrResponse().body ?: ""
     }
 }
