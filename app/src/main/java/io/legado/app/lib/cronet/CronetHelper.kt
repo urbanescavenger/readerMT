@@ -134,7 +134,8 @@ private fun disableCertificateVerify() {
     val hostAwareTrustManager = object : X509TrustManager {
         override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {}
         override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {}
-        override fun checkServerTrusted(
+        @Suppress("UNUSED_PARAMETER")
+        fun checkServerTrusted(
             chain: Array<X509Certificate>,
             authType: String,
             host: String
