@@ -40,7 +40,10 @@ object CookieManager {
     /** 从 jsoup 响应保存 cookies。 */
     fun saveResponse(response: Connection.Response) {
         val url = response.url().toHttpUrlOrNull() ?: return
-        val headers = response.multiHeaders().toHeaders()
+        val headerMap = response.multiHeaders()
+        val headers = Headers.Builder().apply {
+            headerMap.forEach { (k, v) -> v.forEach { add(k, it) } }
+        }.build()
         saveCookiesFromHeaders(url, headers)
     }
 
