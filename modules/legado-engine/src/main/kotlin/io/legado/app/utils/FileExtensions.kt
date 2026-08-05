@@ -52,3 +52,9 @@ fun File.getFile(vararg subDirFiles: String): File {
     val path = FileUtils.getPath(this, *subDirFiles)
     return File(path)
 }
+
+/** 按子路径拼出 File(reader-mt `FileExtensions.exists`;命名沿用原版)。 */
+fun File.exists(vararg subDirFiles: String): File {
+    val path = FileUtils.getPath(this, *subDirFiles)
+    return File(path)
+}
