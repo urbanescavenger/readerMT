@@ -160,11 +160,11 @@ class WebJsExtensions(
         }
     }
     @JavascriptInterface
-    fun toast(msg: String?) {
+    override fun toast(msg: String?) {
         super.toast(msg)
     }
     @JavascriptInterface
-    fun longToast(msg: String?) {
+    override fun longToast(msg: String?) {
         super.longToast(msg)
     }
     @JavascriptInterface

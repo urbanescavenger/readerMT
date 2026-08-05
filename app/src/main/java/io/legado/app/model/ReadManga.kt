@@ -114,7 +114,7 @@ object ReadManga : CoroutineScope by MainScope() {
     fun upWebBook(book: Book) {
         appDb.bookSourceDao.getBookSource(book.origin)?.let {
             bookSource = it
-            rateLimiter = ConcurrentRateLimiter(it)
+            rateLimiter = ConcurrentRateLimiter(it.getKey())
         } ?: let {
             bookSource = null
         }
