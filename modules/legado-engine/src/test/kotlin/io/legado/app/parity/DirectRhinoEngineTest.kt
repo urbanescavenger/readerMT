@@ -109,10 +109,14 @@ class DirectRhinoEngineTest {
         assertNull(engine.getOrCreateSharedScope("k2", "   "))
     }
 
-    @Test(expected = UnsupportedOperationException::class)
-    fun sharedScopeJsonMapThrows() {
-        // JSON-map jsLib(name→URL,需下载)本批未实现 → 明确异常
-        engine.getOrCreateSharedScope("k3", "{\"a\":\"http://x\"}")
+    @Test
+    fun sharedScopeJsonMapNonUrlValues() {
+        // JSON-map jsLib:值非 absUrl(不触发下载/Platform.context)→ 仅解析映射 + 建 scope,不抛异常
+        val scope = engine.getOrCreateSharedScope("k3", "{\"lib\":\"inline-lib\"}")
+        assertNotNull(scope)
+        // 缓存命中:同 srcKey 返回同一 scope
+        val scope2 = engine.getOrCreateSharedScope("k3", "{\"lib\":\"inline-lib\"}")
+        assertSame(scope, scope2)
     }
 
     @Test

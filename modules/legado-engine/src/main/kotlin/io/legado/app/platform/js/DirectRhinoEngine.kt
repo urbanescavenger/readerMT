@@ -2,8 +2,17 @@
 
 package io.legado.app.platform.js
 
+import com.google.gson.reflect.TypeToken
+import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.LruCache
+import io.legado.app.help.http.newCallStrResponse
+import io.legado.app.help.http.okHttpClient
+import io.legado.app.platform.Platform
+import io.legado.app.utils.GSON
+import io.legado.app.utils.MD5Utils
+import io.legado.app.utils.isAbsUrl
 import io.legado.app.utils.isJsonObject
+import kotlinx.coroutines.runBlocking
 import org.mozilla.javascript.ConsString
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
@@ -12,6 +21,7 @@ import org.mozilla.javascript.Script
 import org.mozilla.javascript.Scriptable
 import org.mozilla.javascript.Undefined
 import org.mozilla.javascript.Wrapper
+import java.io.File
 import java.io.StringReader
 import java.lang.ref.WeakReference
 import kotlin.coroutines.CoroutineContext
@@ -35,8 +45,9 @@ import kotlin.coroutines.CoroutineContext
  *   scope(`prototype = cx.initStandardObjects()`),把 `initJs`(裸 JS 源)`eval` 注入后
  *   `preventExtensions()`,对应 app `SharedJsScope.getScope`。子 eval 不调 `getRuntimeScope`,
  *   而是 `bindings.prototypeScope = sharedScope`(链:bindings→sharedScope→standardGlobal)。
- * - **JSON-map jsLib**(`initJs` 是 name→URL JSON):app 下载+ACache 磁盘缓存;本批**暂不实现**,
- *   抛 [UnsupportedOperationException] 作清晰失败信号(真实源需要时再补 OkHttp+`Platform.context.cacheDir`)。
+ * - **JSON-map jsLib**(`initJs` 是 name→URL JSON,多文件库源):逐个 OkHttp 下载 +
+ *   `Platform.context.cacheDir/shareJs` 磁盘缓存后注入(镜像 app `SharedJsScope.getScope`);
+ *   `removeSharedScope` 只清内存 scopeMap,磁盘缓存条目不随删除(轻微遗留,可接受)。
  * - **cancellation**:本批只接 [ctxHolder] ThreadLocal([currentCoroutineContext] 供 JsExtensions
  *   HTTP/WebView 做 `ensureActive`/`runBlocking`);mid-eval 指令级 cancel
  *   (`instructionObserverThreshold`+`observeInstructionCount`+`ensureActive`)留后续(配合 §5c 压测)。
@@ -129,24 +140,51 @@ object DirectRhinoEngine : RhinoEngine {
 
     override fun getOrCreateSharedScope(srcKey: String, initJs: String?): Any? {
         if (initJs.isNullOrBlank()) return null
-        // JSON-map jsLib(name→URL,需下载)暂未实现,清晰失败信号。
-        if (initJs.isJsonObject()) {
-            throw UnsupportedOperationException(
-                "JSON-map jsLib 下载未实现:本批仅支持裸 JS jsLib;真实源需要时再补 OkHttp+磁盘缓存"
-            )
-        }
         scopeMap[srcKey]?.get()?.let { return it }
         val scope = DirectScriptBindings()
         val cx = Context.enter()
         try {
             scope.prototypeScope = cx.initStandardObjects()
-            cx.evaluateReader(scope, StringReader(initJs), "<jsLib:$srcKey>", 1, null)
+            if (initJs.isJsonObject()) {
+                // JSON-map jsLib(name→URL 映射,多文件库源):逐个下载(OkHttp)+磁盘缓存后注入,
+                // 镜像 app SharedJsScope.getScope。
+                val jsMap: Map<String, String> = GSON.fromJson(
+                    initJs,
+                    TypeToken.getParameterized(
+                        Map::class.java, String::class.java, String::class.java
+                    ).type
+                )
+                jsMap.values.forEach { value ->
+                    if (value.isAbsUrl()) {
+                        cx.evaluateReader(
+                            scope, StringReader(getCachedJsLib(value)), "<jsLib:$srcKey>", 1, null
+                        )
+                    }
+                }
+            } else {
+                cx.evaluateReader(scope, StringReader(initJs), "<jsLib:$srcKey>", 1, null)
+            }
             scope.preventExtensions()
         } finally {
             Context.exit()
         }
         scopeMap.put(srcKey, WeakReference(scope))
         return scope
+    }
+
+    /** JSON-map jsLib 单个 URL 的下载+磁盘缓存(镜像 app SharedJsScope 的 ACache 语义)。 */
+    private fun getCachedJsLib(value: String): String {
+        val file = File(File(Platform.context.cacheDir, "shareJs"), MD5Utils.md5Encode(value))
+        if (file.exists()) {
+            file.readText().takeIf { it.isNotBlank() }?.let { return it }
+        }
+        val js = runBlocking { okHttpClient.newCallStrResponse { url(value) }.body }
+        if (js.isNullOrBlank()) {
+            throw NoStackTraceException("下载jsLib-$value 失败")
+        }
+        file.parentFile?.mkdirs()
+        file.writeText(js)
+        return js
     }
 
     override fun getOrCreateSharedScope(
