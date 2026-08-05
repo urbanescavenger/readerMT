@@ -48,6 +48,15 @@ open class RssJsExtensions(
     val activityRef: WeakReference<AppCompatActivity> = WeakReference(activity)
     val sourceRef: WeakReference<BaseSource?> = WeakReference(source)
 
+    /** 引擎 JsExtensions 无 Android toast(UI 方法),app 端补;WebJsExtensions.super.toast 转发至此。 */
+    open fun toast(msg: String?) {
+        msg?.let { activityRef.get()?.toastOnUi(it) }
+    }
+
+    open fun longToast(msg: String?) {
+        msg?.let { activityRef.get()?.toastOnUi(it) }
+    }
+
     override fun getSource(): BaseSource? {
         return sourceRef.get()
     }
