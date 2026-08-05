@@ -20,6 +20,7 @@ import io.legado.app.help.book.isImage
 import io.legado.app.help.book.simulatedTotalChapterNum
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
+import io.legado.app.help.RuleBigDataHelp
 import io.legado.app.model.ReadBook
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonObject
@@ -142,6 +143,20 @@ data class Book(
     @IgnoredOnParcel
     override val variableMap: HashMap<String, String> by lazy {
         GSON.fromJsonObject<HashMap<String, String>>(variable).getOrNull() ?: hashMapOf()
+    }
+
+    override fun putVariable(key: String, value: String?): Boolean {
+        val keyExist = super.putVariable(key, value)
+        if (keyExist) variable = GSON.toJson(variableMap)
+        return true
+    }
+
+    override fun putBigVariable(key: String, value: String?) {
+        RuleBigDataHelp.putBookVariable(bookUrl, key, value)
+    }
+
+    override fun getBigVariable(key: String): String? {
+        return RuleBigDataHelp.getBookVariable(bookUrl, key)
     }
 
     @Ignore
