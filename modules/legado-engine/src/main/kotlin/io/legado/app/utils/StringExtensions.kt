@@ -6,6 +6,7 @@ import io.legado.app.constant.AppPattern.dataUriRegex
 import io.legado.app.constant.AppPattern.fileNameRegex2
 import io.legado.app.constant.AppPattern.regexCharRegex
 import java.net.InetAddress
+import java.net.URLEncoder
 import java.text.Collator
 import java.util.Locale
 
@@ -27,6 +28,15 @@ fun String.splitNotBlank(regex: Regex, limit: Int = 0): Array<String> = run {
 fun String.isHex(): Boolean {
     return all { c ->
         c in '0'..'9' || c in 'A'..'F' || c in 'a'..'f'
+    }
+}
+
+/** app 端顶层 `String.encodeURI`(EpubFile 等);与 `JsExtensions.encodeURI` 成员同实现(URLEncoder)。 */
+fun String.encodeURI(enc: String = "UTF-8"): String {
+    return try {
+        URLEncoder.encode(this, enc)
+    } catch (e: Exception) {
+        ""
     }
 }
 
