@@ -45,7 +45,7 @@ data class SearchBook(
     /** 目录页Url (toc=table of Contents) */
     var tocUrl: String = "",
     var time: Long = System.currentTimeMillis(),
-    override var variable: String? = null,
+    var variable: String? = null,
     var originOrder: Int = 0,
     var chapterWordCountText: String? = null,
     @ColumnInfo(defaultValue = "-1")

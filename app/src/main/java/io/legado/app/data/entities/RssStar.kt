@@ -13,18 +13,18 @@ import kotlinx.parcelize.IgnoredOnParcel
     primaryKeys = ["origin", "link"]
 )
 data class RssStar(
-    override var origin: String = "",
+    var origin: String = "",
     var sort: String = "",
     var title: String = "",
     var starTime: Long = 0,
-    override var link: String = "",
+    var link: String = "",
     var pubDate: String? = null,
     var description: String? = null,
     var content: String? = null,
     var image: String? = null,
     @ColumnInfo(defaultValue = "默认分组")
     var group: String = "默认分组",
-    override var variable: String? = null,
+    var variable: String? = null,
     /**类型 0网页，1图片，2视频**/
     @ColumnInfo(defaultValue = "0")
     var type: Int = 0,
