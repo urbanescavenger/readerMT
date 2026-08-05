@@ -58,3 +58,18 @@ fun File.exists(vararg subDirFiles: String): File {
     val path = FileUtils.getPath(this, *subDirFiles)
     return File(path)
 }
+
+/** 写测试(reader-mt `FileExtensions.checkWrite`;FileDocExtensions 359 用)。 */
+fun File.checkWrite(): Boolean {
+    var file: File? = null
+    return try {
+        val filename = System.currentTimeMillis().toString()
+        file = FileUtils.createFileIfNotExist(this, filename)
+        file.outputStream().bufferedWriter().use { it.write(filename) }
+        file.inputStream().bufferedReader().use { it.readText() == filename }
+    } catch (e: Exception) {
+        false
+    } finally {
+        file?.delete()
+    }
+}

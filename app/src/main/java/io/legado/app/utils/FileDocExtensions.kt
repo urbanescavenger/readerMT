@@ -424,3 +424,21 @@ fun DocumentFile.checkWrite(): Boolean {
         file?.delete()
     }
 }
+
+/** 原 `FileExtensions.listFileDocs`(被删副本;依赖 FileDoc/Uri,app 端)。 */
+fun File.listFileDocs(filter: FileDocFilter? = null): ArrayList<FileDoc> {
+    val docList = arrayListOf<FileDoc>()
+    listFiles()?.forEach {
+        val item = FileDoc(
+            it.name,
+            it.isDirectory,
+            it.length(),
+            it.lastModified(),
+            Uri.fromFile(it)
+        )
+        if (filter == null || filter.invoke(item)) {
+            docList.add(item)
+        }
+    }
+    return docList
+}
