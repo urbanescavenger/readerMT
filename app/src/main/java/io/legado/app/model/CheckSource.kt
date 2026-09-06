@@ -22,6 +22,7 @@ object CheckSource {
     var checkInfo = CacheManager.get("checkInfo")?.toBoolean() ?: true
     var checkCategory = CacheManager.get("checkCategory")?.toBoolean() ?: true
     var checkContent = CacheManager.get("checkContent")?.toBoolean() ?: true
+    var deleteInvalid = CacheManager.get("checkSourceDeleteInvalid")?.toBoolean() ?: false
     val summary get() = upSummary()
 
     fun start(context: Context, sources: List<BookSourcePart>) {
@@ -55,6 +56,7 @@ object CheckSource {
         CacheManager.put("checkInfo", checkInfo)
         CacheManager.put("checkCategory", checkCategory)
         CacheManager.put("checkContent", checkContent)
+        CacheManager.put("checkSourceDeleteInvalid", deleteInvalid)
     }
 
     private fun upSummary(): String {

@@ -18,6 +18,7 @@ import io.legado.app.exception.NoStackTraceException
 import io.legado.app.exception.TocEmptyException
 import io.legado.app.help.IntentData
 import io.legado.app.help.config.AppConfig
+import io.legado.app.help.source.SourceHelp
 import io.legado.app.help.source.exploreKinds
 import io.legado.app.model.CheckSource
 import io.legado.app.model.Debug
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import org.mozilla.javascript.RhinoException
@@ -46,6 +48,7 @@ import splitties.systemservices.notificationManager
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.URI
+import java.util.Collections
 import java.util.concurrent.Executors
 import kotlin.math.min
 
@@ -60,6 +63,9 @@ class CheckSourceService : BaseService() {
     private var checkJob: Job? = null
     private var originSize = 0
     private var finishCount = 0
+    //本次校验中判定为致命失效(搜索/详情/目录/正文失效)的源,自动删除用
+    private val fatalInvalidIds =
+        Collections.synchronizedSet(mutableSetOf<String>())
 
     private val notificationBuilder by lazy {
         NotificationCompat.Builder(this, AndroidAppConst.channelIdReadAloud)
@@ -111,6 +117,7 @@ class CheckSourceService : BaseService() {
                     }
                 }
             }.onStart {
+                fatalInvalidIds.clear()
                 originSize = ids.size
                 finishCount = 0
                 notificationMsg = getString(R.string.progress_show, "", 0, originSize)
@@ -126,33 +133,62 @@ class CheckSourceService : BaseService() {
                     originSize
                 )
                 upNotification()
-                appDb.bookSourceDao.update(it)
-            }.onCompletion {
+                //即将被自动删除的源跳过写回
+                if (!(CheckSource.deleteInvalid && fatalInvalidIds.contains(it.bookSourceUrl))) {
+                    appDb.bookSourceDao.update(it)
+                }
+            }.onCompletion { cause ->
+                //仅正常完成且开关打开时自动删除,取消/异常不删
+                if (cause == null && CheckSource.deleteInvalid && fatalInvalidIds.isNotEmpty()) {
+                    val ids = fatalInvalidIds.toList()
+                    SourceHelp.deleteBookSourceKeys(ids)
+                    toastOnUi(appCtx.getString(R.string.auto_deleted_invalid_toast, ids.size))
+                }
                 stopSelf()
             }.collect()
         }
     }
 
     private suspend fun checkSource(source: BookSourceEntity) {
-        kotlin.runCatching {
-            withTimeout(CheckSource.timeout) {
-                doCheckSource(source)
-            }
-        }.onSuccess {
-            Debug.updateFinalMessage(source.bookSourceUrl, "校验成功")
-        }.onFailure {
+        var failure: Throwable? = checkOnce(source)
+        //失败且非超时:重试 1 次,二次仍失败才判定失效
+        if (failure != null && failure !is TimeoutCancellationException) {
+            //手动取消时立即终止,不重试、不打组
             currentCoroutineContext().ensureActive()
-            when (it) {
+            Debug.updateFinalMessage(source.bookSourceUrl, "校验重试中…")
+            delay(1000)
+            failure = checkOnce(source)
+            if (failure == null) {
+                Debug.updateFinalMessage(source.bookSourceUrl, "校验成功")
+                return
+            }
+            currentCoroutineContext().ensureActive()
+        }
+        if (failure == null) {
+            Debug.updateFinalMessage(source.bookSourceUrl, "校验成功")
+        } else {
+            when (failure) {
                 is TimeoutCancellationException -> source.addGroup("校验超时")
                 is RhinoException -> source.addGroup("js失效")
                 !is NoStackTraceException -> source.addGroup("网站失效")
             }
             if (CheckSource.wSourceComment) {
-                source.addErrorComment(it)
+                source.addErrorComment(failure)
             }
-            Debug.updateFinalMessage(source.bookSourceUrl, "校验失败:${it.localizedMessage}")
+            Debug.updateFinalMessage(source.bookSourceUrl, "校验失败:${failure.localizedMessage}")
+        }
+        if (source.hasFatalInvalidGroup()) {
+            fatalInvalidIds.add(source.bookSourceUrl)
         }
         source.respondTime = Debug.getRespondTime(source.bookSourceUrl)
+    }
+
+    private suspend fun checkOnce(source: BookSourceEntity): Throwable? {
+        return kotlin.runCatching {
+            withTimeout(CheckSource.timeout) {
+                doCheckSource(source)
+            }
+        }.exceptionOrNull()
     }
 
     private suspend fun isDomainReachable(domain: String): Boolean {
@@ -237,7 +273,12 @@ class CheckSourceService : BaseService() {
             }
             //校验详情
             if (book.tocUrl.isBlank()) {
-                WebBook.getBookInfoAwait(source, book)
+                kotlin.runCatching {
+                    WebBook.getBookInfoAwait(source, book)
+                }.onFailure {
+                    source.addGroup(BookSourceEntity.GROUP_INFO_INVALID)
+                    throw it
+                }
             }
             if (!CheckSource.checkCategory || source.bookSourceType == BookSourceType.file) {
                 return
@@ -270,6 +311,7 @@ class CheckSourceService : BaseService() {
             val bookType = if (isSearchBook) "搜索" else "发现"
             source.removeGroup("${bookType}目录失效")
             source.removeGroup("${bookType}正文失效")
+            source.removeGroup(BookSourceEntity.GROUP_INFO_INVALID)
         }
     }
 

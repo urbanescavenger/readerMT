@@ -304,6 +304,13 @@
     <string name="padding_right">Right</string>
     <string name="check_book_source">Check book sources</string>
     <string name="check_select_source">Check the selected source</string>
+    <string name="delete_invalid_source">Delete invalid sources</string>
+    <string name="auto_delete_invalid_source">Auto delete invalid sources after check</string>
+    <string name="check_found_invalid">Check finished, %1$d invalid sources found</string>
+    <string name="sure_del_invalid">Confirm deleting %1$d invalid sources? This cannot be undone</string>
+    <string name="check_invalid_only_view">Just view</string>
+    <string name="auto_deleted_invalid_toast">Deleted %1$d invalid sources</string>
+    <string name="invalid_source_none">No invalid sources</string>
     <string name="progress_show">%1$s      Progress %2$d/%3$d</string>
     <string name="tts_fix">Please install and select Chinese TTS!</string>
     <string name="tts_init_failed">TTS initialization failed!</string>

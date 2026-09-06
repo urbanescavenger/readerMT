@@ -88,6 +88,15 @@ object SourceHelp {
         AppCacheManager.clearSourceVariables()
     }
 
+    fun deleteBookSourceKeys(keys: Collection<String>) {
+        appDb.runInTransaction {
+            keys.forEach {
+                deleteBookSourceInternal(it)
+            }
+        }
+        AppCacheManager.clearSourceVariables()
+    }
+
     private fun deleteBookSourceInternal(key: String) {
         appDb.bookSourceDao.delete(key)
         appDb.cacheDao.deleteSourceVariables(key)

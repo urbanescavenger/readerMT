@@ -57,6 +57,22 @@ class BookSourceViewModel(application: Application) : BaseViewModel(application)
         }
     }
 
+    fun getInvalidSourceCount(onResult: (Int) -> Unit) {
+        execute {
+            appDb.bookSourceDao.all.count { it.hasFatalInvalidGroup() }
+        }.onSuccess { onResult(it) }
+    }
+
+    fun deleteInvalidSources(onResult: (Int) -> Unit) {
+        execute {
+            val sources = appDb.bookSourceDao.all.filter { it.hasFatalInvalidGroup() }
+            if (sources.isNotEmpty()) {
+                SourceHelp.deleteBookSources(sources)
+            }
+            sources.size
+        }.onSuccess { onResult(it) }
+    }
+
     fun update(vararg bookSource: BookSourceEntity) {
         execute { appDb.bookSourceDao.update(*bookSource) }
     }

@@ -221,8 +221,21 @@ data class BookSourceEntity(
 
     fun getInvalidGroupNames(): String {
         return bookSourceGroup?.splitNotBlank(AppPattern.splitGroupRegex)?.toHashSet()?.filter {
-            "失效" in it || it == "校验超时"
+            it in allInvalidGroups
         }?.joinToString() ?: ""
+    }
+
+    fun hasInvalidGroup(): Boolean {
+        return getInvalidGroupNames().isNotBlank()
+    }
+
+    fun getFatalInvalidGroups(): Set<String> {
+        return bookSourceGroup?.splitNotBlank(AppPattern.splitGroupRegex)
+            ?.toSet()?.intersect(fatalInvalidGroups) ?: emptySet()
+    }
+
+    fun hasFatalInvalidGroup(): Boolean {
+        return getFatalInvalidGroups().isNotEmpty()
     }
 
     fun getDisplayVariableComment(otherComment: String): String {
@@ -262,6 +275,27 @@ data class BookSourceEntity(
     }
 
     private fun equal(a: String?, b: String?) = a == b || (a.isNullOrEmpty() && b.isNullOrEmpty())
+
+    companion object {
+        /** 详情页校验失败分组 */
+        const val GROUP_INFO_INVALID = "详情失效"
+
+        /** 致命失效分组:搜索/详情/目录/正文判死,可据此删除 */
+        val fatalInvalidGroups = setOf(
+            "搜索失效", GROUP_INFO_INVALID,
+            "搜索目录失效", "搜索正文失效",
+            "发现目录失效", "发现正文失效"
+        )
+
+        /** 仅标记分组:域名/超时/js/网站等,不可据此删除 */
+        val warnInvalidGroups = setOf(
+            "校验超时", "js失效", "网站失效", "域名失效", "发现失效",
+            "搜索链接规则为空", "发现规则为空"
+        )
+
+        /** 全部校验失效分组名(精确匹配,含旧版本写入 DB 的固定名) */
+        val allInvalidGroups = fatalInvalidGroups + warnInvalidGroups
+    }
 
     class Converters {
 

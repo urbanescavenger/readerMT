@@ -85,6 +85,7 @@ class CheckSourceConfig : BaseDialogFragment(R.layout.dialog_check_source_config
         CheckSource.run {
             binding.checkSourceTimeout.setText((timeout / 1000).toString())
             binding.wSourceComment.isChecked  = wSourceComment
+            binding.deleteInvalidSource.isChecked = deleteInvalid
             binding.checkDomain.isChecked = checkDomain
             binding.checkSearch.isChecked = checkSearch
             binding.checkDiscovery.isChecked = checkDiscovery
@@ -116,6 +117,7 @@ class CheckSourceConfig : BaseDialogFragment(R.layout.dialog_check_source_config
                     else -> timeout = text.toLong() * 1000
                 }
                 wSourceComment = binding.wSourceComment.isChecked
+                deleteInvalid = binding.deleteInvalidSource.isChecked
                 checkDomain = binding.checkDomain.isChecked
                 checkSearch = binding.checkSearch.isChecked
                 checkDiscovery = binding.checkDiscovery.isChecked

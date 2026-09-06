@@ -472,6 +472,7 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
             R.id.menu_enable_explore -> viewModel.enableSelectExplore(adapter.selection)
             R.id.menu_disable_explore -> viewModel.disableSelectExplore(adapter.selection)
             R.id.menu_check_source -> checkSource()
+            R.id.menu_delete_invalid -> deleteInvalidSources()
             R.id.menu_top_sel -> viewModel.topSource(*adapter.selection.toTypedArray())
             R.id.menu_bottom_sel -> viewModel.bottomSource(*adapter.selection.toTypedArray())
             R.id.menu_add_group -> selectionAddToGroups()
@@ -535,6 +536,23 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
         //手动设置监听 避免点击打开校验设置后对话框关闭
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener {
             showDialogFragment<CheckSourceConfig>()
+        }
+    }
+
+    private fun deleteInvalidSources() {
+        viewModel.getInvalidSourceCount { count ->
+            if (count == 0) {
+                toastOnUi(getString(R.string.invalid_source_none))
+                return@getInvalidSourceCount
+            }
+            alert(message = getString(R.string.sure_del_invalid, count)) {
+                yesButton {
+                    viewModel.deleteInvalidSources { deleted ->
+                        toastOnUi(getString(R.string.auto_deleted_invalid_toast, deleted))
+                    }
+                }
+                noButton()
+            }
         }
     }
 
@@ -645,10 +663,35 @@ class BookSourceActivity : VMBaseActivity<ActivityBookSourceBinding, BookSourceV
                 adapter.itemCount,
                 bundleOf(Pair("checkSourceMessage", null))
             )
-            groups.forEach { group ->
-                if (group.contains("失效") && searchView.query.isEmpty()) {
-                    searchView.setQuery("失效", true)
-                    toastOnUi("发现有失效书源，已为您自动筛选！")
+            viewModel.getInvalidSourceCount { count ->
+                if (count > 0) {
+                    alert(title = getString(R.string.check_found_invalid, count)) {
+                        positiveButton(R.string.delete_invalid_source) {
+                            alert(message = getString(R.string.sure_del_invalid, count)) {
+                                yesButton {
+                                    viewModel.deleteInvalidSources { deleted ->
+                                        toastOnUi(
+                                            getString(R.string.auto_deleted_invalid_toast, deleted)
+                                        )
+                                    }
+                                }
+                                noButton()
+                            }
+                        }
+                        negativeButton(R.string.check_invalid_only_view) {
+                            if (searchView.query.isEmpty()) {
+                                searchView.setQuery("失效", true)
+                            }
+                        }
+                        cancelButton()
+                    }
+                } else {
+                    groups.forEach { group ->
+                        if (group.contains("失效") && searchView.query.isEmpty()) {
+                            searchView.setQuery("失效", true)
+                            toastOnUi("发现有失效书源，已为您自动筛选！")
+                        }
+                    }
                 }
             }
         }

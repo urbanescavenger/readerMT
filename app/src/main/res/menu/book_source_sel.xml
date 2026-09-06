@@ -59,6 +59,11 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/menu_delete_invalid"
+        android:title="@string/delete_invalid_source"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_check_selected_interval"
         android:title="@string/check_selected_interval"
         app:showAsAction="never" />

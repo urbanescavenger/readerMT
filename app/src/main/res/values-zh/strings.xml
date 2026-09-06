@@ -302,6 +302,13 @@
     <string name="padding_right">右边距</string>
     <string name="check_book_source">校验书源</string>
     <string name="check_select_source">校验所选</string>
+    <string name="delete_invalid_source">删除无效源</string>
+    <string name="auto_delete_invalid_source">校验后自动删除无效源</string>
+    <string name="check_found_invalid">校验完成，发现 %1$d 个无效源</string>
+    <string name="sure_del_invalid">确认删除 %1$d 个无效源？删除后不可恢复</string>
+    <string name="check_invalid_only_view">仅查看</string>
+    <string name="auto_deleted_invalid_toast">已删除 %1$d 个无效源</string>
+    <string name="invalid_source_none">没有无效源</string>
     <string name="progress_show">%1$s      进度 %2$d/%3$d</string>
     <string name="tts_fix">请安装并选择中文 TTS！</string>
     <string name="tts_init_failed">TTS 初始化失败！</string>
