@@ -120,7 +120,10 @@ jobs:
             exit 1
           }
           post() { curl -sS -X POST "$1" -H "Content-Type: application/json" --data-binary "$2"; }
-          one_book() { jq -c --arg k "$1" '[.data[]|select(.bookUrl==$k)][0]'; }
+          # 取某本书的 JSON(--arg 传 key,避免在 jq 程序里做 shell 转义)。
+          # 注意:这是"跑 jq 的过滤器",必须在管道里用(echo "$R" | book_json URL);
+          # 不要用 $(book_json URL) 当"jq 程序文本"—— 那样命令替换会拿到空串。
+          book_json() { jq -c --arg k "$1" '[.data[]|select(.bookUrl==$k)][0]'; }
 
           echo "--- 1) 推送两个书源(带客户端版本号) ---"
           R=$(post "$BASE/syncPush" "$(jq -n --argjson t $T1 '{bookSources:[
@@ -183,8 +186,9 @@ jobs:
           echo "$R" | jq -e '.data.books.applied == 1' >/dev/null || fail "newer book push should be applied"
           R=$(curl -sS "$BASE/getBookshelf")
           echo "$R"
-          echo "$R" | jq -e "$(one_book https://a.example/book/1) | .name==\"B1-renamed\" and .totalChapterNum==7 and .durChapterIndex==3" >/dev/null \
-            || fail "whitelist merge must preserve server-side progress; got $(echo "$R" | one_book https://a.example/book/1)"
+          echo "$R" | jq -e --arg k "https://a.example/book/1" \
+            '[.data[]|select(.bookUrl==$k)][0] | .name=="B1-renamed" and .totalChapterNum==7 and .durChapterIndex==3' >/dev/null \
+            || fail "whitelist merge must preserve server-side progress; got $(echo "$R" | book_json https://a.example/book/1)"
 
           echo "--- 9) 本地书籍不参与同步 ---"
           R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+2)) '{books:[{
@@ -225,8 +229,9 @@ jobs:
           echo "$R"
           R=$(curl -sS "$BASE/getBookshelf")
           echo "$R"
-          echo "$R" | jq -e "$(one_book https://a.example/book/3) | .name==\"B3-recreated\"" >/dev/null \
-            || fail "entity newer than the tombstone must survive (re-created)"
+          echo "$R" | jq -e --arg k "https://a.example/book/3" \
+            '[.data[]|select(.bookUrl==$k)][0].name=="B3-recreated"' >/dev/null \
+            || fail "entity newer than the tombstone must survive (re-created); got $(echo "$R" | book_json https://a.example/book/3)"
 
           echo "--- 13) 滞后实体不能复活已删除的书(墓碑比实体新) ---"
           post "$BASE/syncPush" "$(jq -n --argjson t $((T1+60)) '{books:[{
