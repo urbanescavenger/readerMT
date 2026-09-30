@@ -218,6 +218,26 @@ data class SyncTombstone(
 
 该问题由 docker 冒烟断言第 2 条（版本号保留）与第 14 条（字段保真）钉住。
 
+### 4.2 ⚠️ 服务端响应会把 Vert.x JsonObject 包成 `{"map":{...}}`（既有缺陷）
+
+响应体走 `VertExt.success()` = `gson.toJson(ReturnData)`（**反射**序列化），而它只对**顶层**
+`JsonObject` 特判 `toString()`。`ReturnData.data` 里**嵌套**的 Vert.x `JsonObject`/`JsonArray`
+会被 GSON 当 POJO，暴露出内部字段 `map`/`list`：
+
+```
+期望 {"bookSources":{"applied":2}}    实际 {"bookSources":{"map":{"applied":2}}}
+```
+
+**存储侧没有这个问题**（`saveStorage` 对 `JsonObject`/`JsonArray` 走原生 `toString()`），
+**app 端也没有**（`getBookSources` 返回 `List<BookSourceEntity>` 朴素对象）——所以这是
+"服务端返回 JsonArray-derived 数据"的端点专有的既有缺陷，受影响面可能还包括
+`getBookSource`（单条，其嵌套规则对象同样会被包）。
+
+修法：`BaseController.plain()` 把 Vert.x 类型深度转成朴素 Map/List，同步相关端点
+（`getTombstones`/`syncPush`/`getBookSources`）已应用。**未全量修**：其余端点（如
+`getBookSource` 单条）的同类包装问题留待单独评估 —— 那是一次涉及多个 handler 的改动，
+不该混在同步功能里，且服务端自带 web 前端读的是朴素字段，修了只会更正确。
+
 ---
 
 ## 5. 功能一：双端同步（书源 + 在线书架元数据）

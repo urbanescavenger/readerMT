@@ -334,6 +334,29 @@ open class BaseController(override val coroutineContext: CoroutineContext): Coro
         return JsonObject().put("type", type).put("key", key).put("deletedAt", deletedAt)
     }
 
+    /**
+     * 把 Vert.x `JsonObject`/`JsonArray` 深度转成朴素 Map/List。
+     *
+     * **为什么必须转**:响应体是 `gson.toJson(ReturnData)` **反射**序列化的(见 `VertExt.success`),
+     * 而 Vert.x `JsonObject` 的内部字段名就叫 `map` —— 直接塞进 `ReturnData.data` 会被序列化成
+     * `{"map":{...}}`,客户端按字段名取值全部取不到。
+     * (实测:`syncPush` 曾返回 `data.bookSources.map.applied` 而非 `data.bookSources.applied`,
+     *  被 docker 冒烟断言第 1 条抓住。)
+     *
+     * **存储侧没有这个问题**:`saveStorage` 对 `JsonObject`/`JsonArray` 走 `value.toString()`
+     * (Vert.x 原生编码);**app 端也没有**:它的 `getBookSources` 返回
+     * `List<BookSourceEntity>` 朴素对象。所以只有"服务端返回 JsonArray-derived 数据"的端点
+     * 有这个包装问题 —— 这是本 fork 的既有缺陷,不是同步功能引入的。
+     */
+    fun plain(value: Any?): Any? = when (value) {
+        null -> null
+        is JsonObject -> value.getMap().mapValues { plain(it.value) }
+        is JsonArray -> value.getList<Any?>().map { plain(it) }
+        is Map<*, *> -> value.mapValues { plain(it.value) }
+        is List<*> -> value.map { plain(it) }
+        else -> value
+    }
+
     /** 墓碑类型:书源(主键 bookSourceUrl) */
     companion object {
         const val TOMBSTONE_TYPE_BOOK_SOURCE = "bookSource"

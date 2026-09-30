@@ -64,7 +64,8 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
         }
         val result = JsonArray()
         merged.values.forEach { result.add(it) }
-        return returnData.setData(result.getList())
+        // plain():不转的话嵌套 JsonObject 会被 GSON 序列化成 {"map":{...}}(见 BaseController.plain)
+        return returnData.setData(plain(result))
     }
 
     /**
@@ -89,11 +90,13 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
         // 墓碑最后应用:实体先落地,再按墓碑删除,保证"墓碑更新则实体一定被删"
         val tombApplied = applyTombstones(body.getJsonArray("tombstones"), userNS, sourceNS)
 
-        val result = JsonObject()
-            .put("bookSources", JsonObject().put("applied", sourceApplied).put("skipped", sourceSkipped))
-            .put("books", JsonObject().put("applied", bookApplied).put("skipped", bookSkipped))
-            .put("tombstones", tombApplied)
-        return returnData.setData(result.map)
+        // 用朴素 Map 构造响应:嵌套 JsonObject 会被 GSON 序列化成 {"map":{...}}(见 BaseController.plain)
+        val result = mapOf(
+            "bookSources" to mapOf("applied" to sourceApplied, "skipped" to sourceSkipped),
+            "books" to mapOf("applied" to bookApplied, "skipped" to bookSkipped),
+            "tombstones" to tombApplied
+        )
+        return returnData.setData(result)
     }
 
     private suspend fun applyBookSources(jsonArray: JsonArray?, userNameSpace: String): Pair<Int, Int> {

@@ -251,9 +251,9 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
                         changedList.add(obj)
                     }
                 }
-                return returnData.setData(changedList.getList())
+                return returnData.setData(plain(changedList))
             }
-            return returnData.setData(bookSourceList.getList())
+            return returnData.setData(plain(bookSourceList))
         }
         return returnData.setData(arrayListOf<Int>())
     }
