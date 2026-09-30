@@ -50,7 +50,12 @@ data class Book(
        var originOrder: Int = 0,                   //书源排序
         var useReplaceRule: Boolean = true,         // 正文使用净化替换规则
         var variable: String? = null,                // 自定义书籍变量信息(用于书源规则检索书籍信息)
-        var readConfig: ReadConfig? = null
+        var readConfig: ReadConfig? = null,
+        /**
+         * 书架元数据的最后修改时间(服务端本地编辑即刷新),双端同步的 LWW 版本号。
+         * 缺字段的旧 bookshelf.json 反序列化后为 0(客户端视为"无版本",会被较新的一端覆盖)。
+         */
+        var lastModifiedAt: Long = 0L
     ) : BaseBook {
 
     fun isLocalBook(): Boolean {

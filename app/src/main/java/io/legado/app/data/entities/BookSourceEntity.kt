@@ -74,6 +74,10 @@ data class BookSourceEntity(
     var variableComment: String? = null,
     // 最后更新时间，用于排序
     var lastUpdateTime: Long = 0,
+    // 书源内容的最后修改时间(本地编辑即刷新),双端同步的 LWW 版本号
+    // 与 lastUpdateTime(订阅更新时间)严格区分,见 SYNC_PLAN.md §3.1
+    @ColumnInfo(defaultValue = "0")
+    var lastModifiedAt: Long = 0,
     // 响应时间，用于排序
     var respondTime: Long = 180000L,
     // 智能排序的权重

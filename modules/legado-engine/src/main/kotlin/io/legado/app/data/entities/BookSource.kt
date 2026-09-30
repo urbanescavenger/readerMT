@@ -46,6 +46,13 @@ data class BookSource(
     var bookSourceComment: String? = null,
     var variableComment: String? = null,
     var lastUpdateTime: Long? = null,
+    /**
+     * 书源内容的最后修改时间(本地编辑即刷新),双端同步的 LWW 版本号。
+     *
+     * 与 [lastUpdateTime] 严格区分:[lastUpdateTime] 是"**订阅**更新时间",被
+     * `RuleUpdate.cacheSource` 用来判断是否从订阅 URL 更新,不可挪作他用。
+     */
+    var lastModifiedAt: Long? = null,
     var respondTime: Long? = null,
     var weight: Int? = null,
     var exploreUrl: String? = null,

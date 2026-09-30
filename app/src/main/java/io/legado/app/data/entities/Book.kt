@@ -124,7 +124,11 @@ data class Book(
     var readConfig: ReadConfig? = null,
     //同步时间
     @ColumnInfo(defaultValue = "0")
-    var syncTime: Long = 0L
+    var syncTime: Long = 0L,
+    // 书架元数据的最后修改时间(本地编辑即刷新),双端同步的 LWW 版本号
+    // 与 syncTime(WebDAV 进度同步时间)严格区分,见 SYNC_PLAN.md §3.1
+    @ColumnInfo(defaultValue = "0")
+    var lastModifiedAt: Long = 0L
 ) : Parcelable, BaseBook {
 
     override fun equals(other: Any?): Boolean {
