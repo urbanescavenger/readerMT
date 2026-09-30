@@ -97,6 +97,11 @@ class ServersDialog : BaseDialogFragment(R.layout.dialog_recycler_view),
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_add -> showDialogFragment(ServerConfigDialog())
+            R.id.menu_sync -> {
+                appDb.serverDao.get(adapter.selectServerId)?.let { server ->
+                    viewModel.sync(server)
+                }
+            }
         }
         return true
     }

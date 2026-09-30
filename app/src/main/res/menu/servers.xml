@@ -8,4 +8,10 @@
         android:title="@string/create"
         app:showAsAction="always" />
 
+    <item
+        android:id="@+id/menu_sync"
+        android:icon="@drawable/ic_refresh_black_24dp"
+        android:title="@string/sync_now"
+        app:showAsAction="always" />
+
 </menu>

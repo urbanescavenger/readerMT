@@ -1349,4 +1349,8 @@
     <string name="is_system_tts_no_export">无法导出系统tts</string>
     <string name="click_image_way">点击图片方式</string>
     <string name="auto_update_summary">每天自动检查软件是否更新</string>
+    <string name="sync_now">Sync now</string>
+    <string name="sync_running">Syncing…</string>
+    <string name="sync_success">Sync done: pushed %1$d, merged %2$d, deleted %3$d</string>
+    <string name="sync_failed">Sync failed: %1$s</string>
 </resources>

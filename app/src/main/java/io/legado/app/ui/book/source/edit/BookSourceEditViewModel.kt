@@ -57,6 +57,8 @@ class BookSourceEditViewModel(application: Application) : BaseViewModel(applicat
             val oldSource = bookSource ?: BookSourceEntity()
             if (!source.equal(oldSource)) {
                 source.lastUpdateTime = System.currentTimeMillis()
+                // 双端同步:内容真的变了才刷新 LWW 版本号(equal 不比较 lastModifiedAt,故不会自激)
+                source.lastModifiedAt = source.lastUpdateTime
                 if (oldSource.exploreUrl != source.exploreUrl) {
                     oldSource.clearExploreKindsCache()
                 }

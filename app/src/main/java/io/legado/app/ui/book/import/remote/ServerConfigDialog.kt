@@ -32,11 +32,17 @@ class ServerConfigDialog() : BaseDialogFragment(R.layout.dialog_webdav_server, t
     private val binding by viewBinding(DialogWebdavServerBinding::bind)
     private val viewModel by viewModels<ServerConfigViewModel>()
 
-    private val webDavServerUi = listOf(
+    /**
+     * WebDAV 与阅读服务器都是 url/username/password 三个字段,复用同一套输入框;
+     * 差异只在 type 与序列化出的 config 类。
+     */
+    private val serverUi = listOf(
         RowUi("url"),
         RowUi("username"),
         RowUi("password", RowUi.Type.password)
     )
+
+    private val spTypeReader = 1
 
     override fun onStart() {
         super.onStart()
@@ -68,16 +74,16 @@ class ServerConfigDialog() : BaseDialogFragment(R.layout.dialog_webdav_server, t
         binding.etName.setText(server?.name)
         binding.spType.setSelection(
             when (server?.type) {
+                Server.TYPE.READER -> spTypeReader
                 else -> 0
             }
         )
-        when (server?.type) {
-            else -> upWebDavServerUi(server?.getConfigJsonObject())
-        }
+        // upServerUi 只按键名读 url/username/password,两种类型的 config 都有这三个键
+        upServerUi(server?.getConfigJsonObject())
     }
 
-    private fun upWebDavServerUi(config: JSONObject?) {
-        webDavServerUi.forEachIndexed { index, rowUi ->
+    private fun upServerUi(config: JSONObject?) {
+        serverUi.forEachIndexed { index, rowUi ->
             when (rowUi.type) {
                 RowUi.Type.text -> ItemSourceEditBinding.inflate(
                     layoutInflater,
@@ -109,23 +115,35 @@ class ServerConfigDialog() : BaseDialogFragment(R.layout.dialog_webdav_server, t
         val server = viewModel.mServer?.copy() ?: Server()
         server.name = binding.etName.text.toString()
         server.type = when (binding.spType.selectedItemPosition) {
+            spTypeReader -> Server.TYPE.READER
             else -> Server.TYPE.WEBDAV
         }
+        val values = serverUi.mapIndexed { index, _ ->
+            val rowView = binding.root.findViewById<View>(index + 1000)
+            ItemSourceEditBinding.bind(rowView).editText.text?.toString() ?: ""
+        }
+        val url = values.getOrElse(0) { "" }
+        val username = values.getOrElse(1) { "" }
+        val password = values.getOrElse(2) { "" }
         server.config = when (server.type) {
-            else -> GSON.toJson(getWebDavConfig())
+            Server.TYPE.READER -> {
+                // accessToken/lastSyncAt 是运行时同步状态。地址或账号密码一变,已缓存的
+                // token 与增量基准就失效了——那种情况下才清掉,否则每次改配置都要重新登录。
+                val kept = viewModel.mServer?.getReaderServerConfig()
+                    ?.takeIf { it.url == url && it.username == username && it.password == password }
+                GSON.toJson(
+                    Server.ReaderServerConfig(
+                        url = url,
+                        username = username,
+                        password = password,
+                        accessToken = kept?.accessToken ?: "",
+                        lastSyncAt = kept?.lastSyncAt ?: 0L
+                    )
+                )
+            }
+            else -> GSON.toJson(Server.WebDavConfig(url, username, password))
         }
         return server
-    }
-
-    private fun getWebDavConfig(): HashMap<String, String> {
-        val data = hashMapOf<String, String>()
-        webDavServerUi.forEachIndexed { index, rowUi ->
-            val rowView = binding.root.findViewById<View>(index + 1000)
-            ItemSourceEditBinding.bind(rowView).editText.text?.let {
-                data[rowUi.name] = it.toString()
-            }
-        }
-        return data
     }
 
 }

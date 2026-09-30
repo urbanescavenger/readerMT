@@ -13,6 +13,7 @@ import io.legado.app.data.entities.RssSource
 import io.legado.app.help.AppCacheManager
 import io.legado.app.help.config.SourceConfig
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.help.sync.SyncTombstoneHelp
 import io.legado.app.model.AudioPlay
 import io.legado.app.model.ReadBook
 import io.legado.app.model.ReadManga
@@ -97,7 +98,21 @@ object SourceHelp {
         AppCacheManager.clearSourceVariables()
     }
 
-    private fun deleteBookSourceInternal(key: String) {
+    /**
+     * 同步合并专用:删除本地书源及其缓存,但**不**记墓碑。
+     *
+     * 墓碑由服务端同步过来,它的 `deletedAt` 才是权威时间;若在这里重记会被刷成 now,
+     * 让"本地删除"显得比实际更新,进而可能删掉另一端更晚的重新创建。
+     */
+    fun deleteBookSourceFromSync(key: String) {
+        deleteBookSourceInternal(key, recordTombstone = false)
+    }
+
+    private fun deleteBookSourceInternal(key: String, recordTombstone: Boolean = true) {
+        if (recordTombstone) {
+            // 双端同步:删除必须留墓碑,否则下次同步会被另一端的旧副本复活
+            SyncTombstoneHelp.recordBookSource(key)
+        }
         appDb.bookSourceDao.delete(key)
         appDb.cacheDao.deleteSourceVariables(key)
         SourceConfig.removeSource(key)
@@ -155,6 +170,9 @@ object SourceHelp {
             appCtx.toastOnUi("${it.bookSourceName}是18+网址,禁止导入.")
         }
         bookSourcesGroup[false]?.let {
+            // 双端同步:导入/订阅更新都算"内容被修改",刷新 LWW 版本号
+            val now = System.currentTimeMillis()
+            it.forEach { source -> source.lastModifiedAt = now }
             appDb.bookSourceDao.insert(*it.toTypedArray())
         }
         Coroutine.async {
