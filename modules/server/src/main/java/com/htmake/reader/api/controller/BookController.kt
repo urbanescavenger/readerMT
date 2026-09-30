@@ -1239,6 +1239,12 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
             refresh = context.queryParam("refresh").firstOrNull()?.toInt() ?: 0
         }
         var bookList = getBookShelfBooks(refresh > 0, getUserNameSpace(context))
+        // 双端同步增量:since 缺省或 <=0 表示全量(见 BaseController.getSinceParam)
+        val since = getSinceParam(context)
+        if (since > 0) {
+            // 注意:增量同步**不要**传 refresh,否则每次同步都会并发 16 实时重取最新章节
+            bookList = bookList.filter { it.lastModifiedAt > since }
+        }
         return returnData.setData(bookList)
     }
 
@@ -1278,6 +1284,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
         if (book.bookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("书籍链接不能为空")
         }
+        // 服务端本地编辑:刷新同步版本号(客户端经 /reader3/syncPush 推送时保留其自带版本号)
+        book.lastModifiedAt = System.currentTimeMillis()
         var userNameSpace = getUserNameSpace(context)
         var bookshelf: JsonArray? = asJsonArray(getUserStorage(userNameSpace, "bookshelf"))
         if (bookshelf == null) {
@@ -1609,6 +1617,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
             return returnData.setErrorMsg("书架书籍不存在")
         }
         bookshelf.remove(existIndex)
+        // 双端同步:记录删除墓碑,否则客户端下次同步会把该书"复活"
+        addTombstone(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK, book.bookUrl)
         // logger.info("bookshelf: {}", bookshelf)
         saveUserStorage(userNameSpace, "bookshelf", bookshelf)
 
@@ -1650,6 +1660,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
             }
             if (existIndex >= 0) {
                 bookshelf.remove(existIndex)
+                // 双端同步:记录删除墓碑
+                addTombstone(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK, book.bookUrl)
             }
             // 删除书籍目录
             val localBookPath = File(getWorkDir("storage", "data", userNameSpace, book.name + "_" + book.author))
@@ -1992,7 +2004,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
     }
 
     fun saveShelfBookProgress(book: Book, bookChapter: BookChapter, userNameSpace: String) {
-        editShelfBook(book, userNameSpace) { existBook ->
+        // 进度不是元数据,不打同步版本号(否则每次翻页都算"书架被修改")
+        editShelfBook(book, userNameSpace, touchModifiedAt = false) { existBook ->
             existBook.durChapterIndex = bookChapter.index
             existBook.durChapterTitle = bookChapter.title
             existBook.durChapterTime = System.currentTimeMillis()
@@ -2006,7 +2019,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
     suspend fun saveShelfBookLatestChapter(book: Book, bookChapterList: List<BookChapter>, userNameSpace: String, mutex: Mutex? = null) {
         try {
             mutex?.lock()
-            editShelfBook(book, userNameSpace) { existBook ->
+            // 后台书架刷新不是元数据编辑,不打同步版本号
+            editShelfBook(book, userNameSpace, touchModifiedAt = false) { existBook ->
                 if (bookChapterList.size > 0) {
                     var bookChapter = bookChapterList.last()
                     existBook.latestChapterTitle = bookChapter.title
@@ -2026,7 +2040,19 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
         }
     }
 
-    fun editShelfBook(book: Book, userNameSpace: String, handler: (Book)->Book) {
+    /**
+     * 书架条目写入的唯一收口。
+     *
+     * [touchModifiedAt] 控制是否刷新双端同步版本号 `lastModifiedAt`,**默认为 true**:
+     * 所有"用户可见的元数据编辑"(换源/分组/刷新本地书)都该打版本号,放在收口处默认生效
+     * 比散落在调用点更不容易漏。
+     *
+     * 必须显式传 false 的是两类**非元数据**写入,否则它们会污染增量同步:
+     * - 阅读进度(`saveShelfBookProgress` / `syncBookProgressFromWebdav`)
+     * - 后台书架刷新(`saveShelfBookLatestChapter`,由每 10 分钟的 shelfUpdateJob 触发)
+     * 这两类若打版本号,会变成"每次翻页/每 10 分钟全部书籍都算被修改",增量同步直接失效。
+     */
+    fun editShelfBook(book: Book, userNameSpace: String, touchModifiedAt: Boolean = true, handler: (Book)->Book) {
         var bookshelf: JsonArray? = asJsonArray(getUserStorage(userNameSpace, "bookshelf"))
         if (bookshelf == null) {
             bookshelf = JsonArray()
@@ -2050,6 +2076,9 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
             var bookList = bookshelf.getList()
             var existBook = bookshelf.getJsonObject(existIndex).mapTo(Book::class.java)
             existBook = handler(existBook)
+            if (touchModifiedAt) {
+                existBook.lastModifiedAt = System.currentTimeMillis()
+            }
 
             // logger.info("editShelfBook: {}", existBook)
 
@@ -2146,7 +2175,8 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
         }
         var book = asJsonObject(progressFile.readText())?.mapTo(Book::class.java)
         if (book != null) {
-            editShelfBook(book, userNameSpace) { existBook ->
+            // WebDAV 进度回灌不是元数据编辑,不打同步版本号
+            editShelfBook(book, userNameSpace, touchModifiedAt = false) { existBook ->
                 existBook.durChapterIndex = book.durChapterIndex
                 existBook.durChapterPos = book.durChapterPos
                 existBook.durChapterTime = book.durChapterTime

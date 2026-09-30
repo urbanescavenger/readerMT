@@ -154,20 +154,34 @@ data class SyncTombstone(
 
 ## 4. 服务端改动清单
 
-| # | 改动 | 位置 | 说明 |
-|---|---|---|---|
-| S1 | `Book` DTO 加 `lastModifiedAt: Long = 0` | `io/legado/app/data/entities/Book.kt` | 兼容旧 JSON（缺字段默认 0） |
-| S2 | 书源写入刷新 `lastModifiedAt` | `BookSourceController.saveBookSource(s)` | 服务端本地编辑时置 `now` |
-| S3 | 书架写入刷新 `lastModifiedAt` | `BookController.saveBook` / `saveBookProgress` / 分组变更 | 同上 |
-| S4 | 墓碑写入 | delete 路径（§3.2） | 新增 `tombstone.json` 读写工具 |
-| S5 | `GET /reader3/getBookSources?since=<ts>` | `BookSourceController.getBookSources` | 缺省全量；带 since 只返回 `lastModifiedAt > since` |
-| S6 | `GET /reader3/getBookshelf?since=<ts>` | `BookController.getBookshelf` | **不要传 `refresh`**（会触发并发 16 实时重取，代价高） |
-| S7 | `GET /reader3/getTombstones?since=<ts>` | 新增 handler（可放 `BookController` 或新 `SyncController`） | 返回墓碑数组 |
-| S8 | `POST /reader3/saveBooks`（批量） | 新增 | 避免逐条 POST 导致 `saveStorage` 全量重写 JSON 的写放大 |
-| S9 | 修 `getBookshelf`/`getShelfBook` 的 POST 注册缺失 | `YueduApi.kt:165-166` | 顺手修（§1.4） |
-| S10 | （可选）`accessToken` 支持 header 传入 | `BaseController.checkAuth` | 降低 token 进日志风险 |
+| # | 改动 | 位置 | 说明 | 状态 |
+|---|---|---|---|---|
+| S1 | `Book` DTO 加 `lastModifiedAt: Long = 0` | `io/legado/app/data/entities/Book.kt` | 兼容旧 JSON（缺字段默认 0） | ✅ 阶段 0 |
+| S2 | 书源写入刷新 `lastModifiedAt` | `BookSourceController.saveBookSource(s)` | 服务端本地编辑时置 `now` | ✅ 阶段 1 |
+| S3 | 书架写入刷新 `lastModifiedAt` | `BookController.saveBook` + `editShelfBook` | 同上 | ✅ 阶段 1 |
+| S4 | 墓碑写入 | 删除路径 + `BaseController.addTombstone` | 新增 `tombstone.json` 读写 | ✅ 阶段 1 |
+| S5 | `GET /reader3/getBookSources?since=` | `BookSourceController.getBookSources` | 缺省/<=0 全量 | ✅ 阶段 1 |
+| S6 | `GET /reader3/getBookshelf?since=` | `BookController.getBookshelf` | **不要传 `refresh`**（会触发并发 16 实时重取） | ✅ 阶段 1 |
+| S7 | `GET /reader3/getTombstones?since=` | `SyncController.getTombstones` | 书源+书籍墓碑,按 (type,key) 去重 | ✅ 阶段 1 |
+| S8 | `POST /reader3/syncPush`（批量,单次往返） | `SyncController.syncPush` | **替代原计划的 `saveBooks`**：一个端点推书源+书架+墓碑，且保留客户端版本号 | ✅ 阶段 1 |
+| S9 | 修 `getBookshelf`/`getShelfBook` 的 POST 注册缺失 | `YueduApi.kt:165-166` | 已补 POST 路由 | ✅ 阶段 1 |
+| S10 | （可选）`accessToken` 支持 header 传入 | `BaseController.checkAuth` | 降低 token 进日志风险 | ⬜ 未做 |
 
-**注意**：服务端 `saveStorage`（`utils/VertExt.kt:128-156`）每次**整体重写 JSON 文件**，无索引、无按 id 查询（都是遍历数组）。批量端点 S8 是缓解写放大的必要手段，但不是根本解；书架规模上限由 `userBookLimit`（默认 200）兜住，可接受。
+**S8 为何改成 `syncPush`（相对原计划）**：
+1. 原计划的 `saveBooks` 只管书架，书源推送仍需复用 `saveBookSources`——但后者的语义是
+   "服务端本地编辑"，会把 `lastModifiedAt` 刷成 now。必须有一条**保留客户端版本号**的写入路径，
+   否则服务端时间永远最新，LWW 退化成"服务端永远赢"。
+2. 推书源/书架/墓碑各来一次 HTTP 会把 `saveStorage` 的全量 JSON 重写放大 3 倍；
+   合到一个端点后每类数据只写一次文件。
+
+**S3 的关键区分**：`editShelfBook` 加了 `touchModifiedAt` 参数（默认 `true`），
+阅读进度（`saveShelfBookProgress` / `syncBookProgressFromWebdav`）与后台书架刷新
+（`saveShelfBookLatestChapter`，每 10 分钟跑）显式传 `false`。
+否则进度/刷新会让"每次翻页、每 10 分钟全书架都算被修改"，增量同步直接失效。
+
+**注意**：服务端 `saveStorage`（`utils/VertExt.kt:128-156`）每次**整体重写 JSON 文件**，
+无索引、无按 id 查询（都是遍历数组）。批量端点 S8 是缓解写放大的必要手段，但不是根本解；
+书架规模上限由 `userBookLimit`（默认 200）兜住，可接受。
 
 ---
 
@@ -194,17 +208,19 @@ app/src/main/java/io/legado/app/
 ```
 1. 确保 accessToken（缓存有效则跳过；否则 POST /reader3/login，失败则提示）
 2. 记 t0 = max(本地 max(lastModifiedAt), 上次 lastSyncAt)
-3. PULL:
-     GET /reader3/getBookSources?since=0      → 远端书源全量
-     GET /reader3/getBookshelf?since=0        → 远端书架全量
+3. PULL（先拉后推，保证推送的是合并后的结果）
+     GET /reader3/getBookSources          → 远端书源
+     GET /reader3/getBookshelf            → 远端书架
      GET /reader3/getTombstones?since=<lastSyncAt>  → 远端墓碑增量
-   （首版 since 传 0 走全量：数据量小、逻辑简单、正确性优先；
-     实体数量上万后再启用增量参数）
+   （首版**不带 since** 走全量：数据量小、逻辑简单、正确性优先；
+     实体数量上万后再启用增量参数。注意 since 缺省或 <=0 都表示全量，
+     因为旧数据 lastModifiedAt=0，用 `>0` 过滤会把它们全部漏掉）
 4. MERGE（见 5.3）
-5. PUSH:
-     POST /reader3/saveBookSources  ← 本地 lastModifiedAt > lastSyncAt 的书源
-     POST /reader3/saveBooks        ← 本地新增/变更的书架条目
-     POST 墓碑（本地删除 → 远端）
+5. PUSH（一次往返）
+     POST /reader3/syncPush
+       body = { bookSources: 本地变更的书源, books: 本地变更的书架条目,
+                tombstones: 本地墓碑 }
+     只推 lastModifiedAt > lastSyncAt 的条目；服务端保留客户端版本号并做 LWW 仲裁
 6. lastSyncAt = t0（持久化）
 ```
 
@@ -218,12 +234,23 @@ app/src/main/java/io/legado/app/
 本地有墓碑 + 本地墓碑.deletedAt > 远端.lastModifiedAt
     → 推墓碑到远端（保留删除）
 两边都有且都无墓碑
-    → lastModifiedAt 大者胜；相等则远端胜（保证收敛）
+    → lastModifiedAt 大者胜;**相等则本地(推送方)胜**
 只有一边有
     → 补到另一边
 ```
 
-**关键：墓碑必须先于实体比较**，否则"删除后被另一端的旧副本复活"（经典 bug）。
+**关键点 1:墓碑必须先于实体比较**，否则"删除后被另一端的旧副本复活"（经典 bug）。
+
+**关键点 2:"相等则推送方胜"是收敛的必要条件,两端必须用同一规则。**
+服务端 `SyncController.applyBookSources/applyBooks` 的仲裁写的是 `existingAt > pushedAt` 才拒绝
+（即**相等时接受推送**）;客户端因此必须在相等时判本地胜并推送出去。若客户端写成"相等则远端胜",
+两端会各自保留自己那份、永远不收敛。这与"旧数据两侧 `lastModifiedAt` 都是 0"的情形直接相关:
+首次同步时大量条目会落在相等分支,务必确保客户端实现与之一致。
+
+**关键点 3:客户端推送必须只带同步白名单字段。**
+服务端对已存在的书是**逐字段合并**(`SyncController.mergeSyncedBook`),不是整对象替换——
+若整对象替换,推送 JSON 里缺失的 `durChapterIndex`/`latestChapterTitle`/`totalChapterNum`/
+`readConfig` 等会取默认值,把服务端上的阅读进度与章节信息抹掉。
 
 ### 5.4 ⚠️ 回环坑（必须处理）
 
@@ -344,9 +371,11 @@ ruleContent.content = "<root>/reader3/getBookContent?url={{bookUrl}}&index={{cha
 - server `Book` 加 `lastModifiedAt`
 - **CI 验证**：三端编译绿 + Room schema 导出更新
 
-### 阶段 1：服务端同步端点（S1–S9）
-- `since` 参数、墓碑读写、批量 `saveBooks`、修 POST 注册
-- **CI 验证**：server 编译绿 + 冒烟脚本（沿用现有 docker 冒烟方式，`curl` 断言 `getTombstones`/`saveBooks`）
+### 阶段 1：服务端同步端点（S1–S9）✅ 已完成
+- `since` 参数（S5/S6）、墓碑读写（S4/S7）、批量 `syncPush`（S8）、修 POST 注册（S9）
+- 新增 `SyncController`；`BaseController` 加 `getUserTombstones`/`addTombstone`/`getSinceParam`/`jsonToLong`
+- **CI 验证**：server 编译绿（docker.yml 会构建 server 镜像 + 冒烟）
+- ⚠️ 待真机/curl 验证：`getTombstones` 与 `syncPush` 的实际行为（CI 只保证编译与既有冒烟用例）
 
 ### 阶段 2：书源同步（功能一 · 前半）
 - app `ReaderServerClient` + `SyncTarget` + `SyncManager`（只做 bookSource）

@@ -101,6 +101,8 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
             return returnData.setErrorMsg("参数错误")
         }
         // val bookSource = context.bodyAsJson.mapTo(BookSource::class.java)
+        // 服务端本地编辑:刷新同步版本号(客户端经 /reader3/syncPush 推送时保留其自带版本号)
+        bookSource.lastModifiedAt = System.currentTimeMillis()
 
         var userNameSpace = getBookSourceNameSpace(context)
         var bookSourceList = getUserBookSourceJson(userNameSpace)
@@ -148,6 +150,8 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
             if (bookSource == null) {
                 continue
             }
+            // 服务端本地编辑:刷新同步版本号(客户端经 /reader3/syncPush 推送时保留其自带版本号)
+            bookSource.lastModifiedAt = System.currentTimeMillis()
             // var bookSource = bookSourceJsonArray.getJsonObject(k).mapTo(BookSource::class.java)
             // 遍历判断书本是否存在
             var existIndex: Int = -1
@@ -236,6 +240,19 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
                 }
                 return returnData.setData(list)
             }
+            // 双端同步增量:since 缺省或 <=0 表示全量(见 BaseController.getSinceParam)
+            val since = getSinceParam(context)
+            if (since > 0) {
+                val changedList = JsonArray()
+                for (i in 0 until bookSourceList.size()) {
+                    val obj = bookSourceList.getJsonObject(i)
+                    // 直接读原始 JSON,避免 mapTo(BookSource) 的整对象解析开销
+                    if (jsonToLong(obj.getValue("lastModifiedAt")) > since) {
+                        changedList.add(obj)
+                    }
+                }
+                return returnData.setData(changedList.getList())
+            }
             return returnData.setData(bookSourceList.getList())
         }
         return returnData.setData(arrayListOf<Int>())
@@ -264,6 +281,8 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
         }
         if (existIndex >= 0) {
             bookSourceList.remove(existIndex)
+            // 双端同步:记录删除墓碑,否则客户端下次同步会把该源"复活"
+            addTombstone(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK_SOURCE, bookSource.bookSourceUrl)
         }
 
         // logger.info("bookSourceList: {}", bookSourceList)
@@ -296,6 +315,8 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
             }
             if (existIndex >= 0) {
                 bookSourceList.remove(existIndex)
+                // 双端同步:记录删除墓碑
+                addTombstone(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK_SOURCE, bookSource.bookSourceUrl)
             }
         }
 
@@ -310,6 +331,15 @@ class BookSourceController(coroutineContext: CoroutineContext): BaseController(c
             return returnData.setData("NEED_LOGIN").setErrorMsg("请登录后使用")
         }
         var userNameSpace = getBookSourceNameSpace(context)
+        // 双端同步:清空是"逐个删除",需为每个源记墓碑,否则客户端下次同步全部复活
+        // 这里直接读 storage 而不用 getUserBookSourceJson:后者在用户源文件缺失时会先
+        // 把 default 池拷进用户命名空间,清空场景下没必要产生这个副作用
+        asJsonArray(getUserStorage(userNameSpace, "bookSource"))?.let { bookSourceList ->
+            for (i in 0 until bookSourceList.size()) {
+                val bookSource = bookSourceList.getJsonObject(i).mapTo(BookSource::class.java)
+                addTombstone(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK_SOURCE, bookSource.bookSourceUrl)
+            }
+        }
         saveUserStorage(userNameSpace, "bookSource", JsonArray())
         return returnData.setData("")
     }

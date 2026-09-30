@@ -247,6 +247,104 @@ open class BaseController(override val coroutineContext: CoroutineContext): Coro
         return user
     }
 
+    /**
+     * 双端同步:读取某命名空间的删除墓碑(storage/data/<ns>/tombstone.json)。
+     *
+     * 墓碑放在**它所标记实体所在的命名空间**:书源墓碑进书源命名空间
+     * ([getBookSourceNameSpace],共享书源模式下恒为 default),书籍墓碑进用户命名空间
+     * ([getUserNameSpace])。这样共享书源模式下多人删同一个源也能收敛。
+     */
+    suspend fun getUserTombstones(userNameSpace: String): JsonArray {
+        return asJsonArray(getUserStorage(userNameSpace, TOMBSTONE_STORAGE_KEY)) ?: JsonArray()
+    }
+
+    /**
+     * 记录一条删除墓碑。[deletedAt] 参与双端同步的 LWW 比较,同 (type, key) 只保留较新时间
+     * (并发删除不把时间改小,否则会让较新的一端"复活"该实体)。
+     *
+     * **刻意不做按时间淘汰**:墓碑一旦过期被删,超过保留期未同步的客户端就会把已删除实体
+     * 复活。而墓碑量级由 bookSourceLimit(默认100)/userBookLimit(默认200)兜住,不会无限增长。
+     */
+    suspend fun addTombstone(
+        userNameSpace: String,
+        type: String,
+        key: String,
+        deletedAt: Long = System.currentTimeMillis()
+    ) {
+        if (key.isEmpty()) {
+            return
+        }
+        var list = getUserTombstones(userNameSpace)
+        var existIndex = -1
+        for (i in 0 until list.size()) {
+            val item = list.getJsonObject(i)
+            if (item.getString("type", "") == type && item.getString("key", "") == key) {
+                existIndex = i
+                break
+            }
+        }
+        if (existIndex >= 0) {
+            val old = jsonToLong(list.getJsonObject(existIndex).getValue("deletedAt"))
+            if (old >= deletedAt) {
+                return
+            }
+            val itemList = list.getList()
+            itemList.set(existIndex, tombstoneJson(type, key, deletedAt))
+            list = JsonArray(itemList)
+        } else {
+            list.add(tombstoneJson(type, key, deletedAt))
+        }
+        saveUserStorage(userNameSpace, TOMBSTONE_STORAGE_KEY, list)
+    }
+
+    /**
+     * 双端同步:读取 `since` 增量参数。**缺省或 <= 0 表示全量**——
+     * 首次同步的客户端不传该参数;实体上 `lastModifiedAt = 0`(旧数据未打过版本号)
+     * 的条目在全量模式下必须能被取到,故不能用 `lastModifiedAt > 0` 过滤。
+     */
+    fun getSinceParam(context: RoutingContext): Long {
+        if (context.request().method() == HttpMethod.POST) {
+            // 空 body 时 bodyAsJson 会抛 DecodeException,增量参数缺失按全量处理即可
+            val body = try {
+                context.bodyAsJson
+            } catch (e: Exception) {
+                null
+            }
+            if (body != null) {
+                return jsonToLong(body.getValue("since"))
+            }
+            return 0L
+        }
+        return context.queryParam("since").firstOrNull()?.toLongOrNull() ?: 0L
+    }
+
+    /**
+     * 读取 JSON 里的 Long。不用 `JsonObject.getLong(key, def)`:Vert.x 4.5 该两参重载
+     * 可用性不明确,而 JSON 数字经 Jackson/Vert.x 往返可能是 Int/Long/Double,统一按 Number 收。
+     */
+    fun jsonToLong(value: Any?): Long {
+        return when (value) {
+            is Number -> value.toLong()
+            is String -> value.toLongOrNull() ?: 0L
+            else -> 0L
+        }
+    }
+
+    private fun tombstoneJson(type: String, key: String, deletedAt: Long): JsonObject {
+        return JsonObject().put("type", type).put("key", key).put("deletedAt", deletedAt)
+    }
+
+    /** 墓碑类型:书源(主键 bookSourceUrl) */
+    companion object {
+        const val TOMBSTONE_TYPE_BOOK_SOURCE = "bookSource"
+
+        /** 墓碑类型:书籍(主键 bookUrl) */
+        const val TOMBSTONE_TYPE_BOOK = "book"
+
+        /** 墓碑文件在命名空间目录下的 storage key(对应 storage/data/<ns>/tombstone.json) */
+        const val TOMBSTONE_STORAGE_KEY = "tombstone"
+    }
+
     fun getUserInfoMap(username: String): Map<String, Any>? {
         if (username.isEmpty()) {
             return null

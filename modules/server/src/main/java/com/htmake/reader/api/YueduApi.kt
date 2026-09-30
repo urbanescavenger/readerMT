@@ -22,6 +22,7 @@ import com.htmake.reader.api.controller.UserController
 import com.htmake.reader.api.controller.WebdavController
 import com.htmake.reader.api.controller.ReplaceRuleController
 import com.htmake.reader.api.controller.BookmarkController
+import com.htmake.reader.api.controller.SyncController
 import com.htmake.reader.utils.error
 import com.htmake.reader.utils.success
 import com.htmake.reader.utils.getStorage
@@ -135,6 +136,7 @@ class YueduApi : RestVerticle() {
         }
         val replaceRuleController = ReplaceRuleController(coroutineContext)
         val bookmarkController = BookmarkController(coroutineContext)
+        val syncController = SyncController(coroutineContext)
 
         /** 书源模块 */
         router.post("/reader3/saveBookSource").coroutineHandler { bookSourceController.saveBookSource(it) }
@@ -163,10 +165,19 @@ class YueduApi : RestVerticle() {
         /** 书籍模块 */
         // 书架
         router.get("/reader3/getBookshelf").coroutineHandler { bookController.getBookshelf(it) }
+        router.post("/reader3/getBookshelf").coroutineHandler { bookController.getBookshelf(it) }
         router.get("/reader3/getShelfBook").coroutineHandler { bookController.getShelfBook(it) }
+        router.post("/reader3/getShelfBook").coroutineHandler { bookController.getShelfBook(it) }
         router.post("/reader3/saveBook").coroutineHandler { bookController.saveBook(it) }
         router.post("/reader3/deleteBook").coroutineHandler { bookController.deleteBook(it) }
         router.post("/reader3/deleteBooks").coroutineHandler { bookController.deleteBooks(it) }
+
+        /** 双端同步(SYNC_PLAN.md 阶段 1) */
+        // 拉取删除墓碑(书源 + 书籍,按 type 路由到各自命名空间)
+        router.get("/reader3/getTombstones").coroutineHandler { syncController.getTombstones(it) }
+        router.post("/reader3/getTombstones").coroutineHandler { syncController.getTombstones(it) }
+        // 推送本地变更(书源 + 书架 + 墓碑,保留客户端版本号)
+        router.post("/reader3/syncPush").coroutineHandler { syncController.syncPush(it) }
 
         // 失效书源
         router.post("/reader3/getInvalidBookSources").coroutineHandler { bookController.getInvalidBookSources(it) }
