@@ -347,13 +347,19 @@ open class BaseController(override val coroutineContext: CoroutineContext): Coro
      * (Vert.x 原生编码);**app 端也没有**:它的 `getBookSources` 返回
      * `List<BookSourceEntity>` 朴素对象。所以只有"服务端返回 JsonArray-derived 数据"的端点
      * 有这个包装问题 —— 这是本 fork 的既有缺陷,不是同步功能引入的。
+     *
+     * 参数与返回值都非空:`ReturnData.setData(data: Any)` 不接受 null。嵌套里的 null 值由
+     * [plainOrNull] 原样保留(JSON 字段为 null 是合法的)。
      */
-    fun plain(value: Any?): Any? = when (value) {
+    fun plain(value: Any): Any = plainOrNull(value) ?: value
+
+    /** [plain] 的递归核心:允许输入/输出为 null,以便原样保留嵌套的 null 值。 */
+    private fun plainOrNull(value: Any?): Any? = when (value) {
         null -> null
-        is JsonObject -> value.getMap().mapValues { plain(it.value) }
-        is JsonArray -> value.getList<Any?>().map { plain(it) }
-        is Map<*, *> -> value.mapValues { plain(it.value) }
-        is List<*> -> value.map { plain(it) }
+        is JsonObject -> value.getMap().mapValues { plainOrNull(it.value) }
+        is JsonArray -> value.getList().map { plainOrNull(it) }
+        is Map<*, *> -> value.mapValues { plainOrNull(it.value) }
+        is List<*> -> value.map { plainOrNull(it) }
         else -> value
     }
 
