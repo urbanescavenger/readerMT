@@ -433,11 +433,20 @@ ruleContent.content = "<root>/reader3/getBookContent?url={{bookUrl}}&index={{cha
 - server `Book` 加 `lastModifiedAt`
 - **CI 验证**：三端编译绿 + Room schema 导出更新
 
-### 阶段 1：服务端同步端点（S1–S9）✅ 已完成
+### 阶段 1：服务端同步端点（S1–S9）✅ 已完成，行为已实测
 - `since` 参数（S5/S6）、墓碑读写（S4/S7）、批量 `syncPush`（S8）、修 POST 注册（S9）
-- 新增 `SyncController`；`BaseController` 加 `getUserTombstones`/`addTombstone`/`getSinceParam`/`jsonToLong`
-- **CI 验证**：server 编译绿（docker.yml 会构建 server 镜像 + 冒烟）
-- ⚠️ 待真机/curl 验证：`getTombstones` 与 `syncPush` 的实际行为（CI 只保证编译与既有冒烟用例）
+- 新增 `SyncController`；`BaseController` 加 `getUserTombstones`/`addTombstone`/`getSinceParam`/`jsonToLong`/`plain`
+- **行为验证（docker.yml 的 `Sync endpoints behavior smoke`，14 条断言）** ✅ 全过：
+  推送生效、客户端版本号原样保留、LWW 拒旧版本且不覆盖、相等时间戳接受、
+  回环防护、墓碑写入、书架入库、白名单合并保留服务端进度、本地书过滤、
+  书籍墓碑、墓碑传播删除、墓碑后重建存活、滞后实体不复活、书源字段忠实 round-trip
+- 该冒烟是**永久回归闸门**：每次推送都在 CI 起真实服务端容器跑一遍，无需外部凭证
+
+### 阶段 2/3 的 app 侧：⚠️ 仍**只有编译验证**（截至 2026-09-30）
+`SyncManager` 的合并逻辑（墓碑双向优先、LWW 收敛、白名单合并、试读书排除、`upType` 类型转换）
+**一次都没跑过**。服务端那 14 条断言覆盖不到 app 侧代码。
+真机验证需要：起一个服务端（`ghcr.io/urbanescavenger/readermt:unify` 已含全部服务端改动）
++ 装 debug APK，做一轮"建源/改源/删源 → 两端核对"。**这是继续阶段 4 之前应当先补的**。
 
 ### 阶段 2：书源同步（功能一 · 前半）
 - app `ReaderServerClient` + `SyncTarget` + `SyncManager`（只做 bookSource）
