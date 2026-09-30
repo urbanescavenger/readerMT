@@ -201,6 +201,23 @@ data class SyncTombstone(
 无索引、无按 id 查询（都是遍历数组）。批量端点 S8 是缓解写放大的必要手段，但不是根本解；
 书架规模上限由 `userBookLimit`（默认 200）兜住，可接受。
 
+### 4.1 ⚠️ 同步路径不能用 `SourceAnalyzer`
+
+服务端 `io.legado.app.utils.SourceAnalyzer.jsonToBookSource` 是**逐字段枚举**式解析器
+（为导入第三方 legacy 书源而写），它有两个致命问题用于同步：
+
+1. **不认 `lastModifiedAt`** → 每次推送该字段都变 null → 被服务端补成 `now` →
+   **LWW 直接退化成"服务端永远赢"**，另一端编辑再也无法生效。
+2. **丢字段**：`jsLib` / `enabledCookieJar` / `loginUi` / `coverDecodeJs` / `variableComment` /
+   `exploreScreen` / `ruleReview` / `eventListener` / `customButton` 都不在它的拷贝列表里。
+   同步过去再被第三台设备拉下来就是**坏源**（带 JS 库的书源直接失效）。
+
+**结论**：`SyncController` 收推送时用 `GSON.fromJsonObject<BookSource>(...)` 直接映射到引擎 DTO
+（忠实 round-trip）；`SourceAnalyzer` 只保留给 `readSourceFile` 这类"导入第三方书源"的路径。
+`Book` 这边没有这个问题——`applyBooks` 用的是 Vert.x/Jackson 的 `mapTo` 反射映射，不丢字段。
+
+该问题由 docker 冒烟断言第 2 条（版本号保留）与第 14 条（字段保真）钉住。
+
 ---
 
 ## 5. 功能一：双端同步（书源 + 在线书架元数据）

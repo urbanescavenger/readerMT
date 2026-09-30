@@ -101,6 +101,166 @@ jobs:
           echo "--- docker logs (tail) ---"
           docker logs reader 2>&1 | tail -20 || true
 
+      - name: Sync endpoints behavior smoke (阶段1 双端同步)
+        # 阶段 1 的 syncPush / getTombstones 行为验证。编译绿只证明"能编译",
+        # 这里的断言覆盖几处"错一点就静默丢数据"的地方:
+        #   客户端版本号必须原样保留(被刷成 now 会让 LWW 退化成"服务端永远赢")、
+        #   LWW 拒绝旧版本且不覆盖内容、相等时间戳被接受(两端收敛的前提)、
+        #   删除写墓碑且墓碑可传播、书架白名单合并保留服务端进度、本地书被过滤、
+        #   内置源被拒(回环防护)、滞后实体不能复活已删除的书。
+        # prod profile 下 secure=false,无需登录。
+        run: |
+          set -e
+          BASE=http://localhost:8080/reader3
+          T1=1700000000000
+          fail() {
+            echo "ERROR: $1"
+            echo "--- docker logs reader (tail) ---"
+            docker logs reader 2>&1 | tail -40 || true
+            exit 1
+          }
+          post() { curl -sS -X POST "$1" -H "Content-Type: application/json" --data-binary "$2"; }
+          one_book() { jq -c --arg k "$1" '[.data[]|select(.bookUrl==$k)][0]'; }
+
+          echo "--- 1) 推送两个书源(带客户端版本号) ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $T1 '{bookSources:[
+                {bookSourceUrl:"https://a.example", bookSourceName:"A", lastModifiedAt:$t},
+                {bookSourceUrl:"https://b.example", bookSourceName:"B", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.isSuccess == true and .data.bookSources.applied == 2' >/dev/null \
+            || fail "syncPush should apply 2 book sources"
+
+          echo "--- 2) 客户端版本号必须原样保留,不能被刷成 now ---"
+          R=$(curl -sS "$BASE/getBookSources")
+          echo "$R"
+          echo "$R" | jq -e --argjson t $T1 \
+            '[.data[]|select(.bookSourceUrl=="https://a.example")][0].lastModifiedAt == $t' >/dev/null \
+            || fail "pushed lastModifiedAt was not preserved"
+
+          echo "--- 3) LWW:更旧的版本被拒,且不覆盖内容 ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1-1000)) \
+            '{bookSources:[{bookSourceUrl:"https://a.example", bookSourceName:"A-STALE", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.bookSources.skipped == 1 and .data.bookSources.applied == 0' >/dev/null \
+            || fail "stale push should be skipped"
+          R=$(curl -sS "$BASE/getBookSources")
+          echo "$R" | jq -e '[.data[]|select(.bookSourceUrl=="https://a.example")][0].bookSourceName == "A"' >/dev/null \
+            || fail "stale push overwrote a newer copy"
+
+          echo "--- 4) 相等时间戳必须被接受(两端收敛的前提) ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $T1 \
+            '{bookSources:[{bookSourceUrl:"https://a.example", bookSourceName:"A-EQ", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.bookSources.applied == 1' >/dev/null \
+            || fail "equal-timestamp push should be applied"
+
+          echo "--- 5) 回环防护:readerServer:// 内置源必须被拒 ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+99999)) \
+            '{bookSources:[{bookSourceUrl:"readerServer://host/user", bookSourceName:"builtin", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.bookSources.skipped == 1 and .data.bookSources.applied == 0' >/dev/null \
+            || fail "built-in readerServer:// source must be rejected"
+
+          echo "--- 6) 删除书源写墓碑 ---"
+          post "$BASE/deleteBookSource" '{"bookSourceUrl":"https://b.example"}' >/dev/null
+          R=$(curl -sS "$BASE/getTombstones")
+          echo "$R"
+          echo "$R" | jq -e '[.data[]|select(.type=="bookSource" and .key=="https://b.example")]|length == 1' >/dev/null \
+            || fail "deleteBookSource should write a bookSource tombstone"
+
+          echo "--- 7) 书架:新书整对象入库(带上服务端侧字段) ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $T1 '{books:[{
+                bookUrl:"https://a.example/book/1", name:"B1", author:"AU1", origin:"https://a.example",
+                lastModifiedAt:$t, totalChapterNum:7, durChapterIndex:3}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.books.applied == 1' >/dev/null || fail "book push should be applied"
+
+          echo "--- 8) 书架:白名单合并必须保留服务端进度(不能整对象替换) ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+1)) '{books:[{
+                bookUrl:"https://a.example/book/1", name:"B1-renamed", author:"AU1",
+                origin:"https://a.example", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.books.applied == 1' >/dev/null || fail "newer book push should be applied"
+          R=$(curl -sS "$BASE/getBookshelf")
+          echo "$R"
+          echo "$R" | jq -e "$(one_book https://a.example/book/1) | .name==\"B1-renamed\" and .totalChapterNum==7 and .durChapterIndex==3" >/dev/null \
+            || fail "whitelist merge must preserve server-side progress; got $(echo "$R" | one_book https://a.example/book/1)"
+
+          echo "--- 9) 本地书籍不参与同步 ---"
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+2)) '{books:[{
+                bookUrl:"/storage/data/default/local_au/x.txt", name:"LOCAL", author:"AU2",
+                origin:"loc_book", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.books.skipped == 1 and .data.books.applied == 0' >/dev/null \
+            || fail "local book must not be syncable"
+
+          echo "--- 10) 删除书籍写墓碑 ---"
+          post "$BASE/deleteBook" '{"bookUrl":"https://a.example/book/1"}' >/dev/null
+          R=$(curl -sS "$BASE/getTombstones")
+          echo "$R"
+          echo "$R" | jq -e '[.data[]|select(.type=="book" and .key=="https://a.example/book/1")]|length == 1' >/dev/null \
+            || fail "deleteBook should write a book tombstone"
+
+          echo "--- 11) 墓碑经 syncPush 推入后实体被删(删除可传播) ---"
+          post "$BASE/syncPush" "$(jq -n --argjson t $((T1+10)) '{books:[{
+                bookUrl:"https://a.example/book/2", name:"B2", author:"AU3",
+                origin:"https://a.example", lastModifiedAt:$t}]}')" >/dev/null
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+20)) \
+            '{tombstones:[{type:"book", key:"https://a.example/book/2", deletedAt:$t}]}')")
+          echo "$R"
+          R=$(curl -sS "$BASE/getBookshelf")
+          echo "$R"
+          echo "$R" | jq -e '[.data[]|select(.bookUrl=="https://a.example/book/2")]|length == 0' >/dev/null \
+            || fail "tombstone push should delete the entity"
+
+          echo "--- 12) 墓碑之后重建的实体必须能存活 ---"
+          post "$BASE/syncPush" "$(jq -n --argjson t $((T1+30)) '{books:[{
+                bookUrl:"https://a.example/book/3", name:"B3", author:"AU4",
+                origin:"https://a.example", lastModifiedAt:$t}]}')" >/dev/null
+          post "$BASE/syncPush" "$(jq -n --argjson t $((T1+40)) \
+            '{tombstones:[{type:"book", key:"https://a.example/book/3", deletedAt:$t}]}')" >/dev/null
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+50)) '{books:[{
+                bookUrl:"https://a.example/book/3", name:"B3-recreated", author:"AU4",
+                origin:"https://a.example", lastModifiedAt:$t}]}')")
+          echo "$R"
+          R=$(curl -sS "$BASE/getBookshelf")
+          echo "$R"
+          echo "$R" | jq -e "$(one_book https://a.example/book/3) | .name==\"B3-recreated\"" >/dev/null \
+            || fail "entity newer than the tombstone must survive (re-created)"
+
+          echo "--- 13) 滞后实体不能复活已删除的书(墓碑比实体新) ---"
+          post "$BASE/syncPush" "$(jq -n --argjson t $((T1+60)) '{books:[{
+                bookUrl:"https://a.example/book/4", name:"B4", author:"AU5",
+                origin:"https://a.example", lastModifiedAt:$t}]}')" >/dev/null
+          post "$BASE/syncPush" "$(jq -n --argjson t $((T1+70)) \
+            '{tombstones:[{type:"book", key:"https://a.example/book/4", deletedAt:$t}]}')" >/dev/null
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+65)) '{books:[{
+                bookUrl:"https://a.example/book/4", name:"B4-stale", author:"AU5",
+                origin:"https://a.example", lastModifiedAt:$t}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.books.skipped == 1 and .data.books.applied == 0' >/dev/null \
+            || fail "stale entity newer-than-tombstone check failed"
+          R=$(curl -sS "$BASE/getBookshelf")
+          echo "$R"
+          echo "$R" | jq -e '[.data[]|select(.bookUrl=="https://a.example/book/4")]|length == 0' >/dev/null \
+            || fail "stale push resurrected a deleted book"
+
+          echo "--- 14) 书源字段必须忠实 round-trip(jsLib 等不能被丢) ---"
+          # 服务端若用 SourceAnalyzer 解析推送来的书源,会丢掉 jsLib/enabledCookieJar/
+          # variableComment/exploreScreen 等字段,第三台设备拉下来就是坏源(带 JS 库的直接失效)
+          R=$(post "$BASE/syncPush" "$(jq -n --argjson t $((T1+80)) '{bookSources:[{
+                bookSourceUrl:"https://rt.example", bookSourceName:"RT", lastModifiedAt:$t,
+                jsLib:"function f(){return 1}", enabledCookieJar:true,
+                variableComment:"vc", exploreScreen:"es"}]}')")
+          echo "$R"
+          echo "$R" | jq -e '.data.bookSources.applied == 1' >/dev/null || fail "round-trip source push should apply"
+          R=$(curl -sS "$BASE/getBookSources")
+          echo "$R"
+          echo "$R" | jq -e '[.data[]|select(.bookSourceUrl=="https://rt.example")][0] | .jsLib=="function f(){return 1}" and .enabledCookieJar==true and .variableComment=="vc" and .exploreScreen=="es"' >/dev/null \
+            || fail "book source fields must survive round-trip; got $(echo "$R" | jq -c '[.data[]|select(.bookSourceUrl=="https://rt.example")][0]')"
+
+          echo "SYNC SMOKE OK: 双端同步端点行为全部符合预期"
+
       - name: browserless renderHtmlWithJs smoke (§9.9)
         # 直接对 browserless /function 跑 RENDER_HTML_WITH_JS_CODE(从 Kotlin 源码提取,零重复),
         # 验证 renderHtmlWithJs 的 Puppeteer 逻辑(setContent+eval / window.result 注入 / sourceRegex 命中)。

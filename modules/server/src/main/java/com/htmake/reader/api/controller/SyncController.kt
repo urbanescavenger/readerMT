@@ -3,7 +3,9 @@ package com.htmake.reader.api.controller
 import com.htmake.reader.api.ReturnData
 import com.htmake.reader.utils.asJsonArray
 import io.legado.app.data.entities.Book
-import io.legado.app.help.SourceAnalyzer
+import io.legado.app.data.entities.BookSource
+import io.legado.app.utils.GSON
+import io.legado.app.utils.fromJsonObject
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
@@ -99,11 +101,25 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
             return 0 to 0
         }
         var bookSourceList = asJsonArray(getUserStorage(userNameSpace, "bookSource")) ?: JsonArray()
+        val tombstones = tombstoneMap(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK_SOURCE)
         var applied = 0
         var skipped = 0
         for (k in 0 until jsonArray.size()) {
-            val pushed = SourceAnalyzer.jsonToBookSource(jsonArray.getJsonObject(k).toString()).getOrNull()
+            // 用 GSON 直接映射到引擎 BookSource,而**不用** SourceAnalyzer.jsonToBookSource:
+            // 后者是为"导入第三方 legacy 书源"写的逐字段容错解析器,它不认 lastModifiedAt,
+            // 还会丢掉 jsLib / enabledCookieJar / loginUi / coverDecodeJs / variableComment /
+            // exploreScreen / ruleReview / eventListener / customButton —— 同步过去再被
+            // 第三台设备拉下来就是坏源(例如带 JS 库的书源直接失效)。
+            // 同步收发的是我们自己 app 的格式,忠实 round-trip 才是正确语义。
+            val pushed = GSON.fromJsonObject<BookSource>(jsonArray.getJsonObject(k).toString()).getOrNull()
             if (pushed == null || pushed.bookSourceUrl.isEmpty()) {
+                skipped++
+                continue
+            }
+            // 回环防护(纵深):远端直读的内置书源带的是**推送方本机**的 accessToken 与服务器
+            // 地址,一旦进入服务端书源池就会被其它设备拉走(凭证泄漏),且会造成同步自激。
+            // app 侧已在两个方向过滤,服务端再拦一道,不依赖客户端守规矩。
+            if (pushed.bookSourceUrl.startsWith(READER_SERVER_SOURCE_PREFIX)) {
                 skipped++
                 continue
             }
@@ -111,6 +127,12 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
                 pushed.lastModifiedAt = System.currentTimeMillis()
             }
             val pushedAt = pushed.lastModifiedAt!!
+            // 纵深校验:本地墓碑比实体新 → 不落库,否则一个滞后的客户端能把已删的源复活
+            val tombstoneAt = tombstones[pushed.bookSourceUrl]
+            if (tombstoneAt != null && tombstoneAt >= pushedAt) {
+                skipped++
+                continue
+            }
             var existIndex = -1
             var existingAt = 0L
             for (i in 0 until bookSourceList.size()) {
@@ -144,6 +166,7 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
             return 0 to 0
         }
         var bookshelf = asJsonArray(getUserStorage(userNameSpace, "bookshelf")) ?: JsonArray()
+        val tombstones = tombstoneMap(userNameSpace, BaseController.TOMBSTONE_TYPE_BOOK)
         var applied = 0
         var skipped = 0
         for (k in 0 until jsonArray.size()) {
@@ -154,6 +177,12 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
             }
             if (pushed.lastModifiedAt <= 0) {
                 pushed.lastModifiedAt = System.currentTimeMillis()
+            }
+            // 纵深校验:本地墓碑比实体新 → 不落库(同 applyBookSources)
+            val tombstoneAt = tombstones[pushed.bookUrl]
+            if (tombstoneAt != null && tombstoneAt >= pushed.lastModifiedAt) {
+                skipped++
+                continue
             }
             // 先按 bookUrl 认身份;退回 name+author 以兼容服务端既有的(name,author)唯一约束,
             // 否则同一本书会因链接不同而重复入库
@@ -262,6 +291,33 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
     }
 
     /**
+     * 读取某命名空间内指定类型的墓碑,返回 `key → deletedAt`(同 key 取较新值)。
+     *
+     * 一次读盘供整轮写入使用,而不是每个实体查一次 —— `getStorage` 每次都整文件读+解析,
+     * 逐实体调用会退化成 O(n²)。
+     */
+    private suspend fun tombstoneMap(userNameSpace: String, type: String): Map<String, Long> {
+        val map = HashMap<String, Long>()
+        val list = getUserTombstones(userNameSpace)
+        for (i in 0 until list.size()) {
+            val item = list.getJsonObject(i)
+            if (item.getString("type", "") != type) {
+                continue
+            }
+            val key = item.getString("key", "")
+            if (key.isEmpty()) {
+                continue
+            }
+            val at = jsonToLong(item.getValue("deletedAt"))
+            val old = map[key]
+            if (old == null || old < at) {
+                map[key] = at
+            }
+        }
+        return map
+    }
+
+    /**
      * 不该参与同步的书籍:本地书籍(含服务端本地书仓)文件无法跨端,同步过去也打不开;
      * `webDav::` 是 app 侧远程文件书;`readerServer://` 是远端直读的内置书源(见 SYNC_PLAN.md §5.4)。
      */
@@ -295,6 +351,14 @@ class SyncController(coroutineContext: CoroutineContext) : BaseController(corout
         target.wordCount = source.wordCount
         target.group = source.group
         target.lastModifiedAt = source.lastModifiedAt
+    }
+
+    companion object {
+        /**
+         * 远端直读内置书源的 URL 前缀。app 端在 `SyncManager.READER_SERVER_SOURCE_PREFIX`
+         * 有同值常量(阶段 5 创建该源时两边必须一致);服务端这里再拦一道做纵深防护。
+         */
+        const val READER_SERVER_SOURCE_PREFIX = "readerServer://"
     }
 
 }
