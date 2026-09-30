@@ -2,6 +2,7 @@ package io.legado.app.model.sync
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.SyncTombstone
 import io.legado.app.exception.NoStackTraceException
@@ -70,6 +71,17 @@ class ReaderServerClient(
         }
     }
 
+    /** 拉取服务端书架。 */
+    suspend fun getBookshelf(): List<Book> {
+        val data = parseData(request("getBookshelf")) ?: return emptyList()
+        if (!data.isJsonArray) {
+            return emptyList()
+        }
+        return data.asJsonArray.mapNotNull { element ->
+            runCatching { GSON.fromJson(element, Book::class.java) }.getOrNull()
+        }
+    }
+
     /**
      * 拉取全部删除墓碑(不传 since:墓碑量小,且传 since 需要维护基准,
      * 首版按 SYNC_PLAN.md §5.2 走全量换取正确性)。
@@ -85,17 +97,19 @@ class ReaderServerClient(
     }
 
     /**
-     * 推送本地变更。服务端会做 LWW 仲裁(本地版本不比服务端新则拒绝),
-     * 因此**每次同步全量推送书源是安全的**:不会用旧内容覆盖服务端较新的副本。
-     * 返回服务端各类的 applied/skipped 计数。
+     * 推送本地变更(书源 + 书架 + 墓碑,一次往返)。服务端会做 LWW 仲裁
+     * (本地版本不比服务端新则拒绝),因此**每次同步全量推送是安全的**:
+     * 不会用旧内容覆盖服务端较新的副本。返回服务端各类的 applied/skipped 计数。
      */
     suspend fun syncPush(
-        bookSources: List<BookSourceEntity>,
-        tombstones: List<SyncTombstone>
+        bookSources: List<BookSourceEntity> = emptyList(),
+        books: List<Book> = emptyList(),
+        tombstones: List<SyncTombstone> = emptyList()
     ): JsonObject? {
         val body = GSON.toJson(
             mapOf(
                 "bookSources" to bookSources,
+                "books" to books,
                 "tombstones" to tombstones
             )
         )

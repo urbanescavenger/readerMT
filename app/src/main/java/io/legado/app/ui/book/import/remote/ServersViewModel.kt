@@ -18,14 +18,14 @@ class ServersViewModel(application: Application): BaseViewModel(application) {
     }
 
     /**
-     * 手动同步。阶段 2 只同步书源(SYNC_PLAN.md)。
+     * 手动同步(书源 + 书架元数据,SYNC_PLAN.md 阶段 2/3)。
      *
      * 不做类型预检:非阅读服务器时 [SyncManager] 会抛"该服务器不是阅读服务器",
      * 统一走 onError 提示即可,免得两处判断口径不一致。
      */
     fun sync(server: Server) {
         execute {
-            SyncManager.syncBookSources(server)
+            SyncManager.sync(server)
         }.onSuccess { result ->
             context.toastOnUi(
                 context.getString(

@@ -13,6 +13,7 @@ import io.legado.app.constant.BookType
 import io.legado.app.constant.PageAnim
 import io.legado.app.data.appDb
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.sync.SyncTombstoneHelp
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.getFolderNameNoCache
 import io.legado.app.help.book.isEpub
@@ -455,6 +456,8 @@ data class Book(
         if (ReadBook.book?.bookUrl == bookUrl) {
             ReadBook.book = null
         }
+        // 双端同步:删除必须留墓碑,否则下次同步会被服务端的旧副本复活
+        SyncTombstoneHelp.recordBook(this)
         appDb.bookDao.delete(this)
     }
 

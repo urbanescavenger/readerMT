@@ -9,6 +9,7 @@ import io.legado.app.constant.AndroidAppLog
 import io.legado.app.data.appDb
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.data.entities.RssSource
+import io.legado.app.help.sync.SyncTombstoneHelp
 import io.legado.app.model.VideoPlay
 import io.legado.app.ui.login.SourceLoginJsExtensions
 import io.legado.app.utils.toastOnUi
@@ -18,6 +19,8 @@ class VideoPlayerViewModel(application: Application) : BaseViewModel(application
     fun removeFromBookshelf(success: (() -> Unit)?) {
         execute {
             VideoPlay.book?.let {
+                // 双端同步:删除必须留墓碑,否则下次同步会被服务端的旧副本复活
+                SyncTombstoneHelp.recordBook(it)
                 appDb.bookDao.delete(it)
             }
         }.onSuccess {

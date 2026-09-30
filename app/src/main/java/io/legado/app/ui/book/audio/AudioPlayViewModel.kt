@@ -13,6 +13,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapterEntity
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.book.getBookSource
+import io.legado.app.help.sync.SyncTombstoneHelp
 import io.legado.app.help.book.removeType
 import io.legado.app.help.book.simulatedTotalChapterNum
 import io.legado.app.model.AudioPlay
@@ -119,6 +120,8 @@ class AudioPlayViewModel(application: Application) : BaseViewModel(application) 
     fun removeFromBookshelf(success: (() -> Unit)?) {
         execute {
             AudioPlay.book?.let {
+                // 双端同步:删除必须留墓碑,否则下次同步会被服务端的旧副本复活
+                SyncTombstoneHelp.recordBook(it)
                 appDb.bookDao.delete(it)
             }
         }.onSuccess {

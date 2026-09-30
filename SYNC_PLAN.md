@@ -148,7 +148,25 @@ data class SyncTombstone(
 | 版本 | `lastModifiedAt`（新增） | `lastModifiedAt`（新增） | 同步 |
 | 忽略 | `variable`/`readConfig`/`syncTime`/`durVolumeIndex`/`chapterInVolumeIndex`/`totalChapterNum` 等 | `lastCheckTime`/`lastCheckCount`/`order`/`originOrder`/`canUpdate`/`useReplaceRule` | 各自本地 |
 
-**「在线书架」的界定**：只同步 `BookType.local` 未置位、且 `origin` 非 `loc_book`/`webDav::`/`readerServer::` 的书。本地书籍（txt/epub 文件）与服务端本地书仓的书**跳过**（服务端文档亦注明"本地书源的书籍同步后无法打开"）。
+**「在线书架」的界定**：只同步 `BookType.local` 未置位、且 `origin` 非 `loc_book`/`webDav::`/`readerServer://` 的书。本地书籍（txt/epub 文件）与服务端本地书仓的书**跳过**（服务端文档亦注明"本地书源的书籍同步后无法打开"）。
+
+### 3.4 阶段 3 实现时挖出的三个 app 侧硬约束（都会**静默丢书**）
+
+这三个是 `books` 表/查询自身的性质，不处理就会出错，且不会报错：
+
+1. **`notShelf` 试读书必须排除。** 试读时 `BookInfoActivity` 会给书打 `BookType.notShelf`，
+   这种书**在书架上不显示**（书架列表用 `filterNot { it.isNotShelf }` 过滤），
+   但它满足 `type & local = 0`，会混进 `BookDao.webBooks`。不排除就会被推到服务端书架。
+2. **新书必须过 `Book.upType()`。** 服务端 `Book.type` 是 0–4 枚举（0=文本），
+   而 app 是位掩码（`text = 8`）。服务端来的书 `type = 0` 直接入库，
+   会被书架的类型查询（如 `type & text > 0`）过滤掉——**在书架上直接隐身**。
+   `Book.upType()` 正是"旧数字类型 → 位掩码"的转换器（`type < 4` 才转，而 4 恰好等于
+   `BookType.video`）；对另一端推来的位掩码是空操作，所以两端都安全。
+3. **`books` 表有 `(name, author)` 唯一索引。** 若只按 `bookUrl` 认身份，
+   同一本书来自两个不同书源（bookUrl 不同、name+author 相同）时，
+   `insert` 会以 REPLACE 语义**删掉另一本同名同作者的书**。必须退回按 `(name, author)`
+   认领已有行并原地合并；且按 `(name, author)` 认领时**不能改 `bookUrl`**——
+   改主键会波及目录缓存等以 bookUrl 为键的数据。
 
 ---
 
@@ -391,9 +409,15 @@ ruleContent.content = "<root>/reader3/getBookContent?url={{bookUrl}}&index={{cha
 - **CI 验证**：app 编译绿
 - **真机验证**：两端各建/改/删若干书源 → 同步 → 双向一致；删除可传播
 
-### 阶段 3：书架元数据同步（功能一 · 后半）
-- `SyncManager` 加 Book 的 pull/merge/push + 在线书判定 + 字段映射
-- **真机验证**：加书/改分组/删书双向一致，本地书被正确跳过
+### 阶段 3：书架元数据同步（功能一 · 后半）✅ 已完成
+- `SyncManager` 加 Book 的 pull/merge/push + 在线书判定（含未入书架的试读书）+ 白名单映射
+- 推送载荷 `toSyncPayload()` 只带白名单：否则新书整对象入库时，app 专有状态
+  （进度/章节数/readConfig/变量）会真的写到服务端书架上
+- 合并用 `mergeSyncedBook()` 逐字段覆盖：整对象替换会清掉本机阅读进度
+- 墓碑写入点：`Book.delete()`、`AudioPlayViewModel`、`VideoPlayerViewModel`、
+  `BookshelfManageViewModel`（`deleteNotShelfBook` 走 SQL 批量删，试读书本就不该同步，无需墓碑）
+- 三个 app 侧硬约束见 §3.4
+- **真机验证**：加书/改分组/删书双向一致，本地书与试读书被正确跳过
 
 ### 阶段 4：远程书籍 层 A（载入服务器书架）
 - `RemoteBookManager.addToBookshelf` open 方法 + `RemoteBookServer`

@@ -10,6 +10,7 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSourceEntity
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.sync.SyncTombstoneHelp
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.removeType
 import io.legado.app.help.config.AppConfig
@@ -54,6 +55,8 @@ class BookshelfManageViewModel(application: Application) : BaseViewModel(applica
 
     fun deleteBook(books: List<Book>, deleteOriginal: Boolean = false) {
         execute {
+            // 双端同步:先留墓碑(本地书会被 recordBook 内部跳过),再删行
+            books.forEach { SyncTombstoneHelp.recordBook(it) }
             appDb.bookDao.delete(*books.toTypedArray())
             books.forEach {
                 if (it.isLocal) {
