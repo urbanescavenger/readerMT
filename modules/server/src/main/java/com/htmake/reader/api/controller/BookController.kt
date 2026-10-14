@@ -558,7 +558,12 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
                 if (bookUrl.isNullOrEmpty()) {
                     return returnData.setErrorMsg("请输入书籍链接")
                 }
-                if (bookInfo != null && !bookInfo.isLocalBook() && bookSource.isNullOrEmpty()) {
+                // 书不在书架、请求里又没带书源时必须直接拒绝,不能只拦 bookInfo != null 的情况:
+                // 否则会掉进下面的 `bookSource ?: ""`,用空书源兜底 —— 规则全空 → 拿 bookUrl 当目录页
+                // 抓一遍 → 报"目录为空",把"书架里没有这个链接"误导成"书源坏了"。
+                // 最常见的成因:换源把 bookUrl 换成了新链接,而客户端手里还是旧链接。
+                if (bookSource.isNullOrEmpty() && (bookInfo == null || !bookInfo.isLocalBook())) {
+                    logger.warn("getBookContent 未配置书源, url: {} inBookShelf: {}", bookUrl, bookInfo != null)
                     return returnData.setErrorMsg("未配置书源")
                 }
                 bookInfo = bookInfo ?: mergeBookCacheInfo(WebBook(bookSource ?: "", appConfig.debugLog).getBookInfo(bookUrl))

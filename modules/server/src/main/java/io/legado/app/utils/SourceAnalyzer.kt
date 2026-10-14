@@ -66,6 +66,13 @@ object SourceAnalyzer {
     }
 
     fun jsonToBookSource(json: String): Result<BookSource> {
+        // 空串会让 GSON 返回 null,`as BookSourceAny` 抛出的是
+        // "null cannot be cast to non-null type ...BookSourceAny" —— 既看不出原因也定位不到调用方。
+        // 这里提前给出明确原因;调用方原来怎么兜底(空 BookSource)还是怎么兜底,行为不变。
+        if (json.isBlank()) {
+            Debug.log("转化书源出错", "书源为空")
+            return Result.failure(NoStackTraceException("书源为空"))
+        }
         val source = BookSource()
         val sourceAny = GSON.fromJsonObject<BookSourceAny>(json.trim())
             .onFailure {
