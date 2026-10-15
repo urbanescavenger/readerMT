@@ -1446,6 +1446,13 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
         if (newBookUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("新源书籍链接不能为空")
         }
+        // 必须是绝对 URL:搜索结果的 bookUrl 规则解析不出详情页链接时,上游会回退成
+        // ruleSearchUrl(常常是相对路径,如 /modules/article/search.php?searchkey=...),
+        // 这种值一旦写进书架就成了永远打不开的身份键(AnalyzeUrl 会直接抛 no protocol)。
+        if (!newBookUrl.startsWith("http://") && !newBookUrl.startsWith("https://")) {
+            logger.warn("setBookSource 新链接不是绝对地址: {}", newBookUrl)
+            return returnData.setErrorMsg("新源书籍链接不是绝对地址")
+        }
         if (bookSourceUrl.isNullOrEmpty()) {
             return returnData.setErrorMsg("书源链接不能为空")
         }
@@ -1486,6 +1493,17 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
             WebBook(bookSourceString, appConfig.debugLog).getBookInfo(newBookUrl)
         }
 
+        // 先验证新源真能拉到目录,通过之后才把身份写进书架 —— 顺序不能反。
+        // 反过来的话:拉目录一旦抛错,书架里的 bookUrl/origin 已经变成新源了,而请求返回失败,
+        // 客户端手里仍是旧链接 → 从此和书架永远对不上,连"换回原来的源"都会因为
+        // 按 bookUrl 找不到书而报「书籍信息错误」(2026-10-15 实测)。
+        try {
+            getLocalChapterList(newBookInfo, bookSourceString ?: "", true, userNameSpace)
+        } catch (e: Exception) {
+            logger.warn("setBookSource 新书源取目录失败, 书架保持不变, newUrl: {}", newBookUrl, e)
+            return returnData.setErrorMsg("新书源获取目录失败: " + (e.localizedMessage ?: e.toString()))
+        }
+
         editShelfBook(book, userNameSpace) { existBook ->
             existBook.origin = newBookInfo.origin
             existBook.originName = newBookInfo.originName
@@ -1502,8 +1520,6 @@ class BookController(coroutineContext: CoroutineContext): BaseController(corouti
             existBook
         }
 
-        // 更新目录
-        getLocalChapterList(newBookInfo, bookSourceString ?: "", true, userNameSpace)
         return returnData.setData(newBookInfo)
     }
 
