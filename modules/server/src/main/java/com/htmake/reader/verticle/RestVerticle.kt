@@ -14,12 +14,17 @@ import io.vertx.kotlin.coroutines.CoroutineVerticle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import com.htmake.reader.api.ReturnData
 import com.htmake.reader.utils.error
+import com.htmake.reader.utils.gson
 import com.htmake.reader.utils.success
 import java.net.URLDecoder
 
 
 private val logger = KotlinLogging.logger {}
+
+/** 请求体上限(字节)。原版 Vert.x 3 无上限,迁移到 4 后默认只有 10MB,导入大书会被 413 拒掉。 */
+private const val MAX_REQUEST_BODY_SIZE = 500L * 1024 * 1024
 
 abstract class RestVerticle : CoroutineVerticle() {
 
@@ -70,7 +75,12 @@ abstract class RestVerticle : CoroutineVerticle() {
             }
         }
 
-        router.route().handler(BodyHandler.create())
+        // Vert.x 4 的 BodyHandler 新增了 10MB 默认上限(BodyHandler.DEFAULT_BODY_LIMIT),
+        // Vert.x 3 时代(本服务端原版)是无上限的。迁移到 4 之后,超过 10MB 的请求体
+        // (导入本地书籍的 txt/epub、备份恢复等)会被 BodyHandler 直接 `context.fail(413)`,
+        // 前端只看到 "Request failed with status code 500"(413 被下面 failureHandler 的 NPE 盖掉)。
+        // 书籍/备份动辄几十 MB,这里放宽到 500MB;仍保留有限上限,避免超大 JSON 撑爆堆。
+        router.route().handler(BodyHandler.create().setBodyLimit(MAX_REQUEST_BODY_SIZE))
 
         router.route().handler(LoggerHandler.create(LoggerFormat.DEFAULT));
         router.route("/reader3/*").handler {
@@ -94,7 +104,27 @@ abstract class RestVerticle : CoroutineVerticle() {
 //        }
 
         router.route().last().failureHandler { ctx ->
-            ctx.error(ctx.failure())
+            val failure = ctx.failure()
+            if (failure != null) {
+                ctx.error(failure)
+            } else {
+                // 状态码型失败(BodyHandler 的 413 请求体超限、417 等)不带 Throwable,
+                // ctx.failure() 为 null。原先直接 ctx.error(ctx.failure()) 会在 Kotlin 非空
+                // 参数检查处抛 NPE("Unhandled exception in router"),把真实状态码盖成 500。
+                val status = ctx.statusCode()
+                logger.warn("request failed: status {}, uri: {}", status, ctx.request().absoluteURI())
+                if (!ctx.response().ended()) {
+                    val errorMsg = if (status == 413) {
+                        "请求体超过服务端上限(${MAX_REQUEST_BODY_SIZE / 1024 / 1024}MB)"
+                    } else {
+                        "请求失败(status $status)"
+                    }
+                    ctx.response()
+                            .setStatusCode(status)
+                            .putHeader("content-type", "application/json; charset=utf-8")
+                            .end(gson.toJson(ReturnData().setErrorMsg(errorMsg)))
+                }
+            }
         }
 
         logger.info("port: {}", port)
